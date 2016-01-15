@@ -12,3 +12,7 @@ Desktop.ini
 
 ### Endnote Log
 endnoteLog.txt
+
+
+### InDesing Lock Files
+*.idlk
