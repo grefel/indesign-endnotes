@@ -8,7 +8,7 @@ Copy all **.jsx** files in your InDesign Script Panel folder. Further details ca
 This script converts InDesign footnotes into linked endnotes using InDesign cross references. So you need *footnotes* first. Endnotes are only possible within stories (single or linked textframes), you'll find your endnotes at the end of the story. 
 The script should run from InDesign CS4 onwards but was only tested with CS6 and CC 2015.
 
-### Create or update Endnotes
+#### Create or update Endnotes
 Start **createEndnotes.jsx** 
 
 I hope the user interface is quite self explaining. 
@@ -22,17 +22,17 @@ Basically there are two modes:
 
 
 
-### Jump between note and marker
+#### Jump between note and marker
 Place your cursor in a marker or endnote and start **jumpBetweenMarkerAndNote.jsx**. If you want to go back, simply run the script again. 
 
-### Delete Endnotes
+#### Delete Endnotes
 Start **deleteEndnotes.jsx**. This script will delete a single endnote including there cross reference. Do not delete endnotes paragraphs or markers manually, this will break the update process of the current document.
 
-### Default configuration 
+#### Default configuration 
 All default configuration parameters can be changed in **config.jsx**. 
 Configurations settings for style names are save to change. Same for User interface strings. Be careful with the other options, changing them might break the update process of previously converted documents. 
 
-### Logging and errors
+## Logging and errors
 In the Script Panel folder you'll find an **endnoteLog.txt** log file. Please send this bug report together with a minimal example of your InDesign document if you encounter any problem.
 
 
