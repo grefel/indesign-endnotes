@@ -1,4 +1,4 @@
-## endNote
+## Endnotes for InDesign
 InDesign endnote with the help of  scripting and cross references. 
 
 ## How to install
