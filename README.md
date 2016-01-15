@@ -1,5 +1,5 @@
 ## Endnotes for InDesign
-InDesign endnote with the help of  scripting and cross references. 
+InDesign endnotes with the help of scripting and cross references. 
 
 ## How to install
 Copy all **.jsx** files in your InDesign Script Panel folder. Further details can be found here [[DE] Skripte in InDesign installieren](http://www.publishingx.de/skripte-installieren/) or here [[EN] How to Install a Typical InDesign Script](http://www.danrodney.com/scripts/directions-installingscripts.html).
