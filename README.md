@@ -43,3 +43,4 @@ The code is ready for localization but I had no time to complete the english tra
 ## Acknowledgements
 I picked the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
+The development of these scripts was made possible by publisher [C.H.Beck](http://www.chbeck.de/) [Beltz](http://www.beltz.de/) and [Campus](http://www.campus.de/)
