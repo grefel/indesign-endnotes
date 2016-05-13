@@ -1026,7 +1026,10 @@ var idsLog = function (_logFile, _logLevel) {
 }
 
 
-startProcessing();
+
+if ( ! $.global.hasOwnProperty('idsTesting') ) {
+	startProcessing();
+}
 
 
 function startProcessing() {

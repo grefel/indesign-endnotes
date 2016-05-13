@@ -16,3 +16,7 @@ endnoteLog.txt
 
 ### InDesing Lock Files
 *.idlk
+
+### Local TestFiles 
+publicTestFiles/
+

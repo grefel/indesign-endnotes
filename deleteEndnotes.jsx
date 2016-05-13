@@ -29,7 +29,9 @@ if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK") {
 }
 
 
-startProcessing();
+if ( ! $.global.hasOwnProperty('idsTesting') ) {
+	startProcessing();
+}
 
 function startProcessing() {
 	if (parseInt(app.version) < 6) {
