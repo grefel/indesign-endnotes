@@ -18,5 +18,5 @@ endnoteLog.txt
 *.idlk
 
 ### Local TestFiles 
-publicTestFiles/
+localTestFiles/
 
