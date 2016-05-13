@@ -1253,6 +1253,10 @@ function foot2end (dok) {
 			else {
 				firstHlink = dok.hyperlinks.itemByID(hyperLinkID);
 				firstHlinkIndex = firstHlink.destination.destinationText.insertionPoints[0].index;
+				if (firstHlink.destination.destinationText.parentStory.id != story.id) {
+					px.log.warnAlert( localize(px.ui.endnoteStoryMoved) );
+					return;
+				}
 				firstEndnote = story.insertionPoints[firstHlinkIndex].paragraphs[0];
 				headingParagraph = story.insertionPoints[firstHlinkIndex-1].paragraphs[0];
 				if (px.numberBySection && headingParagraph.appliedParagraphStyle == px.pStyleEndnoteSplitHeading) {

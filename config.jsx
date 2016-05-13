@@ -86,6 +86,7 @@ var px = {
 		headingFail:{en:"For the title of at least one character must be entered .",de:"Für den Titel muss mindestens ein Zeichen eingegeben werden."},
 		styleSelectionFail:{en:"Error in the format selection", de:"Fehler bei der Formatauswahl"},
 		styleSelectionFailSection:{en:"Error in the format selection of selections", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
+		endnoteStoryMoved:{en:"Text and Endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
 		
 
 		// deleteEndnotes.jsx
