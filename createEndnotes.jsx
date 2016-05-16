@@ -28,8 +28,8 @@ I picked the idea of using InDesign cross references for endnotes from Peter Kah
 
 #include config.jsx 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK") {
-     px.debug = false;
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
+     px.debug = true;
 }
 
 // idsHelper.jsx
@@ -1344,9 +1344,11 @@ function foot2end (dok) {
 	for (var j = 0; j < stories.length; j++) {
 		story = stories[j];
 		if (story.footnotes.length > 0) {
-			var pBar = px.ids.getProgressBar(localize(px.ui.menuTitle, px.version));
-			pBar.reset("Verarbeite Textabschnitt " + (j+1) + " von " + stories.length, story.footnotes.length);
-			// EndnotenTitel einfügen
+			if (px.showGui) {
+				var pBar = px.ids.getProgressBar(localize(px.ui.menuTitle, px.version));
+				pBar.reset("Verarbeite Textabschnitt " + (j+1) + " von " + stories.length, story.footnotes.length);
+			}
+			// EndnotenTitel einfügen  					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
 			hyperLinkID =  hLinksPerStory[story.id][1][0];
 			if (hyperLinkID == "last") {
 				story.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
@@ -1378,7 +1380,9 @@ function foot2end (dok) {
 
 			var footn = story.footnotes;
 			for (var i = footn.length-1; i >=0 ; i--) {
-				pBar.hit();
+				if (px.showGui) {
+					pBar.hit();
+				}
 				footnote = footn[i];
 				
 				trimFootnoteSpace(footnote);
@@ -1457,9 +1461,12 @@ function foot2end (dok) {
 				for (var h = 0; h < dok.hyperlinks.length; h++) {
 					hlink = dok.hyperlinks[h];
 					if ( hlink.extractLabel(px.hyperlinkLabel) == "true") {
-						endnotenStartEndPositions.push([hlink.destination.destinationText.index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
+						if (hlink.source.sourceText.parentStory.id == story.id) {
+							endnotenStartEndPositions.push([hlink.destination.destinationText.index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
+						}
 					}
 				}
+			
 				// Endnoten Nummerierung wieder zurücksetzen... 
 				app.findGrepPreferences = NothingEnum.NOTHING;
 				app.changeGrepPreferences = NothingEnum.NOTHING;
@@ -1473,7 +1480,7 @@ function foot2end (dok) {
 
 				endnotenStartEndPositions.sort(sortSecondEntry);
 				
-				// In length -1 steck nur der leere String für den letzten Insertion Point der Story
+				// In length -1 steckt nur der leere String für den letzten Insertion Point der Story
 				sectionCounter = sectionIndexArray.length-2;
 				
 				var currentSection, nextSection, endnotenIndex, endnotenTextIndex;
@@ -1544,7 +1551,7 @@ function foot2end (dok) {
 	} // for
 
 		
-	if (pBar){
+	if (pBar) {
 		var newPages = dok.pages.length - oldPages ;
 		if (dok.pages.length != oldPages ) {
 			alertMsg (localize (px.ui.newPagesAdded, newPages));
@@ -1579,7 +1586,7 @@ function getSections (story) {
 	return sectionIndexArray;
 }
 
-function getCurrentEndnotes(dok, stories) {
+function getCurrentEndnotes (dok, stories) {
 	// Die aktuellen Endnoten einsammeln
 	var hLink, storyID, story;	
 	var hLinksPerStory = [];
@@ -1593,7 +1600,7 @@ function getCurrentEndnotes(dok, stories) {
 						hLinksPerStory[storyID] = [];
 						hLinksPerStory[storyID].push(["first", -1]);
 					}
-//~ 					px.log.debug(hLink.id + " -> " + hLink.source.sourceText.index)
+					px.log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
 					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
 				}
 				else {
@@ -1609,6 +1616,8 @@ function getCurrentEndnotes(dok, stories) {
 	for (var j = 0; j < stories.length; j++) {
 		story = stories[j];
 		storyID = story.id;
+		px.log.debug("Endnoten für "+ storyID);
+
 		if (hLinksPerStory[storyID]) {
 			hLinksPerStory[storyID].sort(sortSecondEntry);
 			hLinksPerStory[storyID].push(["last", story.insertionPoints[-1].index]);
@@ -1618,11 +1627,11 @@ function getCurrentEndnotes(dok, stories) {
 			hLinksPerStory[storyID].push(["first", -1]);
 			hLinksPerStory[storyID].push(["last", story.insertionPoints[-1].index]);
 		}
-//~ 		if (px.debug) {
-//~ 			for (var m =0; m < hLinksPerStory[storyID].length; m++) {
-//~ 				px.log.debug(hLinksPerStory[storyID][m]);
-//~ 			}
-//~ 		}
+		if (px.debug) {
+			for (var m =0; m < hLinksPerStory[storyID].length; m++) {
+				px.log.debug(hLinksPerStory[storyID][m]);
+			}
+		}
 	}
 	
 	// TODO prüfen ob die Reihenfolge in den Stories noch stimmt - Copy & Paste Bugs könnten so auffalen. 
