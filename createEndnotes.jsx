@@ -1386,6 +1386,7 @@ function foot2end (dok) {
 				footnote = footn[i];
 				
 				trimFootnoteSpace(footnote);
+//~ 				$.writeln(footnote.contents);
 				// Formatieren 				
 				footnote.paragraphs[0].applyParagraphStyle (px.pStyleEndnote, false);
 				if(footnote.paragraphs.length > 1) {
@@ -1418,6 +1419,8 @@ function foot2end (dok) {
 				cue.insertLabel(px.hyperlinkLabel, "true");
 				hlink = dok.hyperlinks.add (cue, endnote_link, {visible: false});
 				hlink.insertLabel(px.hyperlinkLabel, "true");
+
+				pushHLink ( hLinksPerStory[story.id], hyperLinkID, hlink);
 
 				// Rückverlinkung
 				endnote_backlink = dok.hyperlinkTextDestinations.add (footn[i].storyOffset);
@@ -1511,6 +1514,7 @@ function foot2end (dok) {
 					nextSectionStartIndex = nextSection[1];
 					
 					if (previousEndnotenTextIndex < currentSectionStartIndex && endnotenTextIndex > currentSectionStartIndex && endnotenTextIndex < nextSectionStartIndex) {
+//~ 						$.writeln(currentSection[2]);
 						story.insertionPoints[endnotenIndex].contents = currentSection[2];
 						story.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
 						var nextPar = px.ids.nextParagraph (story.insertionPoints[endnotenIndex].paragraphs[0]);
@@ -1528,7 +1532,7 @@ function foot2end (dok) {
 						sectionCounter--;						
 					}
 				}
-			}					
+			}		
 			// Schneller fix wenn fortlaufend nummeriert wird
 			else { 
 				app.findGrepPreferences = NothingEnum.NOTHING;
@@ -1648,6 +1652,18 @@ function getPosition(index, endNoteArray) {
 	px.log.warnAlert(localize (px.ui.positionFail));
 	return null; 
 }
+
+function pushHLink ( endNoteArray, hyperLinkID, hLink) {
+	for (var m =1; m < endNoteArray.length; m++) {
+		if (endNoteArray[m][0] == hyperLinkID) {
+			endNoteArray.splice(m,0, [hLink.id, hLink.source.sourceText.index]);
+			return;
+		} 
+	}
+	px.log.warnAlert(localize (px.ui.positionFail));
+	return null; 
+}
+
 
 function deleteNotemarkers (scope) {
 //~ 	// Es gibt Abstürze bei wenn der Footnote Marker am Ende des Textabschnitts steht Suche Ersetze Kombinationen in CS6
