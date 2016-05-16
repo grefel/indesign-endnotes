@@ -17,7 +17,7 @@
 */
 
 /*  
-//DESCRIPTION: Fußnoten zu Endnoten umwandeln (Nutz die Querverweisfunktion von InDesign)
+//DESCRIPTION: Convert Footnotes to Endnotes  ( Uses the cross-reference function from InDesign )
 ## Acknowledgements
 I picked the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
@@ -31,7 +31,6 @@ I picked the idea of using InDesign cross references for endnotes from Peter Kah
 if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK") {
      px.debug = true;
 }
-
 
 // idsHelper.jsx
 {
@@ -940,89 +939,252 @@ var idsMap = function () {
 //~   return items;
 //~ }
 
-/**
-* Logging Class
-* @class <b>idsLog</b> contains a JavaScript Loggin Extensions. Include this library and use the idsLog object in your script.<br/><br/><code>#include "idsHelper.jsx"<br/>[...]<br/>_log = idsLog(FILE, "DEBUG")<br/>_log.debug("Log me")</code><br/>
-* @param {File} _logFile  The Logfile as File-Object.
-* @param {String} _logLevel One of the "OFF" "ERROR", "WARN", "INFO", "DEBUG", sets the current Logger to log only Events more or equal severe than the Loglevel.
-*/
-var idsLog = function (_logFile, _logLevel) {
-	if (_logFile.constructor.name == "String") {
-		this.logFile = File (_logFile);
-	}
-	this.logFile = _logFile;
-	this.SEVERITY = [];
-	this.SEVERITY["OFF"] = 4;
-	this.SEVERITY["ERROR"] = 3;
-	this.SEVERITY["WARN"] = 2;
-	this.SEVERITY["INFO"] = 1;
-	this.SEVERITY["DEBUG"] = 0;
-	this.logLevel = (_logLevel == undefined) ? 0 : SEVERITY[_logLevel];
-	this.writeLog = function (_message, _severity) {
-		logFile.open("e");
-		logFile.seek(logFile.length);	
-		try {
-			logFile.writeln(Date() + " [" + _severity + "] " + ((_severity.length == 4) ? " [" : "[")  + app.activeScript.name + "] " + _message);
-		} catch (e) {
-			//We're running from ESTK 
-			logFile.writeln(Date() + " [" + _severity + "] " + ((_severity.length == 4) ? " [" : "[")  + "ESTK] " + _message);
-		}
-		logFile.close();
-	}
 
-	return { 
-		/**
-		* Writes a debug log message
-		* @param {String} _message Message to log.
-		*/
-		debug : function (_message) {
-			if (logLevel <= 0)  writeLog(_message, "DEBUG"); 
-		},
-		/**
-		* Writes a info log message
-		* @param {String} _message Message to log.
-		*/
-		info : function (_message) {
-			if (logLevel <= 1)  writeLog(_message, "INFO"); 
-		},
-		/**
-		* Writes a info log message und displays an Alert-Window
-		* @param {String} _message Message to log.
-		*/
-		infoAlert : function (_message) {
-			if (logLevel <= 2) {
-				writeLog(_message, "INFO"); 
-				alert ("[INFO]\n" + _message);
-			}
-		},		
-		/**
-		* Writes a warn log message
-		* @param {String} _message Message to log.
-		*/
-		warn : function (_message) {
-			if (logLevel <= 2)  writeLog(_message, "WARN"); 
-		},
-		/**
-		* Writes a warn log message und displays an Alert-Window
-		* @param {String} _message Message to log.
-		*/
-		warnAlert : function (_message) {
-			if (logLevel <= 2) {
-				writeLog(_message, "WARN"); 
-				alert ("PROBLEM [WARN]\n" + _message + "\n\nThere might be more information in the logfile:\n" + logFile);
-			}
-		},
-	
-		
-		/**
-		* Writes a error log message
-		* @param {String} _message Message to log.
-		*/
-		error : function (_message) {
-			if (logLevel <= 3)  writeLog(_message, "ERROR"); 
+
+/****************
+* Logging Class 
+* @Version: 0.91
+* @Date: 2016-03-30
+* @Author: Gregor Fellenz, http://www.publishingx.de
+* Acknowledgments: Library design pattern from Marc Aturet https://forums.adobe.com/thread/1111415
+
+* Usage: 
+
+log = idsLog.getLogger("~/Desktop/testLog.txt", "INFO");
+log.warnAlert("Warn message");
+
+*/
+$.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
+	HOST[SELF] = SELF;
+
+	/****************
+	* PRIVATE
+	*/
+	var INNER = {};
+	INNER.version = "2016-03-30--0.91"
+	INNER.disableAlerts = false;
+	INNER.SEVERITY = [];
+	INNER.SEVERITY["OFF"] = 4;
+	INNER.SEVERITY["ERROR"] = 3;
+	INNER.SEVERITY["WARN"] = 2;
+	INNER.SEVERITY["INFO"] = 1;
+	INNER.SEVERITY["DEBUG"] = 0;
+
+	INNER.writeLog = function(msg, severity, file) { 
+		file.encoding = "UTF-8";
+		file.open("a");
+		var stack = $.stack.split("\n");
+		stack = stack[stack.length - 4];		
+		file.writeln(Date() + " [" + severity + "] " + ((severity.length == 4) ? " [" : "[") + msg + "] Function: " + stack);		
+		file.close();
+	};
+	INNER.showAlert = function(msg){
+		if (!INNER.disableAlerts) {
+			alert(msg) 
 		}
-	} //  return 
-}
+	};
+	INNER.showMessages = function(title, msgArray) { 
+		if (!INNER.disableAlerts) {						
+			msg = msgArray.join("\n");			
+			var w = new Window ("dialog", title);
+			var list = w.add ("edittext", undefined, msg, {multiline: true, scrolling: true});
+			list.maximumSize.height = 300;
+			list.minimumSize.width = 400;
+			w.add ("button", undefined, "Ok", {name: "ok"});
+			w.show ();
+		}
+	};
+
+    /****************
+    * API 
+    */
+
+    /**
+    * Returns a log Object
+    * @logFile {File|String} Path to logfile as File Object or String.
+    * @logLevel {String} Log Threshold  "OFF", "ERROR", "WARN", "INFO", "DEBUG"
+    * @disableAlerts {Boolean} Show alerts
+    */
+	SELF.getLogger = function(logFile, logLevel, disableAlerts) {
+		if (logFile == undefined) {
+			throw Error("Cannot instantiate Log without Logfile. Please provide a File");
+		}
+		if (logFile instanceof String) {
+			logFile = File(logFile);
+		}
+		if (! (logFile instanceof File)) {
+			throw Error("Cannot instantiate Log. Please provide a File");
+		}
+
+
+		if (logLevel == undefined) {
+			logLevel = "INFO";			
+		}
+		logLevel = (logLevel == undefined) ? 0 : INNER.SEVERITY[logLevel];
+
+		if (disableAlerts == undefined) {
+			INNER.disableAlerts = false;
+		}
+
+		var counter = {
+			debug:0,
+			info:0,
+			warn:0,
+			error:0
+		}
+		var messages = {
+			info:[],
+			warn:[],
+			error:[],
+		}
+
+		return {
+			/**
+			* Writes a debug log message
+			* @message {String} message Message to log.
+			*/
+			debug : function (message) {
+				if (logLevel <= 0) {
+					INNER.writeLog(message, "DEBUG", logFile);
+					counter.debug++;
+				}
+			},
+			/**
+			* Writes a info log message
+			* @message {String} message Message to log.
+			*/
+			info : function (message) {
+				if (logLevel <= 1) {
+					INNER.writeLog(message, "INFO", logFile); 
+					counter.info++;
+					messages.info.push(message);
+				}
+			},
+			/**
+			* Writes a info log message und displays an Alert-Window
+			* @message {String} message Message to log.
+			*/
+			infoAlert : function (message) {
+				if (logLevel <= 2) {
+					INNER.writeLog(message, "INFO", logFile); 
+					counter.info++;
+					messages.info.push(message);
+					INNER.showAlert ("[INFO]\n" + message);
+				}
+			},
+			/**
+			* Writes a warn log message
+			* @message {String} message Message to log.
+			*/
+			warn : function (message) {
+				if (logLevel <= 2) {
+					INNER.writeLog(message, "WARN", logFile);
+					counter.warn++;
+					messages.warn.push(message);
+				} 
+			},
+			/**
+			* Writes a warn log message und displays an Alert-Window
+			* @message {String} message Message to log.
+			*/
+			warnAlert : function (message) {
+				if (logLevel <= 2) {
+					INNER.writeLog(message, "WARN", logFile); 
+					counter.warn++;
+					messages.warn.push(message);
+					INNER.showAlert ("[WARN]\n" + message + "\n\nPrüfen Sie auch das Logfile:\n" + logFile);
+				}
+			},
+			/**
+			* Writes a error log message
+			* @message {String} message Message to log.
+			*/
+			error : function (message) {
+				if (logLevel <= 3) {
+					INNER.writeLog(message, "ERROR", logFile); 
+					counter.error++;
+					messages.error.push(message);
+				}
+			},
+
+			/**
+			* Shows all warnings
+			*/
+			showWarnings : function () {
+				INNER.showMessages("Es gab " + counter.warn + " Warnmeldungen", messages.warn);
+			},
+			/**
+			* Returns all warnings
+			*/
+			getWarnings : function () {
+				return messages.warn.join("\n");
+			},
+			/**
+			* Shows all infos
+			*/
+			showInfos : function () {
+				INNER.showMessages("Es gab " + counter.info + " Infos", messages.info);
+			},
+			/**
+			* Returns all infos
+			*/
+			getInfos : function () {
+				return messages.info.join("\n");
+			},
+			/**
+			* Shows all errors
+			*/
+			showErrors : function () {
+				INNER.showMessages("Es gab " + counter.error + " Fehler", messages.error);
+			},
+			/**
+			* Returns all errors
+			*/
+			getErrors : function () {
+				return messages.error.join("\n");
+			},
+			/**
+			* Returns the counter Object
+			*/
+			getCounters : function () {
+				return counter;
+			},
+
+
+			/**
+			* Set silent Mode
+			* @message {Boolean} true will not show alerts!
+			*/
+			disableAlerts : function (mode) {
+				INNER.disableAlerts = mode;
+			},
+
+			/**
+			* Clear Logfile and counters
+			*/
+			clearLog : function () {                
+				logFile.open("w");
+				logFile.write("");
+				logFile.close();
+				counter.debug = 0;
+				counter.info = 0;
+				counter.warn = 0;
+				counter.error = 0;
+				messages.info = [];
+				messages.warn = [];
+				messages.error = [];
+			},
+
+			/**
+			* Shows the log file in the system editor
+			*/
+			showLog : function () {
+				logFile.execute();
+			}
+		} 
+	};
+}) ( $.global, { toString : function() {return 'idsLog';} } );
+
 }
 
 
@@ -1031,7 +1193,7 @@ if ( ! $.global.hasOwnProperty('idsTesting') ) {
 	startProcessing();
 }
 
-
+// Environment checking and startup
 function startProcessing() {
 	if (parseInt(app.version) < 6) {
 		alert(localize(px.ui.versionWarning));
@@ -1064,40 +1226,9 @@ function startProcessing() {
 	}
 
 	px.ids = idsTools();
-
-	// Ggf. erfolge Stylezuordnung aus Dokument auslesen 
-	if (dok.extractLabel(px.pStyleEndnoteLabel) != "") {
-		px.pStyleEndnoteName = dok.extractLabel(px.pStyleEndnoteLabel);
-		if (px.debug) $.writeln ("px.pStyleEndnoteName" + px.pStyleEndnoteName);
-	}	
-	if (dok.extractLabel(px.pStyleEndnoteFollowLabel) != "") {
-		px.pStyleEndnoteFollowName = dok.extractLabel(px.pStyleEndnoteFollowLabel);
-		if (px.debug) $.writeln ("px.pStyleEndnoteFollowName" + px.pStyleEndnoteFollowName);
-	}	
-	if (dok.extractLabel(px.pStyleEndnoteHeadingLabel) != "") {
-		px.pStyleEndnoteHeadingName = dok.extractLabel(px.pStyleEndnoteHeadingLabel);
-		if (px.debug) $.writeln ("px.pStyleEndnoteHeadingName" + px.pStyleEndnoteHeadingName);
-	}
-	if (dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel) != "") {
-		px.pStyleEndnoteSplitHeadingName = dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel);
-		if (px.debug) $.writeln ("px.pStyleEndnoteSplitHeadingName" + px.pStyleEndnoteSplitHeadingName);
-	}
-	if (dok.extractLabel(px.cStyleEndnoteMarkerLabel) != "") {
-		px.cStyleEndnoteMarkerName = dok.extractLabel(px.cStyleEndnoteMarkerLabel);
-		if (px.debug) $.writeln ("px.cStyleEndnoteMarkerName" + px.cStyleEndnoteMarkerName);
-	}
-	if (dok.extractLabel(px.endnoteHeadingStringLabel) != "") {
-		px.endnoteHeadingString = dok.extractLabel(px.endnoteHeadingStringLabel);
-		if (px.debug) $.writeln ("px.endnoteHeadingString" + px.endnoteHeadingString);
-	}
-	if (dok.extractLabel(px.pStylePrefixMarkerLabel) != "") {
-		px.pStylePrefix = dok.extractLabel(px.pStylePrefixMarkerLabel);
-		if (px.debug) $.writeln ("px.pStylePrefix" + px.pStylePrefix);
-	}
-	if (dok.extractLabel(px.numberBySectionLabel) != "") {
-		px.numberBySection = dok.extractLabel(px.numberBySectionLabel) == "true" ? true : false;
-		if (px.debug) $.writeln ("px.numberBySection" + px.numberBySection);
-	}
+	
+	// Read Existing Style mapping from document
+	getStyleInformation (dok);
 
     //Ebenen entsperren und sichtbar machen
 	var layerState = [];
@@ -1140,12 +1271,8 @@ function startProcessing() {
 		px.dokCharacterStyles[i] = style;
 	}
 
-	/* Init Logging */
-	px.scriptFolderPath = getScriptFolderPath();
-	if (px.debug) px.log = idsLog(File ( px.scriptFolderPath + "/" + px.logFileName ), "DEBUG");
-	else px.log = idsLog(File ( px.scriptFolderPath + "/" + px.logFileName), "WARN");		
-	px.log.debug("Start ... ");
-	
+	var logFile = File ( getScriptFolderPath() + "/" + px.logFileName );
+	initLog(logFile);
 	
 	var userLevel = app.scriptPreferences.userInteractionLevel;	
 	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
@@ -1162,8 +1289,7 @@ function startProcessing() {
 			px.log.warnAlert(localize (px.ui.errorInfo) +  e + "\nLine: " + e.line); 
 		}
 	}
-	
-	
+		
     // Ebenen zurücksetzen
 	for (var i = 0; i < dok.layers.length; i++) {
 		dok.layers[i].visible = layerState[i][0];
@@ -1172,11 +1298,16 @@ function startProcessing() {
 	    
 	app.scriptPreferences.userInteractionLevel = userLevel; 
 	app.scriptPreferences.enableRedraw = redraw;
-	px.log.debug("Ende");
-	if (px.showGui) alert (localize(px.ui.resultInfo, px.foot2EndCounter));
+	var resultInfo = localize(px.ui.resultInfo, px.foot2EndCounter);
+	if (px.showGui) {
+		alert (resultInfo);
+	}
+	else {
+		px.log.debug();
+	}
 }
 	
-// Hauptskript
+// Main Script 
 function foot2end (dok) {
 	if (px.showGui) {
 		if ( getConfig() == 2) return;
@@ -1452,7 +1583,7 @@ function foot2end (dok) {
 	}
 }
 
-function getSections(story) {
+function getSections (story) {
 	// die performanteste Lösung ist vermutlich nach allen AF zu suchen die mit dem Präfix anfangen und dann den SectionArray zu bauen.
 	var sectionIndexArray = [[0,story.characters[0].index, ""]];
 	for (var ps = 0; ps < px.dokParagraphStylePrefixStyles[px.pStylePrefix].length; ps++) {
@@ -1568,6 +1699,43 @@ function trimFootnoteSpace (footNote) {
 }
 
 
+
+
+// Read Existing Style mapping from document
+function getStyleInformation (dok) {
+	if (dok.extractLabel(px.pStyleEndnoteLabel) != "") {
+		px.pStyleEndnoteName = dok.extractLabel(px.pStyleEndnoteLabel);
+		if (px.debug) $.writeln ("px.pStyleEndnoteName" + px.pStyleEndnoteName);
+	}	
+	if (dok.extractLabel(px.pStyleEndnoteFollowLabel) != "") {
+		px.pStyleEndnoteFollowName = dok.extractLabel(px.pStyleEndnoteFollowLabel);
+		if (px.debug) $.writeln ("px.pStyleEndnoteFollowName" + px.pStyleEndnoteFollowName);
+	}	
+	if (dok.extractLabel(px.pStyleEndnoteHeadingLabel) != "") {
+		px.pStyleEndnoteHeadingName = dok.extractLabel(px.pStyleEndnoteHeadingLabel);
+		if (px.debug) $.writeln ("px.pStyleEndnoteHeadingName" + px.pStyleEndnoteHeadingName);
+	}
+	if (dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel) != "") {
+		px.pStyleEndnoteSplitHeadingName = dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel);
+		if (px.debug) $.writeln ("px.pStyleEndnoteSplitHeadingName" + px.pStyleEndnoteSplitHeadingName);
+	}
+	if (dok.extractLabel(px.cStyleEndnoteMarkerLabel) != "") {
+		px.cStyleEndnoteMarkerName = dok.extractLabel(px.cStyleEndnoteMarkerLabel);
+		if (px.debug) $.writeln ("px.cStyleEndnoteMarkerName" + px.cStyleEndnoteMarkerName);
+	}
+	if (dok.extractLabel(px.endnoteHeadingStringLabel) != "") {
+		px.endnoteHeadingString = dok.extractLabel(px.endnoteHeadingStringLabel);
+		if (px.debug) $.writeln ("px.endnoteHeadingString" + px.endnoteHeadingString);
+	}
+	if (dok.extractLabel(px.pStylePrefixMarkerLabel) != "") {
+		px.pStylePrefix = dok.extractLabel(px.pStylePrefixMarkerLabel);
+		if (px.debug) $.writeln ("px.pStylePrefix" + px.pStylePrefix);
+	}
+	if (dok.extractLabel(px.numberBySectionLabel) != "") {
+		px.numberBySection = dok.extractLabel(px.numberBySectionLabel) == "true" ? true : false;
+		if (px.debug) $.writeln ("px.numberBySection" + px.numberBySection);
+	}
+}
 
 // Prüft ob die Styles im Dokument sinnvoll angelegt sind
 function checkStyles (dok) {
@@ -1843,6 +2011,17 @@ function alertMsg(_msg) {
 		w.show ();
 	}
 }
+
+/* Init Logging */
+function initLog(logFile) {
+	if (px.debug) {
+		px.log = idsLog.getLogger (logFile, "DEBUG", true);
+	}
+	else {
+		px.log = idsLog.getLogger (logFile, "WARN", false);
+	} 	
+}
+
 /*     Get Filepath from current script  */
 /*Folder*/ function getScriptFolderPath() {
      try {
