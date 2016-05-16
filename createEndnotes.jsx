@@ -29,7 +29,7 @@ I picked the idea of using InDesign cross references for endnotes from Peter Kah
 #include config.jsx 
 // Debug Einstellungen publishingX 
 if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK") {
-     px.debug = true;
+     px.debug = false;
 }
 
 // idsHelper.jsx
@@ -1212,15 +1212,20 @@ function startProcessing() {
 
 	// Dokument gespeichert? 
 	if ((!dok.saved || dok.modified) && !px.debug) {
+		var userLevel = app.scriptPreferences.userInteractionLevel;
+		app.scriptPreferences.userInteractionLevel = UserInteractionLevels.INTERACT_WITH_ALL; 
+
 		if ( confirm ( localize(px.ui.saveDocInfo) , undefined, localize(px.ui.saveDoc))) {
 			try {
 				dok = dok.save();
 			} catch (e) { 
 				alert (localize(px.ui.saveDocFail) + e);
 				return;
-			}
+			}		
+			app.scriptPreferences.userInteractionLevel = userLevel;
 		}
 		else { // User does not want to save -> exit;
+			app.scriptPreferences.userInteractionLevel = userLevel;
 			return; 
 		}
 	}
@@ -1755,13 +1760,14 @@ function checkStyles (dok) {
 	}
 	// Check CrossRef Format 
 	px.crossRefStyleEndnote = dok.crossReferenceFormats.item (px.crossRefStyleEndnoteName);
+	$.bp();
 	if (!px.crossRefStyleEndnote.isValid) {
 		px.crossRefStyleEndnote = dok.crossReferenceFormats.add ({name: px.crossRefStyleEndnoteName});
 		px.crossRefStyleEndnote.appliedCharacterStyle = px.cStyleEndnoteMarker;
 		px.crossRefStyleEndnote.buildingBlocks.add (BuildingBlockTypes.paragraphNumberBuildingBlock);
 	}
 	else {
-		if (px.crossRefStyleEndnote.appliedCharacterStyle == null || px.crossRefStyleEndnote.appliedCharacterStyle.id != px.cStyleEndnoteMarker.id) {
+		if (px.crossRefStyleEndnote.appliedCharacterStyle == null || px.cStyleEndnoteMarker != null &&  px.crossRefStyleEndnote.appliedCharacterStyle.id != px.cStyleEndnoteMarker.id) {
 			px.crossRefStyleEndnote.appliedCharacterStyle = px.cStyleEndnoteMarker;
 			alertMsg(localize (px.ui.crossrefFormatFail, px.crossRefStyleEndnoteName, px.cStyleEndnoteMarkerName));
 		} 

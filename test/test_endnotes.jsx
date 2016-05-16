@@ -13,11 +13,13 @@ function runTests() {
 	px.debug = true;
 	px.showGui = false;
 	
+	px.ids = idsTools();
+	
 	px.logFile = File ( getScriptFolderPath() + "/testLog.txt");
 	if (px.logFile.exists) {
 		px.logFile.remove();
 	}
-	initLog(logFile);
+	initLog(px.logFile);
 	
 	px.log.disableAlerts(true);
 
@@ -40,10 +42,11 @@ function test_01() {
 	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
 
 	idsTesting.insertBlock("test_01");
-	var testFile = File(getScriptFolderPath() + "/publicTestFiles/Fussnotentest_nachtraeglicheEndnotenAmAnfang.indd");
+	var testFile = File(getScriptFolderPath() + "/localTestFiles/Fussnotentest_nachtraeglicheEndnotenAmAnfang.indd");
 	var dokTest = app.open(testFile);
-	getStyleInformation (dok);
+	getStyleInformation (dokTest);
 	
+	foot2end(dokTest);
 	
 	var resultString = readTextFile(px.logFile);
 	
