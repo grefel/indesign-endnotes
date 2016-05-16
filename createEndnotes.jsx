@@ -1234,6 +1234,15 @@ function startProcessing() {
 	
 	// Read Existing Style mapping from document
 	getStyleInformation (dok);
+	readStyles(dok);
+
+	var logFile = File ( getScriptFolderPath() + "/" + px.logFileName );
+	initLog(logFile);
+	
+	var userLevel = app.scriptPreferences.userInteractionLevel;	
+	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
+	var redraw = app.scriptPreferences.enableRedraw;
+	app.scriptPreferences.enableRedraw = false;
 
     //Ebenen entsperren und sichtbar machen
 	var layerState = [];
@@ -1243,47 +1252,6 @@ function startProcessing() {
 		dok.layers[i].locked = false;
 	}
 
-	// Read all Styles for GUI 
-	// Keine korrekte Umsetzung für Formatgruppen!
-	for (var i = 1; i < dok.allParagraphStyles.length; i++) {
-		var style = dok.allParagraphStyles[i];
-		if (style.name == px.pStyleEndnoteName)  px.pStyleEndnoteIndex = i;
-		if (style.name == px.pStyleEndnoteFollowName)  px.pStyleEndnoteFollowIndex = i;
-		if (style.name == px.pStyleEndnoteHeadingName)  px.pStyleEndnoteHeadingIndex = i;
-		if (style.name == px.pStyleEndnoteSplitHeadingName)  px.pStyleEndnoteSplitHeadingIndex = i;
-		px.dokParagraphStyleNames[i] = style.name;
-		px.dokParagraphStyles[i] = style;
-		prefix = style.name.match(/^[^~]+/);
-		if (prefix) {
-			prefix = prefix[0];
-			px.dokParagraphStylePrefixes.push(prefix);
-			if (px.dokParagraphStylePrefixStyles[prefix]) px.dokParagraphStylePrefixStyles[prefix].push(style);
-			else  px.dokParagraphStylePrefixStyles[prefix] = [style];
-		}		
-	}
-	px.dokParagraphStylePrefixes = px.ids.unique(px.dokParagraphStylePrefixes);
-	for (var i = 0; i < px.dokParagraphStylePrefixes.length; i++) {
-		if (px.dokParagraphStylePrefixes[i] == px.pStylePrefix) {
-			px.pStylePrefixIndex = i;
-			break;
-		}
-	}
-
-	for (var i = 0; i < dok.allCharacterStyles.length; i++) {
-		var style = dok.allCharacterStyles[i];
-		if (style.name == px.cStyleEndnoteMarkerName)  px.cStyleEndnoteMarkerIndex = i;
-		px.dokCharacterStyleNames[i] = style.name;
-		px.dokCharacterStyles[i] = style;
-	}
-
-	var logFile = File ( getScriptFolderPath() + "/" + px.logFileName );
-	initLog(logFile);
-	
-	var userLevel = app.scriptPreferences.userInteractionLevel;	
-	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
-	var redraw = app.scriptPreferences.enableRedraw;
-	app.scriptPreferences.enableRedraw = false;
-	
 	if (px.debug) {		
 		foot2end (dok);
 	}
@@ -1303,6 +1271,7 @@ function startProcessing() {
 	    
 	app.scriptPreferences.userInteractionLevel = userLevel; 
 	app.scriptPreferences.enableRedraw = redraw;
+	
 	var resultInfo = localize(px.ui.resultInfo, px.foot2EndCounter);
 	if (px.showGui) {
 		alert (resultInfo);
@@ -1324,21 +1293,18 @@ function foot2end (dok) {
 			if (style.name == px.pStyleEndnoteName)  {
 				px.pStyleEndnote = style;			
 			}
-			if (style.name == px.pStyleEndnoteFollowName)  {
-				px.pStyleEndnoteFollow = style;			
+			else if (style.name == px.pStyleEndnoteFollowName)  {
+				px.pStyleEndnoteFollow = style;
 			}
-			if (style.name == px.pStyleEndnoteSplitHeadingName) {
+			else if (style.name == px.pStyleEndnoteSplitHeadingName) {
 				px.pStyleEndnoteSplitHeading = style;			
 			}				
-			if (style.name == px.pStyleEndnoteHeadingName) {
-				px.pStyleEndnoteHeading = style;			
-			}				
-			if (style.name == px.pStyleEndnoteHeadingName) {
+			else if (style.name == px.pStyleEndnoteHeadingName) {
 				px.pStyleEndnoteHeading = style;			
 			}
 		}
 		for (var i = 0; i < dok.allCharacterStyles.length; i++) {
-			var style = dok.allParagraphStyles[i];
+			var style = dok.allCharacterStyles[i];
 			if (style.name == px.cStyleEndnoteMarkerName)  {
 				px.cStyleEndnoteMarker = style;			
 			}
@@ -1742,6 +1708,40 @@ function getStyleInformation (dok) {
 	}
 }
 
+// Read all Styles for GUI and Prefix Mapping
+function readStyles (dok) {
+	for (var i = 1; i < dok.allParagraphStyles.length; i++) {
+		var style = dok.allParagraphStyles[i];
+		if (style.name == px.pStyleEndnoteName)  px.pStyleEndnoteIndex = i;
+		if (style.name == px.pStyleEndnoteFollowName)  px.pStyleEndnoteFollowIndex = i;
+		if (style.name == px.pStyleEndnoteHeadingName)  px.pStyleEndnoteHeadingIndex = i;
+		if (style.name == px.pStyleEndnoteSplitHeadingName)  px.pStyleEndnoteSplitHeadingIndex = i;
+		px.dokParagraphStyleNames[i] = style.name;
+		px.dokParagraphStyles[i] = style;
+		prefix = style.name.match(/^[^~]+/);
+		if (prefix) {
+			prefix = prefix[0];
+			px.dokParagraphStylePrefixes.push(prefix);
+			if (px.dokParagraphStylePrefixStyles[prefix]) px.dokParagraphStylePrefixStyles[prefix].push(style);
+			else  px.dokParagraphStylePrefixStyles[prefix] = [style];
+		}		
+	}
+	px.dokParagraphStylePrefixes = px.ids.unique(px.dokParagraphStylePrefixes);
+	for (var i = 0; i < px.dokParagraphStylePrefixes.length; i++) {
+		if (px.dokParagraphStylePrefixes[i] == px.pStylePrefix) {
+			px.pStylePrefixIndex = i;
+			break;
+		}
+	}
+
+	for (var i = 0; i < dok.allCharacterStyles.length; i++) {
+		var style = dok.allCharacterStyles[i];
+		if (style.name == px.cStyleEndnoteMarkerName)  px.cStyleEndnoteMarkerIndex = i;
+		px.dokCharacterStyleNames[i] = style.name;
+		px.dokCharacterStyles[i] = style;
+	}
+}
+
 // Prüft ob die Styles im Dokument sinnvoll angelegt sind
 function checkStyles (dok) {
 	// Absätze von Endnoten müssen immer nummeriert sein!
@@ -1760,14 +1760,13 @@ function checkStyles (dok) {
 	}
 	// Check CrossRef Format 
 	px.crossRefStyleEndnote = dok.crossReferenceFormats.item (px.crossRefStyleEndnoteName);
-	$.bp();
 	if (!px.crossRefStyleEndnote.isValid) {
 		px.crossRefStyleEndnote = dok.crossReferenceFormats.add ({name: px.crossRefStyleEndnoteName});
 		px.crossRefStyleEndnote.appliedCharacterStyle = px.cStyleEndnoteMarker;
 		px.crossRefStyleEndnote.buildingBlocks.add (BuildingBlockTypes.paragraphNumberBuildingBlock);
 	}
 	else {
-		if (px.crossRefStyleEndnote.appliedCharacterStyle == null || px.cStyleEndnoteMarker != null &&  px.crossRefStyleEndnote.appliedCharacterStyle.id != px.cStyleEndnoteMarker.id) {
+		if (px.crossRefStyleEndnote.appliedCharacterStyle == null || (px.cStyleEndnoteMarker != null &&  px.crossRefStyleEndnote.appliedCharacterStyle.id != px.cStyleEndnoteMarker.id)) {
 			px.crossRefStyleEndnote.appliedCharacterStyle = px.cStyleEndnoteMarker;
 			alertMsg(localize (px.ui.crossrefFormatFail, px.crossRefStyleEndnoteName, px.cStyleEndnoteMarkerName));
 		} 
@@ -2018,7 +2017,7 @@ function alertMsg(_msg) {
 	}
 }
 
-/* Init Logging */
+/* Init Logging, sets global px.log  */
 function initLog(logFile) {
 	if (px.debug) {
 		px.log = idsLog.getLogger (logFile, "DEBUG", true);

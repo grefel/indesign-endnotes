@@ -141,5 +141,5 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"1.2-2016-01-15"
+	version:"1.2-2016-05-16"
 }

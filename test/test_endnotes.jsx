@@ -24,7 +24,9 @@ function runTests() {
 	px.log.disableAlerts(true);
 
 	// Run Integration Tests 
-	test_01();
+	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
+//~ 	test_01();
+	test_02();
 
 	// Show Test results 
 	idsTesting.htmlReport();
@@ -37,14 +39,31 @@ function runTests() {
 
 
 
-// Do the test_01 Fussnotentest_nachtraeglicheEndnotenAmAnfang.indd  Beim nachträglichen Einfügen von Fußnoten soll die Umwandlung in eine Endnote ohne erneute Generierung des Endnotenverzeichnisses erfolgen. 
+// Beim nachträglichen Einfügen von Fußnoten muss sich das Endnotenverzeichnis noch in der gleichen Story befinden. 
 function test_01() {
-	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
-
-	idsTesting.insertBlock("test_01");
+	idsTesting.insertBlock("With subsequent insertion of footnotes the endnote directory must still be in the same story");
 	var testFile = File(getScriptFolderPath() + "/localTestFiles/Fussnotentest_nachtraeglicheEndnotenAmAnfang.indd");
 	var dokTest = app.open(testFile);
 	getStyleInformation (dokTest);
+	readStyles(dokTest);
+	
+	foot2end(dokTest);
+	
+	var resultString = readTextFile(px.logFile);
+	
+	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
+
+	dokTest.close(SaveOptions.NO);
+}
+
+
+// Probleme bei U_Backmatter_Num-Formate 
+function test_02() {
+	idsTesting.insertBlock("Problems with U_Backmatter_Num-Formate");
+	var testFile = File(getScriptFolderPath() + "/localTestFiles/num-Formate.indd");
+	var dokTest = app.open(testFile);
+	getStyleInformation (dokTest);
+	readStyles(dokTest);
 	
 	foot2end(dokTest);
 	
