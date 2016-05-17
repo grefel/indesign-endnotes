@@ -1350,7 +1350,7 @@ function foot2end (dok) {
 			}
 			// EndnotenTitel einfügen  					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
 			hyperLinkID =  hLinksPerStory[story.id][1][0];
-			if (hyperLinkID == "last") {
+			if (hyperLinkID == "last") { // --> There is no Endnote Hyperlink in the story.
 				story.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
 				story.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
 			}
@@ -1394,7 +1394,7 @@ function foot2end (dok) {
 				}				
 				
 				var fnIndex = footnote.storyOffset.index;
-				hyperLinkID = getPosition(fnIndex, hLinksPerStory[story.id]);
+				hyperLinkID = getPosition(fnIndex, hLinksPerStory[story.id]); // Find the next existing Hyperlink in the story
 				if (hyperLinkID == null) {
 					// Fehler bei getPosition();
 					return;
@@ -1463,7 +1463,7 @@ function foot2end (dok) {
 				endnotenStartEndPositions = [];
 				for (var h = 0; h < dok.hyperlinks.length; h++) {
 					hlink = dok.hyperlinks[h];
-					if ( hlink.extractLabel(px.hyperlinkLabel) == "true") {
+					if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "true") {
 						if (hlink.source.sourceText.parentStory.id == story.id) {
 							endnotenStartEndPositions.push([hlink.destination.destinationText.index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
 						}
@@ -1572,12 +1572,17 @@ function getSections (story) {
 		var pStyle = px.dokParagraphStylePrefixStyles[px.pStylePrefix][ps];
 		app.findGrepPreferences = NothingEnum.NOTHING;
 		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.findWhat = "^.+\\r";
+//~ 		app.findGrepPreferences.findWhat = "^.+\\r";
 		app.findGrepPreferences.appliedParagraphStyle = pStyle;
-		var results = story.findGrep();
+		var results = story.findGrep();		
+		var lastPar = null;
 		for (var i = 0; i < results.length; i++) {
-			var result = results[i];
+			var result = results[i].paragraphs[0];
+			if ( lastPar && lastPar.index == result.index) {
+				continue;
+			}
 			sectionIndexArray.push([sectionIndexArray.length,result.index+1, result.paragraphs[0].contents]);
+			lastPar = result;
 		}
 	}
 

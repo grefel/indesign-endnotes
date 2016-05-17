@@ -27,7 +27,8 @@ function runTests() {
 	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
 //~ 	test_01();
 //~ 	test_02();
-	test_03();
+//~ 	test_03();
+	test_04();
 
 	// Show Test results 
 	idsTesting.htmlReport();
@@ -77,8 +78,27 @@ function test_02() {
 
 // alte Endnoten werden entfernt, Vor Kapitel 4 wird Inhalt merkwürdig zerpflückt, die Überschrift der neu generierten Endnoten ist inkorrekt. 
 function test_03() {
-	idsTesting.insertBlock("alte Endnoten werden entfernt, Vor Kapitel 4 wird Inhalt merkwürdig zerpflückt, die Überschrift der neu generierten Endnoten ist inkorrekt.");
+	idsTesting.insertBlock("Alte Endnoten werden entfernt, Vor Kapitel 4 wird Inhalt merkwürdig zerpflückt, die Überschrift der neu generierten Endnoten ist inkorrekt.");
 	var testFile = File(getScriptFolderPath() + "/localTestFiles/Fußnotentest_vor_neuen_Kap.indd");
+	var dokTest = app.open(testFile);
+	getStyleInformation (dokTest);
+	readStyles(dokTest);
+	
+	foot2end(dokTest);
+	
+	var resultString = readTextFile(px.logFile);
+	
+	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
+
+	dokTest.close(SaveOptions.NO);
+}
+
+
+// 
+// Endnotenverweis in (Kapitel-)Überschriften 
+function test_04() {
+	idsTesting.insertBlock("Endnotenverweis in (Kapitel-)Überschriften werden nicht verarbeitet.");
+	var testFile = File(getScriptFolderPath() + "/localTestFiles/Fussnotentest_FN_in_Ueberschrift.indd");
 	var dokTest = app.open(testFile);
 	getStyleInformation (dokTest);
 	readStyles(dokTest);
