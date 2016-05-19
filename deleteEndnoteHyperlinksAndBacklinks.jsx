@@ -46,88 +46,36 @@ function startProcessing() {
 }
 
 function removeStart() {
-    //Ebenen entsperren und sichtbar machen
-	var  dok  =app.documents[0];
-	var layerState = [];
-	for (var i = 0; i < dok.layers.length; i++) {
-		layerState[i] = [dok.layers[i].visible, dok.layers[i].locked];
-		dok.layers[i].visible = true;
-		dok.layers[i].locked = false;
-	}
-
-	if (dok.extractLabel(px.pStyleEndnoteFollowLabel) != "") {
-		px.pStyleEndnoteFollowName = dok.extractLabel(px.pStyleEndnoteFollowLabel);
-	}
-	if (dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel) != "") {
-		px.pStyleEndnoteSplitHeadingName = dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel);
-	}
-
-	// Read all Styles  
-	for (var i = 0; i < dok.allParagraphStyles.length; i++) {
-		var style = dok.allParagraphStyles[i];
-		if (style.name == px.pStyleEndnoteFollowName)  {
-			px.pStyleEndnoteFollow = style;			
-		}
-		if (style.name == px.pStyleEndnoteSplitHeadingName) {
-			px.pStyleEndnoteSplitHeading = style;			
-		}
-	}
-
-    // Ebenen zurücksetzen
-	for (var i = 0; i < dok.layers.length; i++) {
-		dok.layers[i].visible = layerState[i][0];
-		dok.layers[i].locked = layerState[i][1];
-	}
-
+    var dok;
+	dok  =app.documents[0];
 	
-	if (!remove()) {
-		alert(localize(px.ui.noEndnoteOrMarker));
-	}	
+	for (var i = dok.hyperlinks.length-1; i >= 0; i--) {
+		deleteMe(dok.hyperlinks[i]);
+	} 
+
+	for (var i = dok.paragraphDestinations.length-1; i >= 0; i--) {
+		deleteMe(dok.paragraphDestinations[i]);
+	} 
+
+
+	for (var i = dok.crossReferenceSources.length-1; i >= 0; i--) {
+		deleteMe(dok.crossReferenceSources[i]);
+	} 
+	
+	for (var i = dok.hyperlinkTextDestinations.length-1; i >= 0; i--) {
+		deleteMe(dok.hyperlinkTextDestinations[i]);
+	} 
+
+	for (var i = dok.hyperlinkTextSources.length-1; i >= 0; i--) {
+		deleteMe(dok.hyperlinkTextSources[i]);
+	} 	
 }
 
-function remove() {
-	if (app.selection.length == 0) {
-		return false;
+function deleteMe(object) {
+	if ( object.extractLabel(px.hyperlinkLabel) == "true" || object.extractLabel(px.hyperlinkLabel) == "backlink" ||
+		object.name.indexOf("EndnoteBacklink_") == 0 		// Legacy Skript
+	) {
+		$.writeln(object.constructor.name);
+		object.remove();
 	}
-	if (!app.selection[0].hasOwnProperty ("baseline")) {
-		return false;
-	}
-	if (!app.selection[0].paragraphs[0].isValid) {
-		return false;
-	}
-	var dok = app.documents[0];
-	var selectionText = app.selection[0];
-	var index = app.selection[0].index;
-	var parIndex = app.selection[0].paragraphs[0].index
-	for (var i = 0; i  < dok.hyperlinks.length; i++) {
-		if (dok.hyperlinks[i].extractLabel(px.hyperlinkLabel) == "true") {
-			var hLink = dok.hyperlinks[i];
-			if (hLink.source.sourceText.index == index) {
-				removeHL(hLink);
-				return true;
-			}
-			if (hLink.destination.destinationText.index == parIndex) {
-				removeHL(hLink);
-				return true;
-			} 
-		}
-	}
-	return false;
-}
-
-function removeHL(hLink) {
-	var hLinkPar = hLink.destination.destinationText.paragraphs[0];
-	var story = hLinkPar.parentStory;
-	if (confirm (localize(px.ui.confirmEndnoteDelete,  hLinkPar.bulletsAndNumberingResultText.replace(/\./, ''), hLinkPar.contents.replace(/^\t+/,'') ) ) ) {
-		hLink.source.sourceText.contents = "";
-		while (hLinkPar.insertionPoints[-1].isValid && story.insertionPoints[hLinkPar.insertionPoints[-1].index].paragraphs[0].isValid && story.insertionPoints[hLinkPar.insertionPoints[-1].index].paragraphs[0].appliedParagraphStyle.id == px.pStyleEndnoteFollow.id) {
-			story.insertionPoints[hLinkPar.insertionPoints[-1].index].paragraphs[0].contents = "";
-		}
-		if  (hLinkPar.insertionPoints[-1].isValid && story.insertionPoints[hLinkPar.insertionPoints[-1].index].paragraphs[0].isValid) {
-			story.insertionPoints[hLinkPar.insertionPoints[-1].index].paragraphs[0].numberingStartAt = hLinkPar.numberingStartAt;
-			story.insertionPoints[hLinkPar.insertionPoints[-1].index].paragraphs[0].numberingContinue  = hLinkPar.numberingContinue;
-		}
-		hLinkPar.contents = "";		
-	}
-	app.documents[0].crossReferenceSources.everyItem().update();
 }
