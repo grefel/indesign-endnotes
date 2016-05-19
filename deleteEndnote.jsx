@@ -17,7 +17,7 @@
 */
 
 /*  
-//DESCRIPTION: Delete all endnotes 
+//DESCRIPTION: Delete a endnotes 
 @Date: 2016-15-01
 @Author Gregor Fellenz http://www.publishingx.de/
 */
