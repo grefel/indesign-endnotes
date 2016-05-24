@@ -2,7 +2,7 @@
 #include "idsHelper.jsx"
 #include "../createEndnotes.jsx"
 #include "../jumpBetweenMarkerAndNote.jsx"
-#include "../deleteEndnotes.jsx"
+#include "../deleteEndnote.jsx"
 
 runTests()
 
@@ -25,10 +25,12 @@ function runTests() {
 
 	// Run Integration Tests 
 	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
+	basicIntegrationTest();
+	
 //~ 	test_01();
 //~ 	test_02();
 //~ 	test_03();
-	test_04();
+//~ 	test_04();
 
 	// Show Test results 
 	idsTesting.htmlReport();
@@ -36,6 +38,41 @@ function runTests() {
 	// Close 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
+}
+
+
+// Beim nachträglichen Einfügen von Fußnoten muss sich das Endnotenverzeichnis noch in der gleichen Story befinden. 
+function basicIntegrationTest() {
+	idsTesting.insertBlock("Create Endnotes from Footnotes");
+	idsTesting.insertBlock("Check Document");
+	var testFile = File(getScriptFolderPath() + "/publicTestFiles/endnoteTest.idml");
+	var dokTest = app.open(testFile);
+	
+	idsTesting.assertEquals("Keine Hyperlinks im Dokument", 0, dokTest.hyperlinks.length );
+	idsTesting.assertEquals("Keine paragraphDestinations im Dokument", 0, dokTest.paragraphDestinations.length );
+	idsTesting.assertEquals("Keine crossReferenceSources im Dokument", 0, dokTest.crossReferenceSources.length );
+	idsTesting.assertEquals("Keine hyperlinkTextDestinations im Dokument", 0, dokTest.hyperlinkTextDestinations.length );
+	idsTesting.assertEquals("Keine hyperlinkTextSources im Dokument", 0, dokTest.hyperlinkTextSources.length );
+	
+	getStyleInformation (dokTest);
+	readStyles(dokTest);
+	foot2end(dokTest);
+
+	idsTesting.insertBlock("Endnotes created?");
+
+	idsTesting.assertEquals("14 Hyperlinks im Dokument", 14, dokTest.hyperlinks.length );
+	idsTesting.assertEquals("7 paragraphDestinations im Dokument", 7, dokTest.paragraphDestinations.length );
+	idsTesting.assertEquals("7 crossReferenceSources im Dokument", 7, dokTest.crossReferenceSources.length );
+	idsTesting.assertEquals("7 hyperlinkTextDestinations im Dokument", 7, dokTest.hyperlinkTextDestinations.length );
+	idsTesting.assertEquals("7 hyperlinkTextSources im Dokument", 7, dokTest.hyperlinkTextSources.length );
+
+	idsTesting.insertBlock("Special Test?");
+
+	
+	var resultString = px.ids.readTextFile(px.logFile);	
+//~ 	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
+
+//~ 	dokTest.close(SaveOptions.NO);
 }
 
 
@@ -51,7 +88,7 @@ function test_01() {
 	
 	foot2end(dokTest);
 	
-	var resultString = readTextFile(px.logFile);
+	var resultString = px.ids.readTextFile(px.logFile);
 	
 	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
 
@@ -69,9 +106,9 @@ function test_02() {
 	
 	foot2end(dokTest);
 	
-	var resultString = readTextFile(px.logFile);
-	
-	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
+	var resultString = px.ids.readTextFile(px.logFile);
+// ?? 
+//	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
 
 	dokTest.close(SaveOptions.NO);
 }
@@ -86,9 +123,9 @@ function test_03() {
 	
 	foot2end(dokTest);
 	
-	var resultString = readTextFile(px.logFile);
-	
-	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
+	var resultString = px.ids.readTextFile(px.logFile);
+// ?? 
+//	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
 
 	dokTest.close(SaveOptions.NO);
 }
@@ -105,28 +142,13 @@ function test_04() {
 	
 	foot2end(dokTest);
 	
-	var resultString = readTextFile(px.logFile);
+	var resultString = px.ids.readTextFile(px.logFile);
 	
 	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
 
 	dokTest.close(SaveOptions.NO);
 }
 
-
-function readTextFile (_file, _encoding) {
-	if (_file.constructor.name == "File" && _file.exists) {
-		try {
-			if (_encoding != undefined) _file.encoding = _encoding;
-			_file.open("r");
-			var _res = _file.read(); 
-			_file.close();
-			return _res;
-		} catch (e) {return e}
-	} 
-	else {
-		return Error ("This is not a File");
-	}
-}
 
 /** Get Filepath from current script  */
 /*Folder*/ function getScriptFolderPath() {
