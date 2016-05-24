@@ -18,8 +18,8 @@
 
 /*
 Shared configuration settings 
-@Version: 1.2
-@Date: 2016-01-06
+@Version: 2
+@Date: 2016-05-24
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -97,7 +97,11 @@ var px = {
 	},
 
 
+
 	// Careful with changes below, changing options might break the update process of previously converted documents
+	createBackupCopy:true,
+	backupCopySuffix:"_endnoteBackupt.indd",
+	
 	convertAllStories:true,
 	convertSelection:false,
 	numberBySection:true,

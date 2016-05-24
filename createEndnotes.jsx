@@ -21,8 +21,8 @@
 ## Acknowledgements
 I picked the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
-@Version: 1.2
-@Date: 2016-01-06
+@Version: 2
+@Date: 2016-05-24
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -1231,7 +1231,7 @@ function startProcessing() {
 	}
 
 	px.ids = idsTools();
-	
+
 	// Read Existing Style mapping from document
 	getStyleInformation (dok);
 	readStyles(dok);
@@ -1257,6 +1257,7 @@ function startProcessing() {
 	}
 	else {
 		try {
+			
 			foot2end (dok);
 		} catch (e) {
 			px.log.warnAlert(localize (px.ui.errorInfo) +  e + "\nLine: " + e.line); 
@@ -1310,6 +1311,20 @@ function foot2end (dok) {
 			}
 		}
 	}
+
+	// Dokument gespeichert? 
+	if (px.createBackupCopy && !px.debug) {
+		var date = new Date();
+		var day = px.ids.pad(date.getDate(), 2);
+		var month = px.ids.pad(date.getMonth() + 1, 2);
+		var year = date.getYear() + 1900;
+		var year = date.getYear() + 1900;
+		
+		var backupFile = File( Folder.temp + "/" + dok.name.replace(/.indd$/, "") + "__" + year + month + day + "_" + date.getTime() + "_" + px.backupCopySuffix);
+		dok.saveACopy(backupFile);
+	}
+
+
 	// Save Style and Heading for Updates 
 	dok.insertLabel(px.pStyleEndnoteLabel, px.pStyleEndnoteName);
 	dok.insertLabel(px.pStyleEndnoteFollowLabel, px.pStyleEndnoteFollowName);
