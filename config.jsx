@@ -46,15 +46,22 @@ var px = {
 		// createEndnotes.jsx		
 		menuTitle:{en:"Convert Footnotes to Endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
 		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
+		
 		noTextInDoc:{en:"No text in document", de:"Es ist kein Text im Dokument enthalten"},
+		noFootnoteInDoc:{en:"No footnote in document", de:"Es gibt keine Fußnote im Dokument"},
+		multipleEndnoteLinks:{en:"More than one story with endnotes, cannot process this document.", de:"In mehr ale einem Textabschnitt befinden sich Endnoten, dieses Dokument kann nicht verarbeitet werden."},
+		willProcessCurrentSelection:{en:"More than one story with footnotes, will process the current story (cursor position)", de:"Mehr als ein Textabschnitt enthält Fußnoten, es wird der aktuelle Textabschnitt (Position der Einfügemarke) verarbeitet."},
+		createSelection:{en:"More than one story with footnotes, place cursor in story and restart", de:"Mehr als ein Textabschnitt enthält Fußnoten, bitte positionieren Sie die Einfügemarke im gewünschten Textabschnitt"},
+		endnoteAndFootnotesAreNotInTheSameStory:{en:"Endnotes and Footnotes are not in the same story", de:"Endnoten und Fußnoten sind nicht im gleichen Textabschnitt!"},
+		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by Parargaph Style",de:"Anhand von Absatzformat trennen"},
 		continuousNumbering:{en:"Continuous Numbering",de:"Fortlaufend nummerieren"},		
 		
-		scopePanel:{en:"Area",de:"Bereich"},
-		scopeDoc:{en:"Document",de:"Gesamtes Dokument"},
-		scopeStory:{en:"Selected Story",de:"Ausgewählten Textabschnitt"},
+//~ 		scopePanel:{en:"Area",de:"Bereich"},
+//~ 		scopeDoc:{en:"Document",de:"Textabschnitt mit Endnoten"},
+//~ 		scopeStory:{en:"Selected Story",de:"Ausgewählten Textabschnitt"},
 		
 		splitFormatPanel:{en:"Split endnote configuration",de:"Formatpräfix an dem die Endnoten geteilt werden"},
 		splitByHeadingStyle:{en:"Split Parargaph Style/Heading",de:"Format zur Aufteilung in Abschnitte"},
@@ -102,8 +109,8 @@ var px = {
 	createBackupCopy:true,
 	backupCopySuffix:"_endnoteBackupt.indd",
 	
-	convertAllStories:true,
-	convertSelection:false,
+//~ 	convertAllStories:true,
+//~ 	convertSelection:false,
 	numberBySection:true,
 	
 	hyperlinkLabel:"px:Foot2EndnoteHyperlink", // Markierung der SkriptQuerverweise

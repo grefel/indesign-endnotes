@@ -891,6 +891,80 @@ var idsTools = idsTools || function () {
 
 
 
+/**
+* Hashmap for JavaScript
+* @class <b>idsMap</b> implements a straightforward HashMap based on <a href="http://www.mojavelinux.com/articles/javascript_hashes.html">http://www.mojavelinux.com/articles/javascript_hashes.html</a> by Dan Allen.<br/><br/><code>#include "idsHelper.jsx"<br/>[...]<br/>var _map = idsMap();<br/>_map.pushItem ("key1", "value1");<br/>_map.getItem ("key1");</code>
+ * @property {number} length The number of items in the map.
+*/	 
+var idsMap = function () {
+	return { 
+		length : 0,
+		items : [],
+		/**
+		* Remove an entry
+		* @param {String} _key The key 
+		* @return {Object} The removed value
+		*/		
+		removeItem : function(_key) {
+			var _previous;
+			if (typeof(this.items[_key]) != 'undefined') {
+				this.length--;
+				var _previous = this.items[_key];
+				delete this.items[_key];
+			}
+			return _previous;
+		},
+
+		/**
+		* Get an entry
+		* @param {String} _key The key 
+		* @return {Object} The value
+		*/		
+		getItem : function(_key) {
+			return this.items[_key];
+		},
+
+		/**
+		* Push an entry
+		* @param {String} _key The (new) key 
+		* @param {String} _key The new value 
+		* @return {Object} The previous value (if any) or undefined
+		*/		
+		pushItem : function(_key, _value) {
+			var _previous;
+			if (typeof(_value) != 'undefined') {
+				if (typeof(this.items[_key]) == 'undefined') {
+					this.length++;
+				}
+				else {
+					_previous = this.items[_key];
+				}
+				this.items[_key] = _value;
+			}
+			return _previous;
+		},
+
+		/**
+		* Test if the map has an entry
+		* @param {String} _key The key 
+		* @return {Bool} <b>true</b> everything worked fine, <b>false</b> something went wrong
+		*/
+		hasItem : function(_key) {
+			return typeof(this.items[_key]) != 'undefined';
+		},
+
+		/**
+		* Removes every entry in the map
+		*/
+		clear : function() {
+			for (var i in this.items) {
+				delete this.items[i];
+			}
+			this.length = 0;
+		}
+	}
+}
+
 /****************
 * Logging Class 
 * @Version: 0.91
@@ -1160,6 +1234,73 @@ function startProcessing() {
 		return;
 	}
 
+	// Check for valid stories
+	var endnoteStory = null;
+	var footnoteStories = [];
+	var endnoteStoryMap = idsMap();
+	
+	for (var i = 0; i < dok.stories.length; i++) {
+		story = dok.stories[i];
+		if (story.footnotes.length > 0 ) {
+			footnoteStories.push(story);
+		}
+		for (var k = 0; k < dok.hyperlinks.length; k++) {
+			var hlink = dok.hyperlinks[k];
+			if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination.destinationText.parentStory.id == story.id ) {
+				endnoteStoryMap.pushItem(story.id, story);
+			}
+		}
+	}
+
+	// Die einfachen Fälle 
+	if (footnoteStories.length == 0) {
+		alert(localize(px.ui.noFootnoteInDoc)); 
+		return;
+	}
+	if (endnoteStoryMap.length > 1) {
+		alert(localize(px.ui.multipleEndnoteLinks)); 
+		return;		
+	}
+	if (footnoteStories.length == 1 && endnoteStoryMap.length == 0) { // New doc
+		endnoteStory = footnoteStories[0];
+	}
+	else if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && endnoteStoryMap.hasItem(footnoteStories[0].id)) { // Update Doc
+		endnoteStory = footnoteStories[0];
+	}
+
+	if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && !endnoteStoryMap.hasItem(footnoteStories[0].id)) { 
+		alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
+		return;
+	}
+	
+	// Auswahl der gültigen Story durch user 
+	if (footnoteStories.length > 1) {		
+		if (checkSelection() ) {
+			var selectionID = app.selection[0].parentStory.id;
+			for (var i = 0; i < footnoteStories.length; i++) {
+				if (selectionID == footnoteStories[i].id) {
+					alert (localize(px.ui.willProcessCurrentSelection));
+					endnoteStory = footnoteStories[i];
+					break;
+				}
+			}
+			if (endnoteStoryMap.length > 0 && !endnoteStoryMap.hasItem(footnoteStories[0].id) ) {
+				alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
+				return;
+			}
+		}
+		else {
+			alert (localize(px.ui.createSelection));
+			return;
+		}
+	}
+	if (endnoteStory == null) {
+		// Darf eigentlich nicht passieren 
+		alert(localize(px.ui.unknownSelectionError)); 
+		return;
+	}
+		
+
 	// Dokument gespeichert? 
 	if ((!dok.saved || dok.modified) && !px.debug) {
 		var userLevel = app.scriptPreferences.userInteractionLevel;
@@ -1201,12 +1342,11 @@ function startProcessing() {
 	}
 
 	if (px.debug) {		
-		foot2end (dok);
+		foot2end (dok, endnoteStory);
 	}
 	else {
-		try {
-			
-			foot2end (dok);
+		try {			
+			foot2end (dok, endnoteStory);
 		} catch (e) {
 			px.log.warnAlert(localize (px.ui.errorInfo) +  e + "\nLine: " + e.line); 
 		}
@@ -1231,7 +1371,7 @@ function startProcessing() {
 }
 	
 // Main Script 
-function foot2end (dok) {
+function foot2end (dok, endnoteStory) {
 	if (px.showGui) {
 		if ( getConfig() == 2) return;
 	}
@@ -1287,130 +1427,131 @@ function foot2end (dok) {
 	checkStyles (dok);
 						
 	// Die notwendigen Stories einsammeln
-	var stories = [];
-	if (px.convertAllStories) {
-		stories = dok.stories.everyItem().getElements();
-	}
-	else {
-		try {
-			stories.push(app.selection[0].parentStory);
-		}
-		catch (e) {
-			alertMsg (localize(px.ui.invalidSelection));
-			return;
-		}
-	}
+	var stories = [endnoteStory];
+//~ 	if (px.convertAllStories) {
+//~ 		stories = dok.stories.everyItem().getElements();
+//~ 	}
+//~ 	else {
+//~ 		try {
+//~ 			stories.push(app.selection[0].parentStory);
+//~ 		}
+//~ 		catch (e) {
+//~ 			alertMsg (localize(px.ui.invalidSelection));
+//~ 			return;
+//~ 		}
+//~ 	}
 	var hLinksPerStory = getCurrentEndnotes(dok, stories);
 	// Fußnoten zu Endnoten konvertieren 
 	var story, firstHlink, firstHlinkIndex, headingParagraph, footnote, endnote, endnote_link, cue, hlink, nextHlink,  hyperLinkID;	
 	var oldPages = dok.pages.length;
-	for (var j = 0; j < stories.length; j++) {
-		story = stories[j];
-		if (story.footnotes.length > 0) {
-			if (px.showGui) {
-				var pBar = idsTools.getProgressBar(localize(px.ui.menuTitle, px.version));
-				pBar.reset("Verarbeite Textabschnitt " + (j+1) + " von " + stories.length, story.footnotes.length);
-			}
-			// EndnotenTitel einfügen  					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
-			hyperLinkID =  hLinksPerStory[story.id][1][0];
-			if (hyperLinkID == "last") { // --> There is no Endnote Hyperlink in the story.
-				story.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
-				story.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
-			}
-			else {
-				firstHlink = dok.hyperlinks.itemByID(hyperLinkID);
-				firstHlinkIndex = firstHlink.destination.destinationText.insertionPoints[0].index;
-				if (firstHlink.destination.destinationText.parentStory.id != story.id) {
-					px.log.warnAlert( localize(px.ui.endnoteStoryMoved) );
-					return;
-				}
-				firstEndnote = story.insertionPoints[firstHlinkIndex].paragraphs[0];
-				headingParagraph = story.insertionPoints[firstHlinkIndex-1].paragraphs[0];
-				if (px.numberBySection && headingParagraph.appliedParagraphStyle == px.pStyleEndnoteSplitHeading) {
-					headingParagraph = story.insertionPoints[headingParagraph.insertionPoints[0].index-1].paragraphs[0];
-				}
-				if (headingParagraph.contents != px.endnoteHeadingString + "\r") {
-					alert (localize (px.ui.headingStyleFail , px.endnoteHeadingString, headingParagraph.contents.replace(/\r/g,'') ));
-					headingParagraph.contents = px.endnoteHeadingString + "\r";
-				}
-				headingParagraph.appliedParagraphStyle = px.pStyleEndnoteHeading;
-				firstEndnote.appliedParagraphStyle = px.pStyleEndnote;
-			}
-		
-			// Fußnoten konvertieren 
-			story.insertionPoints[-1].contents = "\r";
-			einfuegeIndex = story.insertionPoints[-1].index;
+//~ 	for (var j = 0; j < stories.length; j++) {
+//~ 		story = stories[j];
+	story = endnoteStory;
+//~ 		if (story.footnotes.length > 0) {
+	// EndnotenTitel einfügen  					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
+	hyperLinkID =  hLinksPerStory[story.id][1][0];
+	if (hyperLinkID == "last") { // --> There is no Endnote Hyperlink in the story.
+		story.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
+		story.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
+	}
+	else {
+		firstHlink = dok.hyperlinks.itemByID(hyperLinkID);
+		firstHlinkIndex = firstHlink.destination.destinationText.insertionPoints[0].index;
+		if (firstHlink.destination.destinationText.parentStory.id != story.id) {
+			px.log.warnAlert( localize(px.ui.endnoteStoryMoved) );
+			return;
+		}
+		firstEndnote = story.insertionPoints[firstHlinkIndex].paragraphs[0];
+		headingParagraph = story.insertionPoints[firstHlinkIndex-1].paragraphs[0];
+		if (px.numberBySection && headingParagraph.appliedParagraphStyle == px.pStyleEndnoteSplitHeading) {
+			headingParagraph = story.insertionPoints[headingParagraph.insertionPoints[0].index-1].paragraphs[0];
+		}
+		if (headingParagraph.contents != px.endnoteHeadingString + "\r") {
+			alert (localize (px.ui.headingStyleFail , px.endnoteHeadingString, headingParagraph.contents.replace(/\r/g,'') ));
+			headingParagraph.contents = px.endnoteHeadingString + "\r";
+		}
+		headingParagraph.appliedParagraphStyle = px.pStyleEndnoteHeading;
+		firstEndnote.appliedParagraphStyle = px.pStyleEndnote;
+	}
 
-			var footn = story.footnotes;
-			for (var i = footn.length-1; i >=0 ; i--) {
-				if (px.showGui) {
-					pBar.hit();
-				}
-				footnote = footn[i];
-				
-				trimFootnoteSpace(footnote);
+	// Fußnoten konvertieren 
+	story.insertionPoints[-1].contents = "\r";
+	einfuegeIndex = story.insertionPoints[-1].index;
+
+	var footn = story.footnotes;
+	if (px.showGui) {
+		var pBar = idsTools.getProgressBar(localize(px.ui.menuTitle, px.version));
+		pBar.reset("Verarbeite Endnoten", footn.length);
+	}
+	for (var i = footn.length-1; i >=0 ; i--) {
+		if (px.showGui) {
+			pBar.hit();
+		}
+		footnote = footn[i];
+		
+		trimFootnoteSpace(footnote);
 //~ 				$.writeln(footnote.contents);
-				// Formatieren 				
-				footnote.paragraphs[0].applyParagraphStyle (px.pStyleEndnote, false);
-				if(footnote.paragraphs.length > 1) {
-					footnote.paragraphs.itemByRange(1,footnote.paragraphs.length-1).applyParagraphStyle (px.pStyleEndnoteFollow, false);
-				}				
-				
-				var fnIndex = footnote.storyOffset.index;
-				hyperLinkID = getPosition(fnIndex, hLinksPerStory[story.id]); // Find the next existing Hyperlink in the story
-				if (hyperLinkID == null) {
-					// Fehler bei getPosition();
-					return;
-				}
-				if (hyperLinkID == "first") {
-					px.log.warnAlert( localize(px.ui.statusFail) ); 
-				}
-				else if (hyperLinkID == "last") {
-					endnote = footnote.texts[0].move (LocationOptions.after, story.insertionPoints[einfuegeIndex]);
-				}
-				else {
-					// Vor dem Hyperlink mit der ID muss die Endnote eingefügt werden:
-					nextHlink = dok.hyperlinks.itemByID(hyperLinkID);					
-					endnote = footnote.texts[0].move (LocationOptions.BEFORE, nextHlink.destination.destinationText.insertionPoints[0]);
-				}
-			
-				// Verlinkung herstellen 
-				endnote_link = dok.paragraphDestinations.add (endnote.insertionPoints[0]);
-				endnote_link.insertLabel(px.hyperlinkLabel, "true");
-				cue = dok.crossReferenceSources.add (footn[i].storyOffset, px.crossRefStyleEndnote);
-				einfuegeIndex++;
-				cue.insertLabel(px.hyperlinkLabel, "true");
-				hlink = dok.hyperlinks.add (cue, endnote_link, {visible: false});
-				hlink.insertLabel(px.hyperlinkLabel, "true");
-
-				pushHLink ( hLinksPerStory[story.id], hyperLinkID, hlink);
-
-				// Rückverlinkung
-				endnote_backlink = dok.hyperlinkTextDestinations.add (footn[i].storyOffset);
-				endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");
-				hyperlinkTextSource = dok.hyperlinkTextSources.add(endnote);
-				hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
-				hlink = dok.hyperlinks.add (hyperlinkTextSource, endnote_backlink, {visible: false});
-				einfuegeIndex++;
-				hlink.name = "EndnoteBacklink_" + (((1+Math.random())*0x10000)|0).toString(16).substring(1) + new Date().getTime();
-				hlink.insertLabel(px.hyperlinkLabel, "backlink");
-				
-				
-				px.foot2EndCounter++;
-			} // for
+		// Formatieren 				
+		footnote.paragraphs[0].applyParagraphStyle (px.pStyleEndnote, false);
+		if(footnote.paragraphs.length > 1) {
+			footnote.paragraphs.itemByRange(1,footnote.paragraphs.length-1).applyParagraphStyle (px.pStyleEndnoteFollow, false);
+		}				
 		
-			
-			// Wenn wir nach Section splitten müssen, werden jetzt die Positionen der Sections ausgewertet die ggf. zugeordnent werden müssen
-			// Problem zweiter Durchlauf, hier muss geprüft werden ob die neue eingefügte Endnote bereits die richtige Überschrift hat.
-			if (px.numberBySection) {
-				sectionIndexArray = getSections(story);
-				
-				// Alte Abschnittsüberschriften löschen...
-				app.findGrepPreferences = NothingEnum.NOTHING;
-				app.changeGrepPreferences = NothingEnum.NOTHING;
-				app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
-				story.changeGrep();
-				
+		var fnIndex = footnote.storyOffset.index;
+		hyperLinkID = getPosition(fnIndex, hLinksPerStory[story.id]); // Find the next existing Hyperlink in the story
+		if (hyperLinkID == null) {
+			// Fehler bei getPosition();
+			return;
+		}
+		if (hyperLinkID == "first") {
+			px.log.warnAlert( localize(px.ui.statusFail) ); 
+		}
+		else if (hyperLinkID == "last") {
+			endnote = footnote.texts[0].move (LocationOptions.after, story.insertionPoints[einfuegeIndex]);
+		}
+		else {
+			// Vor dem Hyperlink mit der ID muss die Endnote eingefügt werden:
+			nextHlink = dok.hyperlinks.itemByID(hyperLinkID);					
+			endnote = footnote.texts[0].move (LocationOptions.BEFORE, nextHlink.destination.destinationText.insertionPoints[0]);
+		}
+	
+		// Verlinkung herstellen 
+		endnote_link = dok.paragraphDestinations.add (endnote.insertionPoints[0]);
+		endnote_link.insertLabel(px.hyperlinkLabel, "true");
+		cue = dok.crossReferenceSources.add (footn[i].storyOffset, px.crossRefStyleEndnote);
+		einfuegeIndex++;
+		cue.insertLabel(px.hyperlinkLabel, "true");
+		hlink = dok.hyperlinks.add (cue, endnote_link, {visible: false});
+		hlink.insertLabel(px.hyperlinkLabel, "true");
+
+		pushHLink ( hLinksPerStory[story.id], hyperLinkID, hlink);
+
+		// Rückverlinkung
+		endnote_backlink = dok.hyperlinkTextDestinations.add (footn[i].storyOffset);
+		endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");
+		hyperlinkTextSource = dok.hyperlinkTextSources.add(endnote);
+		hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
+		hlink = dok.hyperlinks.add (hyperlinkTextSource, endnote_backlink, {visible: false});
+		einfuegeIndex++;
+		hlink.name = "EndnoteBacklink_" + (((1+Math.random())*0x10000)|0).toString(16).substring(1) + new Date().getTime();
+		hlink.insertLabel(px.hyperlinkLabel, "backlink");
+		
+		
+		px.foot2EndCounter++;
+	} // for
+
+	
+	// Wenn wir nach Section splitten müssen, werden jetzt die Positionen der Sections ausgewertet die ggf. zugeordnent werden müssen
+	// Problem zweiter Durchlauf, hier muss geprüft werden ob die neue eingefügte Endnote bereits die richtige Überschrift hat.
+	if (px.numberBySection) {
+		sectionIndexArray = getSections(story);
+		
+		// Alte Abschnittsüberschriften löschen...
+		app.findGrepPreferences = NothingEnum.NOTHING;
+		app.changeGrepPreferences = NothingEnum.NOTHING;
+		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
+		story.changeGrep();
+		
 //~ 				for (var h = 0; h < dok.hyperlinks.length; h++) {
 //~ 					hlink = dok.hyperlinks[h];
 //~ 					if ( hlink.extractLabel(px.hyperlinkLabel) == "true") {
@@ -1421,101 +1562,101 @@ function foot2end (dok) {
 //~ 						}
 //~ 					}
 //~ 				}
-				
-				// Hyperlinks wieder einsammeln... 
-				endnotenStartEndPositions = [];
-				for (var h = 0; h < dok.hyperlinks.length; h++) {
-					hlink = dok.hyperlinks[h];
-					if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "true") {
-						if (hlink.source.sourceText.parentStory.id == story.id) {
-							endnotenStartEndPositions.push([hlink.destination.destinationText.index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
-						}
-					}
-				}
-			
-				// Endnoten Nummerierung wieder zurücksetzen... 
-				app.findGrepPreferences = NothingEnum.NOTHING;
-				app.changeGrepPreferences = NothingEnum.NOTHING;
-				app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-				app.changeGrepPreferences.numberingContinue = true;
-				var result = story.changeGrep();
-				if (result) {
-					result[0].paragraphs[0].numberingStartAt = 1;
-					result[0].paragraphs[0].numberingContinue = false;
-				}			
-
-				endnotenStartEndPositions.sort(sortSecondEntry);
-				
-				// In length -1 steckt nur der leere String für den letzten Insertion Point der Story
-				sectionCounter = sectionIndexArray.length-2;
-				
-				var currentSection, nextSection, endnotenIndex, endnotenTextIndex;
-				
-				for (var i =  endnotenStartEndPositions.length-1; i >= 0; i--) {
-					// Endnoten
-					endnotenTextIndex = endnotenStartEndPositions[i][1];
-					endnotenIndex = endnotenStartEndPositions[i][0];
-//~ 					$.writeln(endnotenStartEndPositions[i][2]);
-					if (i > 0) {
-						previousEndnotenTextIndex = endnotenStartEndPositions[i-1][1];
-					}
-					else {
-						previousEndnotenTextIndex = -1;
-					}
-					
-					if (i ==  endnotenStartEndPositions.length-1) {
-						nextEndnotenIndex = endnotenIndex;
-					}
-					else {
-						nextEndnotenIndex = endnotenStartEndPositions[i+1][0];
-					}
-					
-					// Abschnitte 
-					currentSection = sectionIndexArray[sectionCounter];
-					currentSectionStartIndex = currentSection[1];
-					nextSection = sectionIndexArray[sectionCounter+1];
-					nextSectionStartIndex = nextSection[1];
-					
-					if (previousEndnotenTextIndex < currentSectionStartIndex && endnotenTextIndex > currentSectionStartIndex && endnotenTextIndex < nextSectionStartIndex) {
-//~ 						$.writeln(currentSection[2]);
-						story.insertionPoints[endnotenIndex].contents = currentSection[2];
-						story.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
-						var nextPar = idsTools.nextParagraph (story.insertionPoints[endnotenIndex].paragraphs[0]);
-						if (nextPar != null) {
-							nextPar.numberingStartAt = 1;
-							nextPar.numberingContinue = false;
-						}
-						else {
-							px.log.warnAlert(localize(px.ui.numberingFail));
-						}
-						sectionCounter--;						
-					}
-					else if (endnotenTextIndex < currentSectionStartIndex && sectionCounter > 0) {
-						i++; // endnote zurücksetzen , weil wir gucken müssen ob es in der nächsten Section steht.
-						sectionCounter--;						
-					}
-				}
-			}		
-			// Schneller fix wenn fortlaufend nummeriert wird
-			else { 
-				app.findGrepPreferences = NothingEnum.NOTHING;
-				app.changeGrepPreferences = NothingEnum.NOTHING;
-				app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-				app.changeGrepPreferences.numberingContinue = true;
-				var result = story.changeGrep();
-				if (result) {
-					result[0].paragraphs[0].numberingStartAt = 1;
-					result[0].paragraphs[0].numberingContinue = false;
-				}			
-			}
 		
-			story.characters[-1].contents = "";
-			deleteNotemarkers (story);
+		// Hyperlinks wieder einsammeln... 
+		endnotenStartEndPositions = [];
+		for (var h = 0; h < dok.hyperlinks.length; h++) {
+			hlink = dok.hyperlinks[h];
+			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "true") {
+				if (hlink.source.sourceText.parentStory.id == story.id) {
+					endnotenStartEndPositions.push([hlink.destination.destinationText.index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
+				}
+			}
+		}
+	
+		// Endnoten Nummerierung wieder zurücksetzen... 
+		app.findGrepPreferences = NothingEnum.NOTHING;
+		app.changeGrepPreferences = NothingEnum.NOTHING;
+		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
+		app.changeGrepPreferences.numberingContinue = true;
+		var result = story.changeGrep();
+		if (result) {
+			result[0].paragraphs[0].numberingStartAt = 1;
+			result[0].paragraphs[0].numberingContinue = false;
+		}			
+
+		endnotenStartEndPositions.sort(sortSecondEntry);
+		
+		// In length -1 steckt nur der leere String für den letzten Insertion Point der Story
+		sectionCounter = sectionIndexArray.length-2;
+		
+		var currentSection, nextSection, endnotenIndex, endnotenTextIndex;
+		
+		for (var i =  endnotenStartEndPositions.length-1; i >= 0; i--) {
+			// Endnoten
+			endnotenTextIndex = endnotenStartEndPositions[i][1];
+			endnotenIndex = endnotenStartEndPositions[i][0];
+//~ 					$.writeln(endnotenStartEndPositions[i][2]);
+			if (i > 0) {
+				previousEndnotenTextIndex = endnotenStartEndPositions[i-1][1];
+			}
+			else {
+				previousEndnotenTextIndex = -1;
+			}
 			
-			// Seiten auflösen 
-			idsTools.checkOverflow(story);
-		} //if
-	} // for
+			if (i ==  endnotenStartEndPositions.length-1) {
+				nextEndnotenIndex = endnotenIndex;
+			}
+			else {
+				nextEndnotenIndex = endnotenStartEndPositions[i+1][0];
+			}
+			
+			// Abschnitte 
+			currentSection = sectionIndexArray[sectionCounter];
+			currentSectionStartIndex = currentSection[1];
+			nextSection = sectionIndexArray[sectionCounter+1];
+			nextSectionStartIndex = nextSection[1];
+			
+			if (previousEndnotenTextIndex < currentSectionStartIndex && endnotenTextIndex > currentSectionStartIndex && endnotenTextIndex < nextSectionStartIndex) {
+//~ 						$.writeln(currentSection[2]);
+				story.insertionPoints[endnotenIndex].contents = currentSection[2];
+				story.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
+				var nextPar = idsTools.nextParagraph (story.insertionPoints[endnotenIndex].paragraphs[0]);
+				if (nextPar != null) {
+					nextPar.numberingStartAt = 1;
+					nextPar.numberingContinue = false;
+				}
+				else {
+					px.log.warnAlert(localize(px.ui.numberingFail));
+				}
+				sectionCounter--;						
+			}
+			else if (endnotenTextIndex < currentSectionStartIndex && sectionCounter > 0) {
+				i++; // endnote zurücksetzen , weil wir gucken müssen ob es in der nächsten Section steht.
+				sectionCounter--;						
+			}
+		}
+	}		
+	// Schneller fix wenn fortlaufend nummeriert wird
+	else { 
+		app.findGrepPreferences = NothingEnum.NOTHING;
+		app.changeGrepPreferences = NothingEnum.NOTHING;
+		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
+		app.changeGrepPreferences.numberingContinue = true;
+		var result = story.changeGrep();
+		if (result) {
+			result[0].paragraphs[0].numberingStartAt = 1;
+			result[0].paragraphs[0].numberingContinue = false;
+		}			
+	}
+
+	story.characters[-1].contents = "";
+	deleteNotemarkers (story);
+	
+	// Seiten auflösen 
+	idsTools.checkOverflow(story);
+//~ 		} //if
+//~ 	} // for
 
 		
 	if (pBar) {
@@ -1559,6 +1700,7 @@ function getSections (story) {
 }
 
 function getCurrentEndnotes (dok, stories) {
+	// TODO -> stories -> endnoteStory
 	// Die aktuellen Endnoten einsammeln
 	var hLink, storyID, story;	
 	var hLinksPerStory = [];
@@ -1661,8 +1803,6 @@ function trimFootnoteSpace (footNote) {
 	if (footNote.texts[0].characters.length > 0) footNote.texts[0].changeGrep();
 	footNote.insertionPoints[-1].contents = "\r";
 }
-
-
 
 
 // Read Existing Style mapping from document
@@ -1771,23 +1911,23 @@ function getConfig() {
 	var win = new Window("dialog", localize(px.ui.menuTitle, px.version));  
 	with (win) {
 		// Welcher Bereich soll verarbeitet werden?
-		win.pScope = add( "panel", undefined, localize(px.ui.scopePanel));
-		win.pScope.preferredSize.width = 450;
-		win.pScope.alignChildren = ['left', 'top'];
-		win.pScope.spacing = 10;
-		with (win.pScope) {
-			win.pScope.gScope = add( "group");
-			win.pScope.gScope.margins = [0,10,0,0];
-			win.pScope.gScope.spacing = 10;
-			win.pScope.gScope.alignChildren = ['left', 'top'];
-			win.pScope.gScope.orientation = 'column';
-			with (win.pScope.gScope) {
-				win.pScope.gScope.radioAll = add( "radiobutton", undefined, localize(px.ui.scopeDoc) ); 
-				win.pScope.gScope.radioAll.value = px.convertAllStories ;
-				win.pScope.gScope.radioStory = add( "radiobutton", undefined, localize(px.ui.scopeStory) ); 
-				win.pScope.gScope.radioStory.enabled = checkSelection();
-			}
-		}
+//~ 		win.pScope = add( "panel", undefined, localize(px.ui.scopePanel));
+//~ 		win.pScope.preferredSize.width = 450;
+//~ 		win.pScope.alignChildren = ['left', 'top'];
+//~ 		win.pScope.spacing = 10;
+//~ 		with (win.pScope) {
+//~ 			win.pScope.gScope = add( "group");
+//~ 			win.pScope.gScope.margins = [0,10,0,0];
+//~ 			win.pScope.gScope.spacing = 10;
+//~ 			win.pScope.gScope.alignChildren = ['left', 'top'];
+//~ 			win.pScope.gScope.orientation = 'column';
+//~ 			with (win.pScope.gScope) {
+//~ 				win.pScope.gScope.radioAll = add( "radiobutton", undefined, localize(px.ui.scopeDoc) ); 
+//~ 				win.pScope.gScope.radioAll.value = px.convertAllStories ;
+//~ 				win.pScope.gScope.radioStory = add( "radiobutton", undefined, localize(px.ui.scopeStory) ); 
+//~ 				win.pScope.gScope.radioStory.enabled = checkSelection();
+//~ 			}
+//~ 		}
 		// Art der Verarbeitung 
 		win.pMethod = add( "panel", undefined, localize(px.ui.methodPanel) );
 		win.pMethod.preferredSize.width = 450;
@@ -1939,8 +2079,8 @@ function getConfig() {
 	// Ok / Set Values 
 	win.groupStart.butOk.onClick = function() {
 		// Set Values ... 
-		px.convertAllStories = win.pScope.gScope.radioAll.value;
-		px.convertSelection = win.pScope.gScope.radioStory.value;
+//~ 		px.convertAllStories = win.pScope.gScope.radioAll.value;
+//~ 		px.convertSelection = win.pScope.gScope.radioStory.value;
 		px.numberBySection = win.pMethod.gMethod.radioSplit.value;
 		px.pStylePrefix = px.dokParagraphStylePrefixes[win.pSplit.gInfo.gEndnoteStyle.ddList.selection.index];
 		px.pStyleEndnoteName = px.dokParagraphStyleNames[win.pInfo.gInfo.gEndnoteStyle.ddList.selection.index];
@@ -1979,17 +2119,6 @@ function getConfig() {
 	win.center();
 	return win.show();
 	
-	function checkSelection() {
-		if (app.selection.length != 1) {
-			return false;
-		}		
-		var selection = app.selection[0];
-		selection = selection.getElements()[0];
-		if (!(selection instanceof TextFrame || selection instanceof InsertionPoint || selection instanceof Text)) {		
-			return false;
-		}
-		return true;
-	}
 }
 
 function sortSecondEntry (a,b) {
@@ -2009,6 +2138,19 @@ function alertMsg(_msg) {
 		w.show ();
 	}
 }
+
+function checkSelection() {
+	if (app.selection.length != 1) {
+		return false;
+	}		
+	var selection = app.selection[0];
+	selection = selection.getElements()[0];
+	if (!(selection instanceof TextFrame || selection instanceof InsertionPoint || selection instanceof Text)) {		
+		return false;
+	}
+	return true;
+}
+
 
 /* Init Logging, sets global px.log  */
 function initLog(logFile) {
