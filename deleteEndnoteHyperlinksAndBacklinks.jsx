@@ -17,9 +17,8 @@
 */
 
 /*  
-//DESCRIPTION: Gehe zur Endnote (Gehe zum Hyperlink der diesen Textanker nutzt); 
-@Version: 1.1
-@Date: 2016-01-15
+//DESCRIPTION: Delete alls Hyperlinks and TextlinkSources but leave Endnotes alone (are not linked anymore)
+@Date: 2016-19-05
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -29,51 +28,54 @@ if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK") {
      px.debug = true;
 }
 
+
 if ( ! $.global.hasOwnProperty('idsTesting') ) {
 	startProcessing();
 }
 
 function startProcessing() {
 	if (parseInt(app.version) < 6) {
-		alert(localize(px.ui.versionWarning) );
+		alert( localize(px.ui.versionWarning) );
 		return;
 	}
 	
 	if (app.documents.length == 0) {
 		return;
 	}
-
-	if (!jump()) {
-		alert(localize (px.ui.noEndnoteOrMarker));
-	}
+	app.doScript(removeStart, ScriptLanguage.JAVASCRIPT , undefined, UndoModes.ENTIRE_SCRIPT,  localize(px.ui.deleteEndnoteName));
 }
 
-function jump() {
-	if (app.selection.length == 0) {
-		return false;
+function removeStart() {
+    var dok;
+	dok  =app.documents[0];
+	
+	for (var i = dok.hyperlinks.length-1; i >= 0; i--) {
+		deleteMe(dok.hyperlinks[i]);
+	} 
+
+	for (var i = dok.paragraphDestinations.length-1; i >= 0; i--) {
+		deleteMe(dok.paragraphDestinations[i]);
+	} 
+
+
+	for (var i = dok.crossReferenceSources.length-1; i >= 0; i--) {
+		deleteMe(dok.crossReferenceSources[i]);
+	} 
+	
+	for (var i = dok.hyperlinkTextDestinations.length-1; i >= 0; i--) {
+		deleteMe(dok.hyperlinkTextDestinations[i]);
+	} 
+
+	for (var i = dok.hyperlinkTextSources.length-1; i >= 0; i--) {
+		deleteMe(dok.hyperlinkTextSources[i]);
+	} 	
+}
+
+function deleteMe(object) {
+	if ( object.extractLabel(px.hyperlinkLabel) == "true" || object.extractLabel(px.hyperlinkLabel) == "backlink" ||
+		object.name.indexOf("EndnoteBacklink_") == 0 		// Legacy Skript
+	) {
+		$.writeln(object.constructor.name);
+		object.remove();
 	}
-	if (!app.selection[0].hasOwnProperty ("baseline")) {
-		return false;
-	}
-	if (!app.selection[0].paragraphs[0].isValid) {
-		return false;
-	}
-	var dok = app.documents[0];
-	var selectionText = app.selection[0];
-	var index = app.selection[0].index;
-	var parIndex = app.selection[0].paragraphs[0].index
-	for (var i = 0; i  < dok.hyperlinks.length; i++) {
-		if (dok.hyperlinks[i].extractLabel(px.hyperlinkLabel) == "true") {
-			var hLink = dok.hyperlinks[i];
-			if (hLink.source.sourceText.index == index) {
-				hLink.showDestination();				
-				return true;
-			}
-			if (hLink.destination.destinationText.index == parIndex) {
-				hLink.showSource();
-				return true;
-			} 
-		}
-	}
-	return false;
 }

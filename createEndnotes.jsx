@@ -17,7 +17,7 @@
 */
 
 /*  
-//DESCRIPTION: Fußnoten zu Endnoten umwandeln (Nutz die Querverweisfunktion von InDesign)
+//DESCRIPTION: Convert Footnotes to Endnotes  ( Uses the cross-reference function from InDesign )
 ## Acknowledgements
 I picked the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
@@ -28,10 +28,9 @@ I picked the idea of using InDesign cross references for endnotes from Peter Kah
 
 #include config.jsx 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK") {
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
      px.debug = true;
 }
-
 
 // idsHelper.jsx
 {
@@ -940,95 +939,261 @@ var idsMap = function () {
 //~   return items;
 //~ }
 
-/**
-* Logging Class
-* @class <b>idsLog</b> contains a JavaScript Loggin Extensions. Include this library and use the idsLog object in your script.<br/><br/><code>#include "idsHelper.jsx"<br/>[...]<br/>_log = idsLog(FILE, "DEBUG")<br/>_log.debug("Log me")</code><br/>
-* @param {File} _logFile  The Logfile as File-Object.
-* @param {String} _logLevel One of the "OFF" "ERROR", "WARN", "INFO", "DEBUG", sets the current Logger to log only Events more or equal severe than the Loglevel.
+
+
+/****************
+* Logging Class 
+* @Version: 0.91
+* @Date: 2016-03-30
+* @Author: Gregor Fellenz, http://www.publishingx.de
+* Acknowledgments: Library design pattern from Marc Aturet https://forums.adobe.com/thread/1111415
+
+* Usage: 
+
+log = idsLog.getLogger("~/Desktop/testLog.txt", "INFO");
+log.warnAlert("Warn message");
+
 */
-var idsLog = function (_logFile, _logLevel) {
-	if (_logFile.constructor.name == "String") {
-		this.logFile = File (_logFile);
-	}
-	this.logFile = _logFile;
-	this.SEVERITY = [];
-	this.SEVERITY["OFF"] = 4;
-	this.SEVERITY["ERROR"] = 3;
-	this.SEVERITY["WARN"] = 2;
-	this.SEVERITY["INFO"] = 1;
-	this.SEVERITY["DEBUG"] = 0;
-	this.logLevel = (_logLevel == undefined) ? 0 : SEVERITY[_logLevel];
-	this.writeLog = function (_message, _severity) {
-		logFile.open("e");
-		logFile.seek(logFile.length);	
-		try {
-			logFile.writeln(Date() + " [" + _severity + "] " + ((_severity.length == 4) ? " [" : "[")  + app.activeScript.name + "] " + _message);
-		} catch (e) {
-			//We're running from ESTK 
-			logFile.writeln(Date() + " [" + _severity + "] " + ((_severity.length == 4) ? " [" : "[")  + "ESTK] " + _message);
+$.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
+	HOST[SELF] = SELF;
+
+	/****************
+	* PRIVATE
+	*/
+	var INNER = {};
+	INNER.version = "2016-03-30--0.91"
+	INNER.disableAlerts = false;
+	INNER.SEVERITY = [];
+	INNER.SEVERITY["OFF"] = 4;
+	INNER.SEVERITY["ERROR"] = 3;
+	INNER.SEVERITY["WARN"] = 2;
+	INNER.SEVERITY["INFO"] = 1;
+	INNER.SEVERITY["DEBUG"] = 0;
+
+	INNER.writeLog = function(msg, severity, file) { 
+		file.encoding = "UTF-8";
+		file.open("a");
+		var stack = $.stack.split("\n");
+		stack = stack[stack.length - 4];		
+		file.writeln(Date() + " [" + severity + "] " + ((severity.length == 4) ? " [" : "[") + msg + "] Function: " + stack);		
+		file.close();
+	};
+	INNER.showAlert = function(msg){
+		if (!INNER.disableAlerts) {
+			alert(msg) 
 		}
-		logFile.close();
-	}
-
-	return { 
-		/**
-		* Writes a debug log message
-		* @param {String} _message Message to log.
-		*/
-		debug : function (_message) {
-			if (logLevel <= 0)  writeLog(_message, "DEBUG"); 
-		},
-		/**
-		* Writes a info log message
-		* @param {String} _message Message to log.
-		*/
-		info : function (_message) {
-			if (logLevel <= 1)  writeLog(_message, "INFO"); 
-		},
-		/**
-		* Writes a info log message und displays an Alert-Window
-		* @param {String} _message Message to log.
-		*/
-		infoAlert : function (_message) {
-			if (logLevel <= 2) {
-				writeLog(_message, "INFO"); 
-				alert ("[INFO]\n" + _message);
-			}
-		},		
-		/**
-		* Writes a warn log message
-		* @param {String} _message Message to log.
-		*/
-		warn : function (_message) {
-			if (logLevel <= 2)  writeLog(_message, "WARN"); 
-		},
-		/**
-		* Writes a warn log message und displays an Alert-Window
-		* @param {String} _message Message to log.
-		*/
-		warnAlert : function (_message) {
-			if (logLevel <= 2) {
-				writeLog(_message, "WARN"); 
-				alert ("PROBLEM [WARN]\n" + _message + "\n\nThere might be more information in the logfile:\n" + logFile);
-			}
-		},
-	
-		
-		/**
-		* Writes a error log message
-		* @param {String} _message Message to log.
-		*/
-		error : function (_message) {
-			if (logLevel <= 3)  writeLog(_message, "ERROR"); 
+	};
+	INNER.showMessages = function(title, msgArray) { 
+		if (!INNER.disableAlerts) {						
+			msg = msgArray.join("\n");			
+			var w = new Window ("dialog", title);
+			var list = w.add ("edittext", undefined, msg, {multiline: true, scrolling: true});
+			list.maximumSize.height = 300;
+			list.minimumSize.width = 400;
+			w.add ("button", undefined, "Ok", {name: "ok"});
+			w.show ();
 		}
-	} //  return 
+	};
+
+    /****************
+    * API 
+    */
+
+    /**
+    * Returns a log Object
+    * @logFile {File|String} Path to logfile as File Object or String.
+    * @logLevel {String} Log Threshold  "OFF", "ERROR", "WARN", "INFO", "DEBUG"
+    * @disableAlerts {Boolean} Show alerts
+    */
+	SELF.getLogger = function(logFile, logLevel, disableAlerts) {
+		if (logFile == undefined) {
+			throw Error("Cannot instantiate Log without Logfile. Please provide a File");
+		}
+		if (logFile instanceof String) {
+			logFile = File(logFile);
+		}
+		if (! (logFile instanceof File)) {
+			throw Error("Cannot instantiate Log. Please provide a File");
+		}
+
+
+		if (logLevel == undefined) {
+			logLevel = "INFO";			
+		}
+		logLevel = (logLevel == undefined) ? 0 : INNER.SEVERITY[logLevel];
+
+		if (disableAlerts == undefined) {
+			INNER.disableAlerts = false;
+		}
+
+		var counter = {
+			debug:0,
+			info:0,
+			warn:0,
+			error:0
+		}
+		var messages = {
+			info:[],
+			warn:[],
+			error:[],
+		}
+
+		return {
+			/**
+			* Writes a debug log message
+			* @message {String} message Message to log.
+			*/
+			debug : function (message) {
+				if (logLevel <= 0) {
+					INNER.writeLog(message, "DEBUG", logFile);
+					counter.debug++;
+				}
+			},
+			/**
+			* Writes a info log message
+			* @message {String} message Message to log.
+			*/
+			info : function (message) {
+				if (logLevel <= 1) {
+					INNER.writeLog(message, "INFO", logFile); 
+					counter.info++;
+					messages.info.push(message);
+				}
+			},
+			/**
+			* Writes a info log message und displays an Alert-Window
+			* @message {String} message Message to log.
+			*/
+			infoAlert : function (message) {
+				if (logLevel <= 2) {
+					INNER.writeLog(message, "INFO", logFile); 
+					counter.info++;
+					messages.info.push(message);
+					INNER.showAlert ("[INFO]\n" + message);
+				}
+			},
+			/**
+			* Writes a warn log message
+			* @message {String} message Message to log.
+			*/
+			warn : function (message) {
+				if (logLevel <= 2) {
+					INNER.writeLog(message, "WARN", logFile);
+					counter.warn++;
+					messages.warn.push(message);
+				} 
+			},
+			/**
+			* Writes a warn log message und displays an Alert-Window
+			* @message {String} message Message to log.
+			*/
+			warnAlert : function (message) {
+				if (logLevel <= 2) {
+					INNER.writeLog(message, "WARN", logFile); 
+					counter.warn++;
+					messages.warn.push(message);
+					INNER.showAlert ("[WARN]\n" + message + "\n\nPrüfen Sie auch das Logfile:\n" + logFile);
+				}
+			},
+			/**
+			* Writes a error log message
+			* @message {String} message Message to log.
+			*/
+			error : function (message) {
+				if (logLevel <= 3) {
+					INNER.writeLog(message, "ERROR", logFile); 
+					counter.error++;
+					messages.error.push(message);
+				}
+			},
+
+			/**
+			* Shows all warnings
+			*/
+			showWarnings : function () {
+				INNER.showMessages("Es gab " + counter.warn + " Warnmeldungen", messages.warn);
+			},
+			/**
+			* Returns all warnings
+			*/
+			getWarnings : function () {
+				return messages.warn.join("\n");
+			},
+			/**
+			* Shows all infos
+			*/
+			showInfos : function () {
+				INNER.showMessages("Es gab " + counter.info + " Infos", messages.info);
+			},
+			/**
+			* Returns all infos
+			*/
+			getInfos : function () {
+				return messages.info.join("\n");
+			},
+			/**
+			* Shows all errors
+			*/
+			showErrors : function () {
+				INNER.showMessages("Es gab " + counter.error + " Fehler", messages.error);
+			},
+			/**
+			* Returns all errors
+			*/
+			getErrors : function () {
+				return messages.error.join("\n");
+			},
+			/**
+			* Returns the counter Object
+			*/
+			getCounters : function () {
+				return counter;
+			},
+
+
+			/**
+			* Set silent Mode
+			* @message {Boolean} true will not show alerts!
+			*/
+			disableAlerts : function (mode) {
+				INNER.disableAlerts = mode;
+			},
+
+			/**
+			* Clear Logfile and counters
+			*/
+			clearLog : function () {                
+				logFile.open("w");
+				logFile.write("");
+				logFile.close();
+				counter.debug = 0;
+				counter.info = 0;
+				counter.warn = 0;
+				counter.error = 0;
+				messages.info = [];
+				messages.warn = [];
+				messages.error = [];
+			},
+
+			/**
+			* Shows the log file in the system editor
+			*/
+			showLog : function () {
+				logFile.execute();
+			}
+		} 
+	};
+}) ( $.global, { toString : function() {return 'idsLog';} } );
+
 }
+
+
+
+if ( ! $.global.hasOwnProperty('idsTesting') ) {
+	startProcessing();
 }
 
-
-startProcessing();
-
-
+// Environment checking and startup
 function startProcessing() {
 	if (parseInt(app.version) < 6) {
 		alert(localize(px.ui.versionWarning));
@@ -1047,54 +1212,37 @@ function startProcessing() {
 
 	// Dokument gespeichert? 
 	if ((!dok.saved || dok.modified) && !px.debug) {
+		var userLevel = app.scriptPreferences.userInteractionLevel;
+		app.scriptPreferences.userInteractionLevel = UserInteractionLevels.INTERACT_WITH_ALL; 
+
 		if ( confirm ( localize(px.ui.saveDocInfo) , undefined, localize(px.ui.saveDoc))) {
 			try {
 				dok = dok.save();
 			} catch (e) { 
 				alert (localize(px.ui.saveDocFail) + e);
 				return;
-			}
+			}		
+			app.scriptPreferences.userInteractionLevel = userLevel;
 		}
 		else { // User does not want to save -> exit;
+			app.scriptPreferences.userInteractionLevel = userLevel;
 			return; 
 		}
 	}
 
 	px.ids = idsTools();
+	
+	// Read Existing Style mapping from document
+	getStyleInformation (dok);
+	readStyles(dok);
 
-	// Ggf. erfolge Stylezuordnung aus Dokument auslesen 
-	if (dok.extractLabel(px.pStyleEndnoteLabel) != "") {
-		px.pStyleEndnoteName = dok.extractLabel(px.pStyleEndnoteLabel);
-		if (px.debug) $.writeln ("px.pStyleEndnoteName" + px.pStyleEndnoteName);
-	}	
-	if (dok.extractLabel(px.pStyleEndnoteFollowLabel) != "") {
-		px.pStyleEndnoteFollowName = dok.extractLabel(px.pStyleEndnoteFollowLabel);
-		if (px.debug) $.writeln ("px.pStyleEndnoteFollowName" + px.pStyleEndnoteFollowName);
-	}	
-	if (dok.extractLabel(px.pStyleEndnoteHeadingLabel) != "") {
-		px.pStyleEndnoteHeadingName = dok.extractLabel(px.pStyleEndnoteHeadingLabel);
-		if (px.debug) $.writeln ("px.pStyleEndnoteHeadingName" + px.pStyleEndnoteHeadingName);
-	}
-	if (dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel) != "") {
-		px.pStyleEndnoteSplitHeadingName = dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel);
-		if (px.debug) $.writeln ("px.pStyleEndnoteSplitHeadingName" + px.pStyleEndnoteSplitHeadingName);
-	}
-	if (dok.extractLabel(px.cStyleEndnoteMarkerLabel) != "") {
-		px.cStyleEndnoteMarkerName = dok.extractLabel(px.cStyleEndnoteMarkerLabel);
-		if (px.debug) $.writeln ("px.cStyleEndnoteMarkerName" + px.cStyleEndnoteMarkerName);
-	}
-	if (dok.extractLabel(px.endnoteHeadingStringLabel) != "") {
-		px.endnoteHeadingString = dok.extractLabel(px.endnoteHeadingStringLabel);
-		if (px.debug) $.writeln ("px.endnoteHeadingString" + px.endnoteHeadingString);
-	}
-	if (dok.extractLabel(px.pStylePrefixMarkerLabel) != "") {
-		px.pStylePrefix = dok.extractLabel(px.pStylePrefixMarkerLabel);
-		if (px.debug) $.writeln ("px.pStylePrefix" + px.pStylePrefix);
-	}
-	if (dok.extractLabel(px.numberBySectionLabel) != "") {
-		px.numberBySection = dok.extractLabel(px.numberBySectionLabel) == "true" ? true : false;
-		if (px.debug) $.writeln ("px.numberBySection" + px.numberBySection);
-	}
+	var logFile = File ( getScriptFolderPath() + "/" + px.logFileName );
+	initLog(logFile);
+	
+	var userLevel = app.scriptPreferences.userInteractionLevel;	
+	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
+	var redraw = app.scriptPreferences.enableRedraw;
+	app.scriptPreferences.enableRedraw = false;
 
     //Ebenen entsperren und sichtbar machen
 	var layerState = [];
@@ -1104,51 +1252,6 @@ function startProcessing() {
 		dok.layers[i].locked = false;
 	}
 
-	// Read all Styles for GUI 
-	// Keine korrekte Umsetzung für Formatgruppen!
-	for (var i = 1; i < dok.allParagraphStyles.length; i++) {
-		var style = dok.allParagraphStyles[i];
-		if (style.name == px.pStyleEndnoteName)  px.pStyleEndnoteIndex = i;
-		if (style.name == px.pStyleEndnoteFollowName)  px.pStyleEndnoteFollowIndex = i;
-		if (style.name == px.pStyleEndnoteHeadingName)  px.pStyleEndnoteHeadingIndex = i;
-		if (style.name == px.pStyleEndnoteSplitHeadingName)  px.pStyleEndnoteSplitHeadingIndex = i;
-		px.dokParagraphStyleNames[i] = style.name;
-		px.dokParagraphStyles[i] = style;
-		prefix = style.name.match(/^[^~]+/);
-		if (prefix) {
-			prefix = prefix[0];
-			px.dokParagraphStylePrefixes.push(prefix);
-			if (px.dokParagraphStylePrefixStyles[prefix]) px.dokParagraphStylePrefixStyles[prefix].push(style);
-			else  px.dokParagraphStylePrefixStyles[prefix] = [style];
-		}		
-	}
-	px.dokParagraphStylePrefixes = px.ids.unique(px.dokParagraphStylePrefixes);
-	for (var i = 0; i < px.dokParagraphStylePrefixes.length; i++) {
-		if (px.dokParagraphStylePrefixes[i] == px.pStylePrefix) {
-			px.pStylePrefixIndex = i;
-			break;
-		}
-	}
-
-	for (var i = 0; i < dok.allCharacterStyles.length; i++) {
-		var style = dok.allCharacterStyles[i];
-		if (style.name == px.cStyleEndnoteMarkerName)  px.cStyleEndnoteMarkerIndex = i;
-		px.dokCharacterStyleNames[i] = style.name;
-		px.dokCharacterStyles[i] = style;
-	}
-
-	/* Init Logging */
-	px.scriptFolderPath = getScriptFolderPath();
-	if (px.debug) px.log = idsLog(File ( px.scriptFolderPath + "/" + px.logFileName ), "DEBUG");
-	else px.log = idsLog(File ( px.scriptFolderPath + "/" + px.logFileName), "WARN");		
-	px.log.debug("Start ... ");
-	
-	
-	var userLevel = app.scriptPreferences.userInteractionLevel;	
-	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
-	var redraw = app.scriptPreferences.enableRedraw;
-	app.scriptPreferences.enableRedraw = false;
-	
 	if (px.debug) {		
 		foot2end (dok);
 	}
@@ -1159,8 +1262,7 @@ function startProcessing() {
 			px.log.warnAlert(localize (px.ui.errorInfo) +  e + "\nLine: " + e.line); 
 		}
 	}
-	
-	
+		
     // Ebenen zurücksetzen
 	for (var i = 0; i < dok.layers.length; i++) {
 		dok.layers[i].visible = layerState[i][0];
@@ -1169,11 +1271,17 @@ function startProcessing() {
 	    
 	app.scriptPreferences.userInteractionLevel = userLevel; 
 	app.scriptPreferences.enableRedraw = redraw;
-	px.log.debug("Ende");
-	if (px.showGui) alert (localize(px.ui.resultInfo, px.foot2EndCounter));
+	
+	var resultInfo = localize(px.ui.resultInfo, px.foot2EndCounter);
+	if (px.showGui) {
+		alert (resultInfo);
+	}
+	else {
+		px.log.debug();
+	}
 }
 	
-// Hauptskript
+// Main Script 
 function foot2end (dok) {
 	if (px.showGui) {
 		if ( getConfig() == 2) return;
@@ -1185,21 +1293,18 @@ function foot2end (dok) {
 			if (style.name == px.pStyleEndnoteName)  {
 				px.pStyleEndnote = style;			
 			}
-			if (style.name == px.pStyleEndnoteFollowName)  {
-				px.pStyleEndnoteFollow = style;			
+			else if (style.name == px.pStyleEndnoteFollowName)  {
+				px.pStyleEndnoteFollow = style;
 			}
-			if (style.name == px.pStyleEndnoteSplitHeadingName) {
+			else if (style.name == px.pStyleEndnoteSplitHeadingName) {
 				px.pStyleEndnoteSplitHeading = style;			
 			}				
-			if (style.name == px.pStyleEndnoteHeadingName) {
-				px.pStyleEndnoteHeading = style;			
-			}				
-			if (style.name == px.pStyleEndnoteHeadingName) {
+			else if (style.name == px.pStyleEndnoteHeadingName) {
 				px.pStyleEndnoteHeading = style;			
 			}
 		}
 		for (var i = 0; i < dok.allCharacterStyles.length; i++) {
-			var style = dok.allParagraphStyles[i];
+			var style = dok.allCharacterStyles[i];
 			if (style.name == px.cStyleEndnoteMarkerName)  {
 				px.cStyleEndnoteMarker = style;			
 			}
@@ -1239,17 +1344,23 @@ function foot2end (dok) {
 	for (var j = 0; j < stories.length; j++) {
 		story = stories[j];
 		if (story.footnotes.length > 0) {
-			var pBar = px.ids.getProgressBar(localize(px.ui.menuTitle, px.version));
-			pBar.reset("Verarbeite Textabschnitt " + (j+1) + " von " + stories.length, story.footnotes.length);
-			// EndnotenTitel einfügen
+			if (px.showGui) {
+				var pBar = px.ids.getProgressBar(localize(px.ui.menuTitle, px.version));
+				pBar.reset("Verarbeite Textabschnitt " + (j+1) + " von " + stories.length, story.footnotes.length);
+			}
+			// EndnotenTitel einfügen  					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
 			hyperLinkID =  hLinksPerStory[story.id][1][0];
-			if (hyperLinkID == "last") {
+			if (hyperLinkID == "last") { // --> There is no Endnote Hyperlink in the story.
 				story.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
 				story.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
 			}
 			else {
 				firstHlink = dok.hyperlinks.itemByID(hyperLinkID);
 				firstHlinkIndex = firstHlink.destination.destinationText.insertionPoints[0].index;
+				if (firstHlink.destination.destinationText.parentStory.id != story.id) {
+					px.log.warnAlert( localize(px.ui.endnoteStoryMoved) );
+					return;
+				}
 				firstEndnote = story.insertionPoints[firstHlinkIndex].paragraphs[0];
 				headingParagraph = story.insertionPoints[firstHlinkIndex-1].paragraphs[0];
 				if (px.numberBySection && headingParagraph.appliedParagraphStyle == px.pStyleEndnoteSplitHeading) {
@@ -1269,10 +1380,13 @@ function foot2end (dok) {
 
 			var footn = story.footnotes;
 			for (var i = footn.length-1; i >=0 ; i--) {
-				pBar.hit();
+				if (px.showGui) {
+					pBar.hit();
+				}
 				footnote = footn[i];
 				
 				trimFootnoteSpace(footnote);
+//~ 				$.writeln(footnote.contents);
 				// Formatieren 				
 				footnote.paragraphs[0].applyParagraphStyle (px.pStyleEndnote, false);
 				if(footnote.paragraphs.length > 1) {
@@ -1280,7 +1394,7 @@ function foot2end (dok) {
 				}				
 				
 				var fnIndex = footnote.storyOffset.index;
-				hyperLinkID = getPosition(fnIndex, hLinksPerStory[story.id]);
+				hyperLinkID = getPosition(fnIndex, hLinksPerStory[story.id]); // Find the next existing Hyperlink in the story
 				if (hyperLinkID == null) {
 					// Fehler bei getPosition();
 					return;
@@ -1305,6 +1419,8 @@ function foot2end (dok) {
 				cue.insertLabel(px.hyperlinkLabel, "true");
 				hlink = dok.hyperlinks.add (cue, endnote_link, {visible: false});
 				hlink.insertLabel(px.hyperlinkLabel, "true");
+
+				pushHLink ( hLinksPerStory[story.id], hyperLinkID, hlink);
 
 				// Rückverlinkung
 				endnote_backlink = dok.hyperlinkTextDestinations.add (footn[i].storyOffset);
@@ -1347,10 +1463,13 @@ function foot2end (dok) {
 				endnotenStartEndPositions = [];
 				for (var h = 0; h < dok.hyperlinks.length; h++) {
 					hlink = dok.hyperlinks[h];
-					if ( hlink.extractLabel(px.hyperlinkLabel) == "true") {
-						endnotenStartEndPositions.push([hlink.destination.destinationText.index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
+					if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "true") {
+						if (hlink.source.sourceText.parentStory.id == story.id) {
+							endnotenStartEndPositions.push([hlink.destination.destinationText.index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
+						}
 					}
 				}
+			
 				// Endnoten Nummerierung wieder zurücksetzen... 
 				app.findGrepPreferences = NothingEnum.NOTHING;
 				app.changeGrepPreferences = NothingEnum.NOTHING;
@@ -1364,7 +1483,7 @@ function foot2end (dok) {
 
 				endnotenStartEndPositions.sort(sortSecondEntry);
 				
-				// In length -1 steck nur der leere String für den letzten Insertion Point der Story
+				// In length -1 steckt nur der leere String für den letzten Insertion Point der Story
 				sectionCounter = sectionIndexArray.length-2;
 				
 				var currentSection, nextSection, endnotenIndex, endnotenTextIndex;
@@ -1395,6 +1514,7 @@ function foot2end (dok) {
 					nextSectionStartIndex = nextSection[1];
 					
 					if (previousEndnotenTextIndex < currentSectionStartIndex && endnotenTextIndex > currentSectionStartIndex && endnotenTextIndex < nextSectionStartIndex) {
+//~ 						$.writeln(currentSection[2]);
 						story.insertionPoints[endnotenIndex].contents = currentSection[2];
 						story.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
 						var nextPar = px.ids.nextParagraph (story.insertionPoints[endnotenIndex].paragraphs[0]);
@@ -1412,7 +1532,7 @@ function foot2end (dok) {
 						sectionCounter--;						
 					}
 				}
-			}					
+			}		
 			// Schneller fix wenn fortlaufend nummeriert wird
 			else { 
 				app.findGrepPreferences = NothingEnum.NOTHING;
@@ -1435,7 +1555,7 @@ function foot2end (dok) {
 	} // for
 
 		
-	if (pBar){
+	if (pBar) {
 		var newPages = dok.pages.length - oldPages ;
 		if (dok.pages.length != oldPages ) {
 			alertMsg (localize (px.ui.newPagesAdded, newPages));
@@ -1445,19 +1565,24 @@ function foot2end (dok) {
 	}
 }
 
-function getSections(story) {
+function getSections (story) {
 	// die performanteste Lösung ist vermutlich nach allen AF zu suchen die mit dem Präfix anfangen und dann den SectionArray zu bauen.
 	var sectionIndexArray = [[0,story.characters[0].index, ""]];
 	for (var ps = 0; ps < px.dokParagraphStylePrefixStyles[px.pStylePrefix].length; ps++) {
 		var pStyle = px.dokParagraphStylePrefixStyles[px.pStylePrefix][ps];
 		app.findGrepPreferences = NothingEnum.NOTHING;
 		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.findWhat = "^.+\\r";
+//~ 		app.findGrepPreferences.findWhat = "^.+\\r";
 		app.findGrepPreferences.appliedParagraphStyle = pStyle;
-		var results = story.findGrep();
+		var results = story.findGrep();		
+		var lastPar = null;
 		for (var i = 0; i < results.length; i++) {
-			var result = results[i];
+			var result = results[i].paragraphs[0];
+			if ( lastPar && lastPar.index == result.index) {
+				continue;
+			}
 			sectionIndexArray.push([sectionIndexArray.length,result.index+1, result.paragraphs[0].contents]);
+			lastPar = result;
 		}
 	}
 
@@ -1470,7 +1595,7 @@ function getSections(story) {
 	return sectionIndexArray;
 }
 
-function getCurrentEndnotes(dok, stories) {
+function getCurrentEndnotes (dok, stories) {
 	// Die aktuellen Endnoten einsammeln
 	var hLink, storyID, story;	
 	var hLinksPerStory = [];
@@ -1484,7 +1609,7 @@ function getCurrentEndnotes(dok, stories) {
 						hLinksPerStory[storyID] = [];
 						hLinksPerStory[storyID].push(["first", -1]);
 					}
-//~ 					px.log.debug(hLink.id + " -> " + hLink.source.sourceText.index)
+					px.log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
 					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
 				}
 				else {
@@ -1500,6 +1625,8 @@ function getCurrentEndnotes(dok, stories) {
 	for (var j = 0; j < stories.length; j++) {
 		story = stories[j];
 		storyID = story.id;
+		px.log.debug("Endnoten für "+ storyID);
+
 		if (hLinksPerStory[storyID]) {
 			hLinksPerStory[storyID].sort(sortSecondEntry);
 			hLinksPerStory[storyID].push(["last", story.insertionPoints[-1].index]);
@@ -1509,11 +1636,11 @@ function getCurrentEndnotes(dok, stories) {
 			hLinksPerStory[storyID].push(["first", -1]);
 			hLinksPerStory[storyID].push(["last", story.insertionPoints[-1].index]);
 		}
-//~ 		if (px.debug) {
-//~ 			for (var m =0; m < hLinksPerStory[storyID].length; m++) {
-//~ 				px.log.debug(hLinksPerStory[storyID][m]);
-//~ 			}
-//~ 		}
+		if (px.debug) {
+			for (var m =0; m < hLinksPerStory[storyID].length; m++) {
+				px.log.debug(hLinksPerStory[storyID][m]);
+			}
+		}
 	}
 	
 	// TODO prüfen ob die Reihenfolge in den Stories noch stimmt - Copy & Paste Bugs könnten so auffalen. 
@@ -1530,6 +1657,18 @@ function getPosition(index, endNoteArray) {
 	px.log.warnAlert(localize (px.ui.positionFail));
 	return null; 
 }
+
+function pushHLink ( endNoteArray, hyperLinkID, hLink) {
+	for (var m =1; m < endNoteArray.length; m++) {
+		if (endNoteArray[m][0] == hyperLinkID) {
+			endNoteArray.splice(m,0, [hLink.id, hLink.source.sourceText.index]);
+			return;
+		} 
+	}
+	px.log.warnAlert(localize (px.ui.positionFail));
+	return null; 
+}
+
 
 function deleteNotemarkers (scope) {
 //~ 	// Es gibt Abstürze bei wenn der Footnote Marker am Ende des Textabschnitts steht Suche Ersetze Kombinationen in CS6
@@ -1562,6 +1701,77 @@ function trimFootnoteSpace (footNote) {
 
 
 
+
+// Read Existing Style mapping from document
+function getStyleInformation (dok) {
+	if (dok.extractLabel(px.pStyleEndnoteLabel) != "") {
+		px.pStyleEndnoteName = dok.extractLabel(px.pStyleEndnoteLabel);
+		if (px.debug) $.writeln ("px.pStyleEndnoteName" + px.pStyleEndnoteName);
+	}	
+	if (dok.extractLabel(px.pStyleEndnoteFollowLabel) != "") {
+		px.pStyleEndnoteFollowName = dok.extractLabel(px.pStyleEndnoteFollowLabel);
+		if (px.debug) $.writeln ("px.pStyleEndnoteFollowName" + px.pStyleEndnoteFollowName);
+	}	
+	if (dok.extractLabel(px.pStyleEndnoteHeadingLabel) != "") {
+		px.pStyleEndnoteHeadingName = dok.extractLabel(px.pStyleEndnoteHeadingLabel);
+		if (px.debug) $.writeln ("px.pStyleEndnoteHeadingName" + px.pStyleEndnoteHeadingName);
+	}
+	if (dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel) != "") {
+		px.pStyleEndnoteSplitHeadingName = dok.extractLabel(px.pStyleEndnoteSplitHeadingLabel);
+		if (px.debug) $.writeln ("px.pStyleEndnoteSplitHeadingName" + px.pStyleEndnoteSplitHeadingName);
+	}
+	if (dok.extractLabel(px.cStyleEndnoteMarkerLabel) != "") {
+		px.cStyleEndnoteMarkerName = dok.extractLabel(px.cStyleEndnoteMarkerLabel);
+		if (px.debug) $.writeln ("px.cStyleEndnoteMarkerName" + px.cStyleEndnoteMarkerName);
+	}
+	if (dok.extractLabel(px.endnoteHeadingStringLabel) != "") {
+		px.endnoteHeadingString = dok.extractLabel(px.endnoteHeadingStringLabel);
+		if (px.debug) $.writeln ("px.endnoteHeadingString" + px.endnoteHeadingString);
+	}
+	if (dok.extractLabel(px.pStylePrefixMarkerLabel) != "") {
+		px.pStylePrefix = dok.extractLabel(px.pStylePrefixMarkerLabel);
+		if (px.debug) $.writeln ("px.pStylePrefix" + px.pStylePrefix);
+	}
+	if (dok.extractLabel(px.numberBySectionLabel) != "") {
+		px.numberBySection = dok.extractLabel(px.numberBySectionLabel) == "true" ? true : false;
+		if (px.debug) $.writeln ("px.numberBySection" + px.numberBySection);
+	}
+}
+
+// Read all Styles for GUI and Prefix Mapping
+function readStyles (dok) {
+	for (var i = 1; i < dok.allParagraphStyles.length; i++) {
+		var style = dok.allParagraphStyles[i];
+		if (style.name == px.pStyleEndnoteName)  px.pStyleEndnoteIndex = i;
+		if (style.name == px.pStyleEndnoteFollowName)  px.pStyleEndnoteFollowIndex = i;
+		if (style.name == px.pStyleEndnoteHeadingName)  px.pStyleEndnoteHeadingIndex = i;
+		if (style.name == px.pStyleEndnoteSplitHeadingName)  px.pStyleEndnoteSplitHeadingIndex = i;
+		px.dokParagraphStyleNames[i] = style.name;
+		px.dokParagraphStyles[i] = style;
+		prefix = style.name.match(/^[^~]+/);
+		if (prefix) {
+			prefix = prefix[0];
+			px.dokParagraphStylePrefixes.push(prefix);
+			if (px.dokParagraphStylePrefixStyles[prefix]) px.dokParagraphStylePrefixStyles[prefix].push(style);
+			else  px.dokParagraphStylePrefixStyles[prefix] = [style];
+		}		
+	}
+	px.dokParagraphStylePrefixes = px.ids.unique(px.dokParagraphStylePrefixes);
+	for (var i = 0; i < px.dokParagraphStylePrefixes.length; i++) {
+		if (px.dokParagraphStylePrefixes[i] == px.pStylePrefix) {
+			px.pStylePrefixIndex = i;
+			break;
+		}
+	}
+
+	for (var i = 0; i < dok.allCharacterStyles.length; i++) {
+		var style = dok.allCharacterStyles[i];
+		if (style.name == px.cStyleEndnoteMarkerName)  px.cStyleEndnoteMarkerIndex = i;
+		px.dokCharacterStyleNames[i] = style.name;
+		px.dokCharacterStyles[i] = style;
+	}
+}
+
 // Prüft ob die Styles im Dokument sinnvoll angelegt sind
 function checkStyles (dok) {
 	// Absätze von Endnoten müssen immer nummeriert sein!
@@ -1586,7 +1796,7 @@ function checkStyles (dok) {
 		px.crossRefStyleEndnote.buildingBlocks.add (BuildingBlockTypes.paragraphNumberBuildingBlock);
 	}
 	else {
-		if (px.crossRefStyleEndnote.appliedCharacterStyle == null || px.crossRefStyleEndnote.appliedCharacterStyle.id != px.cStyleEndnoteMarker.id) {
+		if (px.crossRefStyleEndnote.appliedCharacterStyle == null || (px.cStyleEndnoteMarker != null &&  px.crossRefStyleEndnote.appliedCharacterStyle.id != px.cStyleEndnoteMarker.id)) {
 			px.crossRefStyleEndnote.appliedCharacterStyle = px.cStyleEndnoteMarker;
 			alertMsg(localize (px.ui.crossrefFormatFail, px.crossRefStyleEndnoteName, px.cStyleEndnoteMarkerName));
 		} 
@@ -1836,6 +2046,17 @@ function alertMsg(_msg) {
 		w.show ();
 	}
 }
+
+/* Init Logging, sets global px.log  */
+function initLog(logFile) {
+	if (px.debug) {
+		px.log = idsLog.getLogger (logFile, "DEBUG", true);
+	}
+	else {
+		px.log = idsLog.getLogger (logFile, "WARN", false);
+	} 	
+}
+
 /*     Get Filepath from current script  */
 /*Folder*/ function getScriptFolderPath() {
      try {

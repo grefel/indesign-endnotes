@@ -37,15 +37,15 @@ var px = {
 	// User interface strings -- translation and changes are save
 	ui:{
 		// all scripts 
-		saveDoc:{en:"Dokument ist nicht gespeichert", de:"Dokument ist nicht gespeichert"},
-		saveDocInfo:{en:"Das Dokument muss zuerst gespeichert werden!\rSpeichern und fortfahren?", de:"Das Dokument muss zuerst gespeichert werden!\rSpeichern und fortfahren?"},
-		saveDocFail:{en:"Die Datei konnte nicht gespeichert werden.\n", de:"Die Datei konnte nicht gespeichert werden.\n"},
-		errorInfo:{en:"Fehler bei der Ausführung: ", de:"Fehler bei der Ausführung: "},		
+		saveDoc:{en:"Document is not saved", de:"Dokument ist nicht gespeichert"},
+		saveDocInfo:{en:"Save your document first!\rSave and continue?", de:"Das Dokument muss zuerst gespeichert werden!\rSpeichern und fortfahren?"},
+		saveDocFail:{en:"Could not save File.\n", de:"Die Datei konnte nicht gespeichert werden.\n"},
+		errorInfo:{en:"Error during execution: ", de:"Fehler bei der Ausführung: "},		
 		versionWarning:{en:"To run this script InDesign CS4 is required", de:"Für dieses Skript wird mindestens InDesign CS4 benötigt"},
 		
 		// createEndnotes.jsx		
 		menuTitle:{en:"Convert Footnotes to Endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
-		resultInfo:{en:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
+		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
 		noTextInDoc:{en:"No text in document", de:"Es ist kein Text im Dokument enthalten"},
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
@@ -74,22 +74,23 @@ var px = {
 		
 		
 		invalidSelection:{en:"Invalid Selection", de:"Ungültige Auswahl"},
-		headingStyleFail :{en:"Die von Ihnen gewünschte Überschrift [%1] stimmt nicht mit dem Überschriftentext [%2] im Dokument überein. \n\nBitte prüfen Sie das Ergebnis!", de:"Die von Ihnen gewünschte Überschrift [%1] stimmt nicht mit dem Überschriftentext [%2] im Dokument überein. \n\nBitte prüfen Sie das Ergebnis!"},
-		statusFail:{en:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!", de:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!"},
-		numberingFail:{en:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!", de:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!"},
-		newPagesAdded:{en:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
-		positionFail:{en:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
-		samePStyle:{en:"Das Absatzformat [%1] wurde auch für die Folgeabsätze ausgewählt, dies führt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert.", de:"Das Absatzformat [%1] wurde auch für die Folgeabsätze ausgewählt, dies führt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert."},
-		endnoteStyleNumberingFail:{en:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] aktiviert.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] aktiviert."},
-		crossrefFormatFail:{en:"Das Querverweisformat [%1] ist bereits vorhanden.\nDas ausgewählte aber abweichende Zeichenformat [%2] wurde eingestellt!", de:"Das Querverweisformat [%1] ist bereits vorhanden.\nDas ausgewählte aber abweichende Zeichenformat [%2] wurde eingestellt!"},
-		endnoteStyleNumberingDeactivate:{en:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] deaktiviert.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] deaktiviert."},
-		headingFail:{en:"Für den Titel muss mindestens ein Zeichen eingegeben werden.",de:"Für den Titel muss mindestens ein Zeichen eingegeben werden."},
-		styleSelectionFail:{en:"Fehler bei der Formatauswahl", de:"Fehler bei der Formatauswahl"},
-		styleSelectionFailSection:{en:"Fehler bei der Formatauswahl für die Abschnittsbildung", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
+		headingStyleFail :{en:"The choosen heading [%1] does not match the heading text [%2] in your document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] stimmt nicht mit dem Überschriftentext [%2] im Dokument überein. \n\nBitte prüfen Sie das Ergebnis!"},
+		statusFail:{en:"Undocumented Error! - Please send the document to the support!", de:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!"},
+		numberingFail:{en:"Followup paragraph not found! Numbering may be faulty!", de:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!"},
+		newPagesAdded:{en:"There were added %1 pages . Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
+		positionFail:{en:"There was an error in the endnote position analysis!\Please contact Support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
+		samePStyle:{en:"The paragraph format [%1] was also selected for the followup paragraphs , this could lead to numbering errors! The format has been duplicated.", de:"Das Absatzformat [%1] wurde auch für die Folgeabsätze ausgewählt, dies führt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert."},
+		endnoteStyleNumberingFail:{en:"In paragraph style [%1] the option [Bullets and Numbering] -> [List Type : Numbes ] was activated.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] aktiviert."},
+		crossrefFormatFail:{en:"The cross-reference format [%1] already exists.\nThe selected different Character Style [%2] was set!", de:"Das Querverweisformat [%1] ist bereits vorhanden.\nDas ausgewählte aber abweichende Zeichenformat [%2] wurde eingestellt!"},
+		endnoteStyleNumberingDeactivate:{en:"In Paragraph Style [%1] the option \n[Bullets and Numbering] -> [List Type : Numbes ] was deactivated.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] deaktiviert."},
+		headingFail:{en:"For the title of at least one character must be entered .",de:"Für den Titel muss mindestens ein Zeichen eingegeben werden."},
+		styleSelectionFail:{en:"Error in the format selection", de:"Fehler bei der Formatauswahl"},
+		styleSelectionFailSection:{en:"Error in the format selection of selections", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
+		endnoteStoryMoved:{en:"Text and Endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
 		
 
 		// deleteEndnotes.jsx
-		noEndnoteOrMarker:{en:"Die Einfügemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein.", de:"Die Einfügemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein."},
+		noEndnoteOrMarker:{en:"The insertion point must be placed within an endnote or before the endnote marker.", de:"Die Einfügemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein."},
 		deleteEndnoteName:{en:"Remove endnote",de:"Endnote entfernen"},
 		confirmEndnoteDelete:{en:"Remove Endnote %1 \n\n%2",de:"Endnote löschen %1 \n\n%2"},
 
@@ -140,5 +141,5 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"1.2-2016-01-15"
+	version:"1.2-2016-05-16"
 }
