@@ -32,24 +32,13 @@ if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
      px.debug = true;
 }
 
-// idsHelper.jsx
+// Libs 
 {
-	/** 
-* License: Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) http://creativecommons.org/licenses/by-sa/3.0/
-* @fileoverview InDesign JavaScript Extension Library ...
- * {@link http://gisbert.wikisquare.de/indesignjs/} 
- *
- * @author Gregor Fellenz
- * @version 0.3
- * @date 10.10.2011
- */
-
-
 /**
 * Helper and tools for common InDesign scripting tasks
 * @class <b>idsTools</b> contains InDesign JavaScript Extensions. Include this library and use the idsTools object in your script.<br/><br/><code>#include "idsHelper.jsx"<br/>[...]<br/>_ids = idsTools()<br/>_ids.getPageByObject(_pageItem)</code><br/>
 */
-var idsTools = function () {
+var idsTools = idsTools || function () {
 	return { 
 		/**
 		* Returns the <b>Page</b> which contains the Object
@@ -132,6 +121,9 @@ var idsTools = function () {
 		*/
 		showIt : function (_object) {
 			if (_object != null) {
+		        if (_object.hasOwnProperty ("source")) _object = _object.source;
+				if (_object.hasOwnProperty ("sourcePageItem")) _object = _object.sourcePageItem;
+				if (_object.hasOwnProperty ("sourceText")) _object = _object.sourceText;
 				var _spread = this.getSpreadByObject (_object);
 				if (_spread != null) {
 					var _dok = _spread.parent;
@@ -197,12 +189,30 @@ var idsTools = function () {
 			return _tf;
 		},
 
+		/**
+		* Get the type area of the page 
+		* @param {Page} page The reference page
+		* @return {Array} Type area Array [y1,x1,y2,x2]
+		*/
+		getTypeArea : function (page) {
+			var doc = page.parent.parent;
+			var y1 = page.marginPreferences.top;
+			var y2 = doc.documentPreferences.pageHeight - page.marginPreferences.bottom;
+			if (page.side == PageSideOptions.LEFT_HAND) {
+				var x1 = page.marginPreferences.right;
+				var x2 = doc.documentPreferences.pageWidth - page.marginPreferences.left;
+			} 
+			else {
+				var x1 = page.marginPreferences.left;
+				var x2 = doc.documentPreferences.pageWidth - page.marginPreferences.right;
+			}			
+			return [y1 , x1 , y2 , x2];
+		},		
 		/** Scales a frame to a given width 
 			@param {PageItem} frame The frame to scale
 			@param {Number} width The widht in millimeters
 			@param {Boolean} maxImageSize is a maximum image size greater 100% allowed?
-		*/
-			
+		*/			
 		scaleToWidth : function (frame, width, maxImageSize) {
 			if (maxImageSize == undefined) maxImageSize == false;			
 			var gb = frame.geometricBounds;
@@ -306,14 +316,22 @@ var idsTools = function () {
 		/**
 		* Resolves the next Paragraph object. Use this function instead of <code>nextItem()</code> 
 		* from the collection Paragraphs as this method is much quicker with long Text objects.
-		* @param {Paragraph} _par The reference Paragraph 
+		* @param {Paragraph} par The reference Paragraph 
 		* @return {Paragraph} The next Paragraph or null
 		*/
-		nextParagraph : function (_par) {
-			var _lastCharLetzterIndex = _par.characters[-1].index;
-			var _firstCharNaechster = _par.parentStory.characters[_lastCharLetzterIndex + 1];
-			if (_firstCharNaechster.isValid ) return _firstCharNaechster.paragraphs[0];
-			else return null;
+		nextParagraph : function (par) {
+			if ( par == undefined || !par.hasOwnProperty('baseline')) {
+				return null;
+			}
+			var last_ip = null, next_ip = null, next_paragraph = null;
+			last_ip = (par.constructor.name == 'Paragraph') ? par.insertionPoints[-1] : par.paragraphs[-1].insertionPoints[-1];
+			next_ip = par.parent.insertionPoints.item(last_ip.index);
+			if (next_ip.isValid) {
+				return next_ip.paragraphs[0];
+			}
+			else {
+				return null;			
+			}
 		},
 
 		/**
@@ -324,7 +342,7 @@ var idsTools = function () {
 		*/
 		nextChar : function (_char) {
 			var _lastCharLetzterIndex = _char.index;
-			var _firstfirstCharNaechster = _char.parentStory.characters[_lastCharLetzterIndex + 1];
+			var _firstCharNaechster = _char.parentStory.characters[_lastCharLetzterIndex + 1];
 			if (_firstCharNaechster != null ) return _firstCharNaechster;
 			else return null;
 		},
@@ -349,28 +367,30 @@ var idsTools = function () {
 			return _versalHoehe;
 		},
 
+
 		/**
 		* Checks the last TextFrame of the Story. If there is an overflow new Pages and TextFrames are added.
 		* @param {Story} _story The Story to check
 		* @return {TextFrame} The last TextFrame
 		*/
 		checkOverflow : function (_story) {
+			_story.insertionPoints[-1].contents = SpecialCharacters.ZERO_WIDTH_NONJOINER;
 			var _lastTC = _story.textContainers[_story.textContainers.length - 1];
 			var _run = true;
 			while (_lastTC.overflows && _run) {
 				var _last = _story.textContainers.length -1;
-				if (_story.textContainers[_last].characters.length == 0 && _story.textContainers[_last -1].characters.length == 0 && _story.textContainers[_last -2].characters.length ==0 ) _run = false;
+				if (_story.textContainers[_last].characters.length == 0 && _last -1 > -1 && _story.textContainers[_last -1].characters.length == 0 && _last -1 > -2 && _story.textContainers[_last -2].characters.length ==0 ) _run = false;
 				var _page = this.getPageByObject(_lastTC);
 				var _tf = this.addPageTextFrame(_page);
 				_lastTC.nextTextFrame = _tf;
 				_lastTC = _tf;
 			}
-//~ 			while (_story.textContainers.length > 1 && _lastTC.characters.length == 0) {
-//~ 				var _page = this.getPageByObject(_lastTC);
-//~ 				_page.remove();
-//~ 				_lastTC = _story.textContainers[_story.textContainers.length - 1];
-//~ 			}
-			return _lastTC;
+			while (_story.textContainers.length > 1 && _lastTC.characters.length == 0) {
+				var _page = this.getPageByObject(_lastTC);
+				_page.remove();
+				_lastTC = _story.textContainers[_story.textContainers.length - 1];
+			}
+			_story.characters[-1].contents = "";
 		},
 
 
@@ -811,7 +831,8 @@ var idsTools = function () {
 				viewPreferences:dok.viewPreferences.rulerOrigin,
 				zeroPoint:dok.zeroPoint,
 				textDefaultParStyle:dok.textDefaults.appliedParagraphStyle,
-				textDefaultCharStyle:dok.textDefaults.appliedCharacterStyle
+				textDefaultCharStyle:dok.textDefaults.appliedCharacterStyle,
+				transformReferencePoint:dok.layoutWindows[0].transformReferencePoint
 			}		
 			dok.textDefaults.appliedCharacterStyle = dok.characterStyles[0];
 			dok.textDefaults.appliedParagraphStyle = dok.paragraphStyles[1];
@@ -821,7 +842,8 @@ var idsTools = function () {
 			dok.viewPreferences.horizontalMeasurementUnits = MeasurementUnits.MILLIMETERS;
 			dok.viewPreferences.verticalMeasurementUnits = MeasurementUnits.MILLIMETERS;
 			dok.viewPreferences.rulerOrigin = RulerOrigin.PAGE_ORIGIN;
-			dok.zeroPoint = [0,0]
+			dok.zeroPoint = [0,0];
+			dok.layoutWindows[0].transformReferencePoint = AnchorPoint.TOP_LEFT_ANCHOR;
 			return oldValues;
 		},
 		/**
@@ -836,11 +858,24 @@ var idsTools = function () {
 			dok.zeroPoint = values.zeroPoint;
 			dok.textDefaults.appliedParagraphStyle = values.textDefaultParStyle;
 			dok.textDefaults.appliedCharacterStyle = values.textDefaultCharStyle;
+			dok.layoutWindows[0].transformReferencePoint = values.transformReferencePoint;
+
 		},
 		trim : function (string) {
 			string = string.replace(/^\s+/g,"");
 			string = string.replace(/\s+$/g,"");
 			return string;
+		},
+		
+		/**
+		* Rounds to a given Number of decimal, default = 2
+		* @param {Number} value Number tor round
+		* @param {Number} decimals Number of decimal place
+		* @return {Number} The rounded value
+		*/
+		roundToDecimal : function (value, decimals) {
+			if (!decimals) decimals = 2;
+			return Math.round( value*Math.pow(10, decimals)) / Math.pow(10, decimals);
 		},
 		/**
 		* Recursively remove XML-Tags 
@@ -852,92 +887,7 @@ var idsTools = function () {
 			}
 		}	
 	}
-}
-
-/**
-* Hashmap for JavaScript
-* @class <b>idsMap</b> implements a straightforward HashMap based on <a href="http://www.mojavelinux.com/articles/javascript_hashes.html">http://www.mojavelinux.com/articles/javascript_hashes.html</a> by Dan Allen.<br/><br/><code>#include "idsHelper.jsx"<br/>[...]<br/>var _map = idsMap();<br/>_map.pushItem ("key1", "value1");<br/>_map.getItem ("key1");</code>
- * @property {number} length The number of items in the map.
-*/	 
-var idsMap = function () {
-	return { 
-		length : 0,
-		items : [],
-		/**
-		* Remove an entry
-		* @param {String} _key The key 
-		* @return {Object} The removed value
-		*/		
-		removeItem : function(_key) {
-			var _previous;
-			if (typeof(this.items[_key]) != 'undefined') {
-				this.length--;
-				var _previous = this.items[_key];
-				delete this.items[_key];
-			}
-			return _previous;
-		},
-
-		/**
-		* Get an entry
-		* @param {String} _key The key 
-		* @return {Object} The value
-		*/		
-		getItem : function(_key) {
-			return this.items[_key];
-		},
-
-		/**
-		* Push an entry
-		* @param {String} _key The (new) key 
-		* @param {String} _key The new value 
-		* @return {Object} The previous value (if any) or undefined
-		*/		
-		pushItem : function(_key, _value) {
-			var _previous;
-			if (typeof(_value) != 'undefined') {
-				if (typeof(this.items[_key]) == 'undefined') {
-					this.length++;
-				}
-				else {
-					_previous = this.items[_key];
-				}
-				this.items[_key] = _value;
-			}
-			return _previous;
-		},
-
-		/**
-		* Test if the map has an entry
-		* @param {String} _key The key 
-		* @return {Bool} <b>true</b> everything worked fine, <b>false</b> something went wrong
-		*/
-		hasItem : function(_key) {
-			return typeof(this.items[_key]) != 'undefined';
-		},
-
-		/**
-		* Removes every entry in the map
-		*/
-		clear : function() {
-			for (var i in this.items) {
-				delete this.items[i];
-			}
-			this.length = 0;
-		}
-	}
-}
-
-// By Harbs http://forums.adobe.com/message/2800152#2800152
-//~ function GetItemFromCollection(label,collection){
-//~   var scriptVersion = app.scriptPreferences.version;
-//~   if( parseFloat(scriptVersion) > 6){app.scriptPreferences.version = 6}
-//~   var items = collection.item(label).getElements();
-//~   app.scriptPreferences.version = scriptVersion;
-//~   if(items.length==0){return null}
-//~   if(items.length==1){return items[0]}
-//~   return items;
-//~ }
+}();
 
 
 
@@ -1230,8 +1180,6 @@ function startProcessing() {
 		}
 	}
 
-	px.ids = idsTools();
-
 	// Read Existing Style mapping from document
 	getStyleInformation (dok);
 	readStyles(dok);
@@ -1315,8 +1263,8 @@ function foot2end (dok) {
 	// Dokument gespeichert? 
 	if (px.createBackupCopy && !px.debug) {
 		var date = new Date();
-		var day = px.ids.pad(date.getDate(), 2);
-		var month = px.ids.pad(date.getMonth() + 1, 2);
+		var day = idsTools.pad(date.getDate(), 2);
+		var month = idsTools.pad(date.getMonth() + 1, 2);
 		var year = date.getYear() + 1900;
 		var year = date.getYear() + 1900;
 		
@@ -1360,7 +1308,7 @@ function foot2end (dok) {
 		story = stories[j];
 		if (story.footnotes.length > 0) {
 			if (px.showGui) {
-				var pBar = px.ids.getProgressBar(localize(px.ui.menuTitle, px.version));
+				var pBar = idsTools.getProgressBar(localize(px.ui.menuTitle, px.version));
 				pBar.reset("Verarbeite Textabschnitt " + (j+1) + " von " + stories.length, story.footnotes.length);
 			}
 			// EndnotenTitel einfügen  					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
@@ -1466,10 +1414,10 @@ function foot2end (dok) {
 //~ 				for (var h = 0; h < dok.hyperlinks.length; h++) {
 //~ 					hlink = dok.hyperlinks[h];
 //~ 					if ( hlink.extractLabel(px.hyperlinkLabel) == "true") {
-//~ 						nextPar = px.ids.nextParagraph(hlink.destination.destinationText.paragraphs[0]);
+//~ 						nextPar = idsTools.nextParagraph(hlink.destination.destinationText.paragraphs[0]);
 //~ 						while (nextPar && nextPar.appliedParagraphStyle.id == px.pStyleEndnoteSplitHeading.id) {
 //~ 							nextPar.contents = "";
-//~ 							nextPar = px.ids.nextParagraph(hlink.destination.destinationText.paragraphs[0]);
+//~ 							nextPar = idsTools.nextParagraph(hlink.destination.destinationText.paragraphs[0]);
 //~ 						}
 //~ 					}
 //~ 				}
@@ -1532,7 +1480,7 @@ function foot2end (dok) {
 //~ 						$.writeln(currentSection[2]);
 						story.insertionPoints[endnotenIndex].contents = currentSection[2];
 						story.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
-						var nextPar = px.ids.nextParagraph (story.insertionPoints[endnotenIndex].paragraphs[0]);
+						var nextPar = idsTools.nextParagraph (story.insertionPoints[endnotenIndex].paragraphs[0]);
 						if (nextPar != null) {
 							nextPar.numberingStartAt = 1;
 							nextPar.numberingContinue = false;
@@ -1565,7 +1513,7 @@ function foot2end (dok) {
 			deleteNotemarkers (story);
 			
 			// Seiten auflösen 
-			px.ids.checkOverflow(story);
+			idsTools.checkOverflow(story);
 		} //if
 	} // for
 
@@ -1771,7 +1719,7 @@ function readStyles (dok) {
 			else  px.dokParagraphStylePrefixStyles[prefix] = [style];
 		}		
 	}
-	px.dokParagraphStylePrefixes = px.ids.unique(px.dokParagraphStylePrefixes);
+	px.dokParagraphStylePrefixes = idsTools.unique(px.dokParagraphStylePrefixes);
 	for (var i = 0; i < px.dokParagraphStylePrefixes.length; i++) {
 		if (px.dokParagraphStylePrefixes[i] == px.pStylePrefix) {
 			px.pStylePrefixIndex = i;

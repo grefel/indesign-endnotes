@@ -12,9 +12,7 @@ function runTests() {
 	// Override Settings in Skripts
 	px.debug = true;
 	px.showGui = false;
-	
-	px.ids = idsTools();
-	
+		
 	px.logFile = File ( getScriptFolderPath() + "/testLog.txt");
 	if (px.logFile.exists) {
 		px.logFile.remove();
@@ -69,7 +67,7 @@ function basicIntegrationTest() {
 	idsTesting.insertBlock("Special Test?");
 
 	
-	var resultString = px.ids.readTextFile(px.logFile);	
+	var resultString = idsTools.readTextFile(px.logFile);	
 //~ 	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
 
 //~ 	dokTest.close(SaveOptions.NO);
@@ -88,7 +86,7 @@ function test_01() {
 	
 	foot2end(dokTest);
 	
-	var resultString = px.ids.readTextFile(px.logFile);
+	var resultString = idsTools.readTextFile(px.logFile);
 	
 	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
 
@@ -106,7 +104,7 @@ function test_02() {
 	
 	foot2end(dokTest);
 	
-	var resultString = px.ids.readTextFile(px.logFile);
+	var resultString = idsTools.readTextFile(px.logFile);
 // ?? 
 //	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
 
@@ -123,7 +121,7 @@ function test_03() {
 	
 	foot2end(dokTest);
 	
-	var resultString = px.ids.readTextFile(px.logFile);
+	var resultString = idsTools.readTextFile(px.logFile);
 // ?? 
 //	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
 
@@ -142,7 +140,7 @@ function test_04() {
 	
 	foot2end(dokTest);
 	
-	var resultString = px.ids.readTextFile(px.logFile);
+	var resultString = idsTools.readTextFile(px.logFile);
 	
 	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
 
