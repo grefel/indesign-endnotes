@@ -1234,72 +1234,10 @@ function startProcessing() {
 		return;
 	}
 
-	// Check for valid stories
-	var endnoteStory = null;
-	var footnoteStories = [];
-	var endnoteStoryMap = idsMap();
-	
-	for (var i = 0; i < dok.stories.length; i++) {
-		story = dok.stories[i];
-		if (story.footnotes.length > 0 ) {
-			footnoteStories.push(story);
-		}
-		for (var k = 0; k < dok.hyperlinks.length; k++) {
-			var hlink = dok.hyperlinks[k];
-			if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination.destinationText.parentStory.id == story.id ) {
-				endnoteStoryMap.pushItem(story.id, story);
-			}
-		}
-	}
-
-	// Die einfachen Fälle 
-	if (footnoteStories.length == 0) {
-		alert(localize(px.ui.noFootnoteInDoc)); 
-		return;
-	}
-	if (endnoteStoryMap.length > 1) {
-		alert(localize(px.ui.multipleEndnoteLinks)); 
-		return;		
-	}
-	if (footnoteStories.length == 1 && endnoteStoryMap.length == 0) { // New doc
-		endnoteStory = footnoteStories[0];
-	}
-	else if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && endnoteStoryMap.hasItem(footnoteStories[0].id)) { // Update Doc
-		endnoteStory = footnoteStories[0];
-	}
-
-	if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && !endnoteStoryMap.hasItem(footnoteStories[0].id)) { 
-		alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
-		return;
-	}
-	
-	// Auswahl der gültigen Story durch user 
-	if (footnoteStories.length > 1) {		
-		if (checkSelection() ) {
-			var selectionID = app.selection[0].parentStory.id;
-			for (var i = 0; i < footnoteStories.length; i++) {
-				if (selectionID == footnoteStories[i].id) {
-					alert (localize(px.ui.willProcessCurrentSelection));
-					endnoteStory = footnoteStories[i];
-					break;
-				}
-			}
-			if (endnoteStoryMap.length > 0 && !endnoteStoryMap.hasItem(footnoteStories[0].id) ) {
-				alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
-				return;
-			}
-		}
-		else {
-			alert (localize(px.ui.createSelection));
-			return;
-		}
-	}
+	var endnoteStory = getEndnoteStory(dok);
 	if (endnoteStory == null) {
-		// Darf eigentlich nicht passieren 
-		alert(localize(px.ui.unknownSelectionError)); 
 		return;
 	}
-		
 
 	// Dokument gespeichert? 
 	if ((!dok.saved || dok.modified) && !px.debug) {
@@ -1369,7 +1307,78 @@ function startProcessing() {
 		px.log.debug();
 	}
 }
+
+// Returns a valid EndnoteStory for processing
+function getEndnoteStory(dok) {
+	// Check for valid stories
+	var endnoteStory = null;
+	var footnoteStories = [];
+	var endnoteStoryMap = idsMap();
 	
+	for (var i = 0; i < dok.stories.length; i++) {
+		story = dok.stories[i];
+		if (story.footnotes.length > 0 ) {
+			footnoteStories.push(story);
+		}
+		for (var k = 0; k < dok.hyperlinks.length; k++) {
+			var hlink = dok.hyperlinks[k];
+			if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination.destinationText.parentStory.id == story.id ) {
+				endnoteStoryMap.pushItem(story.id, story);
+			}
+		}
+	}
+
+	// Die einfachen Fälle 
+	if (footnoteStories.length == 0) {
+		alert(localize(px.ui.noFootnoteInDoc)); 
+		return null;
+	}
+	if (endnoteStoryMap.length > 1) {
+		alert(localize(px.ui.multipleEndnoteLinks)); 
+		return null;
+	}
+	if (footnoteStories.length == 1 && endnoteStoryMap.length == 0) { // New doc
+		endnoteStory = footnoteStories[0];
+	}
+	else if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && endnoteStoryMap.hasItem(footnoteStories[0].id)) { // Update Doc
+		endnoteStory = footnoteStories[0];
+	}
+
+	if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && !endnoteStoryMap.hasItem(footnoteStories[0].id)) { 
+		alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
+		return null;
+	}
+	
+	// Auswahl der gültigen Story durch user 
+	if (footnoteStories.length > 1) {		
+		if (checkSelection() ) {
+			var selectionID = app.selection[0].parentStory.id;
+			for (var i = 0; i < footnoteStories.length; i++) {
+				if (selectionID == footnoteStories[i].id) {
+					alert (localize(px.ui.willProcessCurrentSelection));
+					endnoteStory = footnoteStories[i];
+					break;
+				}
+			}
+			if (endnoteStoryMap.length > 0 && !endnoteStoryMap.hasItem(footnoteStories[0].id) ) {
+				alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
+				return null;
+			}
+		}
+		else {
+			alert (localize(px.ui.createSelection));
+			return null;
+		}
+	}
+	if (endnoteStory == null) {
+		// Darf eigentlich nicht passieren 
+		alert(localize(px.ui.unknownSelectionError)); 
+		return null;
+	}
+	return endnoteStory;
+} 
+
+
 // Main Script 
 function foot2end (dok, endnoteStory) {
 	if (px.showGui) {
@@ -1412,7 +1421,6 @@ function foot2end (dok, endnoteStory) {
 		dok.saveACopy(backupFile);
 	}
 
-
 	// Save Style and Heading for Updates 
 	dok.insertLabel(px.pStyleEndnoteLabel, px.pStyleEndnoteName);
 	dok.insertLabel(px.pStyleEndnoteFollowLabel, px.pStyleEndnoteFollowName);
@@ -1423,24 +1431,10 @@ function foot2end (dok, endnoteStory) {
 	dok.insertLabel(px.pStylePrefixMarkerLabel, px.pStylePrefix);
 	dok.insertLabel(px.numberBySectionLabel, px.numberBySection +"");
 	
-
 	checkStyles (dok);
 						
-	// Die notwendigen Stories einsammeln
-	var stories = [endnoteStory];
-//~ 	if (px.convertAllStories) {
-//~ 		stories = dok.stories.everyItem().getElements();
-//~ 	}
-//~ 	else {
-//~ 		try {
-//~ 			stories.push(app.selection[0].parentStory);
-//~ 		}
-//~ 		catch (e) {
-//~ 			alertMsg (localize(px.ui.invalidSelection));
-//~ 			return;
-//~ 		}
-//~ 	}
-	var hLinksPerStory = getCurrentEndnotes(dok, stories);
+	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
+	
 	// Fußnoten zu Endnoten konvertieren 
 	var story, firstHlink, firstHlinkIndex, headingParagraph, footnote, endnote, endnote_link, cue, hlink, nextHlink,  hyperLinkID;	
 	var oldPages = dok.pages.length;
@@ -1699,23 +1693,21 @@ function getSections (story) {
 	return sectionIndexArray;
 }
 
-function getCurrentEndnotes (dok, stories) {
-	// TODO -> stories -> endnoteStory
+function getCurrentEndnotes (dok, endnoteStory) {
 	// Die aktuellen Endnoten einsammeln
-	var hLink, storyID, story;	
+	var hLink;	
 	var hLinksPerStory = [];
+	hLinksPerStory[0] = ["first", -1];
+	
 	for (var j = 0; j < dok.hyperlinks.length; j++) {
 		hLink = dok.hyperlinks[j];
 		if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
 			try {
 				if(hLink.destination != null) {
-					storyID = hLink.source.sourceText.parentStory.id;
-					if (hLinksPerStory[storyID] == undefined) {
-						hLinksPerStory[storyID] = [];
-						hLinksPerStory[storyID].push(["first", -1]);
+					if (hLink.source.sourceText.parentStory.id == endnoteStory.id) {
+						px.log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
+						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index]);
 					}
-					px.log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
-					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
 				}
 				else {
 					px.log.warn("Ein Hyperlink [ID: " + hLink.id + "] hat kein Ziel mehr. Der Ursprungstext vermutlich gelöscht!");
@@ -1727,29 +1719,20 @@ function getCurrentEndnotes (dok, stories) {
 	}
 
 	// Endnoten nach Position in der Story sortieren 
-	for (var j = 0; j < stories.length; j++) {
-		story = stories[j];
-		storyID = story.id;
-		px.log.debug("Endnoten für "+ storyID);
+	hLinksPerStory.sort(sortSecondEntry);
+	hLinksPerStory.push(["last", endnoteStory.insertionPoints[-1].index]);
 
-		if (hLinksPerStory[storyID]) {
-			hLinksPerStory[storyID].sort(sortSecondEntry);
-			hLinksPerStory[storyID].push(["last", story.insertionPoints[-1].index]);
-		}
-		else {
-			hLinksPerStory[storyID] = [];
-			hLinksPerStory[storyID].push(["first", -1]);
-			hLinksPerStory[storyID].push(["last", story.insertionPoints[-1].index]);
-		}
-		if (px.debug) {
-			for (var m =0; m < hLinksPerStory[storyID].length; m++) {
-				px.log.debug(hLinksPerStory[storyID][m]);
-			}
+	if (px.debug) {
+		for (var m =0; m < hLinksPerStory.length; m++) {
+			px.log.debug(hLinksPerStory[m]);
+			$.writeln(hLinksPerStory[m]);
 		}
 	}
 	
 	// TODO prüfen ob die Reihenfolge in den Stories noch stimmt - Copy & Paste Bugs könnten so auffalen. 
 	// Wenn ja, dann sollte erstmal nach Korrektur gefragt werden und automatisch korrigiert werden. 
+	
+	
 	return hLinksPerStory;
 }
 
