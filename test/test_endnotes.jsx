@@ -52,9 +52,10 @@ function basicIntegrationTest() {
 	idsTesting.assertEquals("Keine hyperlinkTextDestinations im Dokument", 0, dokTest.hyperlinkTextDestinations.length );
 	idsTesting.assertEquals("Keine hyperlinkTextSources im Dokument", 0, dokTest.hyperlinkTextSources.length );
 	
+	var endnoteStory = getEndnoteStory(dokTest);
 	getStyleInformation (dokTest);
 	readStyles(dokTest);
-	foot2end(dokTest);
+	foot2end(dokTest, endnoteStory);
 
 	idsTesting.insertBlock("Endnotes created?");
 
@@ -81,11 +82,12 @@ function test_01() {
 	idsTesting.insertBlock("With subsequent insertion of footnotes the endnote directory must still be in the same story");
 	var testFile = File(getScriptFolderPath() + "/localTestFiles/Fussnotentest_nachtraeglicheEndnotenAmAnfang.indd");
 	var dokTest = app.open(testFile);
+
+	var endnoteStory = getEndnoteStory(dokTest);
 	getStyleInformation (dokTest);
 	readStyles(dokTest);
-	
-	foot2end(dokTest);
-	
+	foot2end(dokTest, endnoteStory);
+
 	var resultString = idsTools.readTextFile(px.logFile);
 	
 	idsTesting.assertStringInFile("Correct Error Message if Endnotes do not reside in the same story", localize(px.ui.endnoteStoryMoved) , px.logFile);
@@ -99,10 +101,11 @@ function test_02() {
 	idsTesting.insertBlock("Problems with U_Backmatter_Num-Formate");
 	var testFile = File(getScriptFolderPath() + "/localTestFiles/num-Formate.indd");
 	var dokTest = app.open(testFile);
+	
+	var endnoteStory = getEndnoteStory(dokTest);
 	getStyleInformation (dokTest);
 	readStyles(dokTest);
-	
-	foot2end(dokTest);
+	foot2end(dokTest, endnoteStory);
 	
 	var resultString = idsTools.readTextFile(px.logFile);
 // ?? 
@@ -116,10 +119,11 @@ function test_03() {
 	idsTesting.insertBlock("Alte Endnoten werden entfernt, Vor Kapitel 4 wird Inhalt merkwürdig zerpflückt, die Überschrift der neu generierten Endnoten ist inkorrekt.");
 	var testFile = File(getScriptFolderPath() + "/localTestFiles/Fußnotentest_vor_neuen_Kap.indd");
 	var dokTest = app.open(testFile);
+	
+	var endnoteStory = getEndnoteStory(dokTest);
 	getStyleInformation (dokTest);
 	readStyles(dokTest);
-	
-	foot2end(dokTest);
+	foot2end(dokTest, endnoteStory);
 	
 	var resultString = idsTools.readTextFile(px.logFile);
 // ?? 
@@ -135,10 +139,11 @@ function test_04() {
 	idsTesting.insertBlock("Endnotenverweis in (Kapitel-)Überschriften werden nicht verarbeitet.");
 	var testFile = File(getScriptFolderPath() + "/localTestFiles/Fussnotentest_FN_in_Ueberschrift.indd");
 	var dokTest = app.open(testFile);
+	
+	var endnoteStory = getEndnoteStory(dokTest);
 	getStyleInformation (dokTest);
 	readStyles(dokTest);
-	
-	foot2end(dokTest);
+	foot2end(dokTest, endnoteStory);
 	
 	var resultString = idsTools.readTextFile(px.logFile);
 	
