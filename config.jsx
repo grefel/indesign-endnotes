@@ -55,6 +55,7 @@ var px = {
 		endnoteAndFootnotesAreNotInTheSameStory:{en:"Endnotes and Footnotes are not in the same story", de:"Endnoten und Fußnoten sind nicht im gleichen Textabschnitt!"},
 		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
 		wrongEndnoteOrder:{en:"Position of Endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
+		emptyFootnote:{en:"Cannot process Footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by Parargaph Style",de:"Anhand von Absatzformat trennen"},

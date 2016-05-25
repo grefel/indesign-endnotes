@@ -1487,6 +1487,10 @@ function foot2end (dok, endnoteStory) {
 		footnote = footn[i];
 		
 		trimFootnoteSpace(footnote);
+		if (footnote.contents.replace(//, '').replace(/\s/g, '') == "") {
+			px.log.warnAlert(localize(px.ui.emptyFootnote));
+			continue;
+		}
 //~ 				$.writeln(footnote.contents);
 		// Formatieren 				
 		footnote.paragraphs[0].applyParagraphStyle (px.pStyleEndnote, false);
