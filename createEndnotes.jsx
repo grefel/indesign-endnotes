@@ -1484,6 +1484,7 @@ function foot2end (dok, endnoteStory) {
 		if (px.showGui) {
 			pBar.hit();
 		}
+	
 		footnote = footn[i];
 		
 		trimFootnoteSpace(footnote);
@@ -1491,7 +1492,7 @@ function foot2end (dok, endnoteStory) {
 			px.log.warnAlert(localize(px.ui.emptyFootnote));
 			continue;
 		}
-//~ 				$.writeln(footnote.contents);
+
 		// Formatieren 				
 		footnote.paragraphs[0].applyParagraphStyle (px.pStyleEndnote, false);
 		if(footnote.paragraphs.length > 1) {
@@ -1552,18 +1553,7 @@ function foot2end (dok, endnoteStory) {
 		app.changeGrepPreferences = NothingEnum.NOTHING;
 		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
 		endnoteStory.changeGrep();
-		
-//~ 				for (var h = 0; h < dok.hyperlinks.length; h++) {
-//~ 					hlink = dok.hyperlinks[h];
-//~ 					if ( hlink.extractLabel(px.hyperlinkLabel) == "true") {
-//~ 						nextPar = idsTools.nextParagraph(hlink.destination.destinationText.paragraphs[0]);
-//~ 						while (nextPar && nextPar.appliedParagraphStyle.id == px.pStyleEndnoteSplitHeading.id) {
-//~ 							nextPar.contents = "";
-//~ 							nextPar = idsTools.nextParagraph(hlink.destination.destinationText.paragraphs[0]);
-//~ 						}
-//~ 					}
-//~ 				}
-		
+			
 		// Hyperlinks wieder einsammeln... 
 		endnotenStartEndPositions = [];
 		for (var h = 0; h < dok.hyperlinks.length; h++) {
@@ -1620,6 +1610,9 @@ function foot2end (dok, endnoteStory) {
 			
 			if (previousEndnotenTextIndex < currentSectionStartIndex && endnotenTextIndex > currentSectionStartIndex && endnotenTextIndex < nextSectionStartIndex) {
 //~ 						$.writeln(currentSection[2]);
+				if (currentSection[2] == "") {
+					currentSection[2] = "\r";
+				}
 				endnoteStory.insertionPoints[endnotenIndex].contents = currentSection[2];
 				endnoteStory.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
 				var nextPar = idsTools.nextParagraph (endnoteStory.insertionPoints[endnotenIndex].paragraphs[0]);
@@ -1691,7 +1684,7 @@ function getSections (story) {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 	
-	sectionIndexArray.push([sectionIndexArray.length,story.characters[-1].index, ""]);			
+	sectionIndexArray.push([sectionIndexArray.length, story.characters[-1].index, ""]);			
 	sectionIndexArray.sort(sortSecondEntry);
 
 	return sectionIndexArray;
