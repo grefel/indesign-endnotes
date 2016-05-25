@@ -59,12 +59,16 @@ function jump() {
 		return false;
 	}
 	var dok = app.documents[0];
+
+	fixHyperlinks(dok);
+	
 	var selectionText = app.selection[0];
 	var index = app.selection[0].index;
 	var parIndex = app.selection[0].paragraphs[0].index
 	for (var i = 0; i  < dok.hyperlinks.length; i++) {
 		if (dok.hyperlinks[i].extractLabel(px.hyperlinkLabel) == "true") {
 			var hLink = dok.hyperlinks[i];
+			$.writeln(hLink.source.sourceText.index + " - " +  hLink.destination.destinationText.index);
 			if (hLink.source.sourceText.index == index) {
 				hLink.showDestination();				
 				return true;
@@ -76,4 +80,17 @@ function jump() {
 		}
 	}
 	return false;
+}
+
+function fixHyperlinks(dok) {
+	var hLink;
+	for (var i = 0; i  < dok.hyperlinks.length; i++) {
+		hLink = dok.hyperlinks[i];
+		if (hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
+			hLink.insertLabel(px.hyperlinkLabel, "true");
+		}
+		if (hLink.destination.extractLabel(px.hyperlinkLabel) == "backlink") {
+			hLink.insertLabel(px.hyperlinkLabel, "backlink");
+		}
+	}
 }

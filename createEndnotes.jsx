@@ -1436,29 +1436,27 @@ function foot2end (dok, endnoteStory) {
 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 	
 	// Fußnoten zu Endnoten konvertieren 
-	var story, firstHlink, firstHlinkIndex, headingParagraph, footnote, endnote, endnote_link, cue, hlink, nextHlink,  hyperLinkID;	
+	var firstHlink, firstHlinkIndex, headingParagraph, footnote, endnote, endnote_link, cue, hlink, nextHlink,  hyperLinkID;	
 	var oldPages = dok.pages.length;
-//~ 	for (var j = 0; j < stories.length; j++) {
-//~ 		story = stories[j];
-	story = endnoteStory;
-//~ 		if (story.footnotes.length > 0) {
-	// EndnotenTitel einfügen  					hLinksPerStory[storyID].push([hLink.id, hLink.source.sourceText.index]);
-	hyperLinkID =  hLinksPerStory[story.id][1][0];
+
+	// EndnotenTitel einfügen  					
+	hyperLinkID =  hLinksPerStory[1][0];
+	
 	if (hyperLinkID == "last") { // --> There is no Endnote Hyperlink in the story.
-		story.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
-		story.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
+		endnoteStory.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
+		endnoteStory.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
 	}
 	else {
 		firstHlink = dok.hyperlinks.itemByID(hyperLinkID);
 		firstHlinkIndex = firstHlink.destination.destinationText.insertionPoints[0].index;
-		if (firstHlink.destination.destinationText.parentStory.id != story.id) {
+		if (firstHlink.destination.destinationText.parentStory.id != endnoteStory.id) {
 			px.log.warnAlert( localize(px.ui.endnoteStoryMoved) );
 			return;
 		}
-		firstEndnote = story.insertionPoints[firstHlinkIndex].paragraphs[0];
-		headingParagraph = story.insertionPoints[firstHlinkIndex-1].paragraphs[0];
+		firstEndnote = endnoteStory.insertionPoints[firstHlinkIndex].paragraphs[0];
+		headingParagraph = endnoteStory.insertionPoints[firstHlinkIndex-1].paragraphs[0];
 		if (px.numberBySection && headingParagraph.appliedParagraphStyle == px.pStyleEndnoteSplitHeading) {
-			headingParagraph = story.insertionPoints[headingParagraph.insertionPoints[0].index-1].paragraphs[0];
+			headingParagraph = endnoteStory.insertionPoints[headingParagraph.insertionPoints[0].index-1].paragraphs[0];
 		}
 		if (headingParagraph.contents != px.endnoteHeadingString + "\r") {
 			alert (localize (px.ui.headingStyleFail , px.endnoteHeadingString, headingParagraph.contents.replace(/\r/g,'') ));
@@ -1468,11 +1466,13 @@ function foot2end (dok, endnoteStory) {
 		firstEndnote.appliedParagraphStyle = px.pStyleEndnote;
 	}
 
-	// Fußnoten konvertieren 
-	story.insertionPoints[-1].contents = "\r";
-	einfuegeIndex = story.insertionPoints[-1].index;
 
-	var footn = story.footnotes;
+
+	// Fußnoten konvertieren 
+	endnoteStory.insertionPoints[-1].contents = "\r";
+	einfuegeIndex = endnoteStory.insertionPoints[-1].index;
+
+	var footn = endnoteStory.footnotes;
 	if (px.showGui) {
 		var pBar = idsTools.getProgressBar(localize(px.ui.menuTitle, px.version));
 		pBar.reset("Verarbeite Endnoten", footn.length);
@@ -1492,7 +1492,7 @@ function foot2end (dok, endnoteStory) {
 		}				
 		
 		var fnIndex = footnote.storyOffset.index;
-		hyperLinkID = getPosition(fnIndex, hLinksPerStory[story.id]); // Find the next existing Hyperlink in the story
+		hyperLinkID = getPosition(fnIndex, hLinksPerStory); // Find the next existing Hyperlink in the story
 		if (hyperLinkID == null) {
 			// Fehler bei getPosition();
 			return;
@@ -1501,7 +1501,7 @@ function foot2end (dok, endnoteStory) {
 			px.log.warnAlert( localize(px.ui.statusFail) ); 
 		}
 		else if (hyperLinkID == "last") {
-			endnote = footnote.texts[0].move (LocationOptions.after, story.insertionPoints[einfuegeIndex]);
+			endnote = footnote.texts[0].move (LocationOptions.after, endnoteStory.insertionPoints[einfuegeIndex]);
 		}
 		else {
 			// Vor dem Hyperlink mit der ID muss die Endnote eingefügt werden:
@@ -1518,7 +1518,7 @@ function foot2end (dok, endnoteStory) {
 		hlink = dok.hyperlinks.add (cue, endnote_link, {visible: false});
 		hlink.insertLabel(px.hyperlinkLabel, "true");
 
-		pushHLink ( hLinksPerStory[story.id], hyperLinkID, hlink);
+		pushHLink ( hLinksPerStory, hyperLinkID, hlink);
 
 		// Rückverlinkung
 		endnote_backlink = dok.hyperlinkTextDestinations.add (footn[i].storyOffset);
@@ -1538,13 +1538,13 @@ function foot2end (dok, endnoteStory) {
 	// Wenn wir nach Section splitten müssen, werden jetzt die Positionen der Sections ausgewertet die ggf. zugeordnent werden müssen
 	// Problem zweiter Durchlauf, hier muss geprüft werden ob die neue eingefügte Endnote bereits die richtige Überschrift hat.
 	if (px.numberBySection) {
-		sectionIndexArray = getSections(story);
+		sectionIndexArray = getSections(endnoteStory);
 		
 		// Alte Abschnittsüberschriften löschen...
 		app.findGrepPreferences = NothingEnum.NOTHING;
 		app.changeGrepPreferences = NothingEnum.NOTHING;
 		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
-		story.changeGrep();
+		endnoteStory.changeGrep();
 		
 //~ 				for (var h = 0; h < dok.hyperlinks.length; h++) {
 //~ 					hlink = dok.hyperlinks[h];
@@ -1562,7 +1562,7 @@ function foot2end (dok, endnoteStory) {
 		for (var h = 0; h < dok.hyperlinks.length; h++) {
 			hlink = dok.hyperlinks[h];
 			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "true") {
-				if (hlink.source.sourceText.parentStory.id == story.id) {
+				if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {
 					endnotenStartEndPositions.push([hlink.destination.destinationText.index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
 				}
 			}
@@ -1573,7 +1573,7 @@ function foot2end (dok, endnoteStory) {
 		app.changeGrepPreferences = NothingEnum.NOTHING;
 		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
 		app.changeGrepPreferences.numberingContinue = true;
-		var result = story.changeGrep();
+		var result = endnoteStory.changeGrep();
 		if (result) {
 			result[0].paragraphs[0].numberingStartAt = 1;
 			result[0].paragraphs[0].numberingContinue = false;
@@ -1613,9 +1613,9 @@ function foot2end (dok, endnoteStory) {
 			
 			if (previousEndnotenTextIndex < currentSectionStartIndex && endnotenTextIndex > currentSectionStartIndex && endnotenTextIndex < nextSectionStartIndex) {
 //~ 						$.writeln(currentSection[2]);
-				story.insertionPoints[endnotenIndex].contents = currentSection[2];
-				story.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
-				var nextPar = idsTools.nextParagraph (story.insertionPoints[endnotenIndex].paragraphs[0]);
+				endnoteStory.insertionPoints[endnotenIndex].contents = currentSection[2];
+				endnoteStory.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
+				var nextPar = idsTools.nextParagraph (endnoteStory.insertionPoints[endnotenIndex].paragraphs[0]);
 				if (nextPar != null) {
 					nextPar.numberingStartAt = 1;
 					nextPar.numberingContinue = false;
@@ -1637,28 +1637,25 @@ function foot2end (dok, endnoteStory) {
 		app.changeGrepPreferences = NothingEnum.NOTHING;
 		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
 		app.changeGrepPreferences.numberingContinue = true;
-		var result = story.changeGrep();
+		var result = endnoteStory.changeGrep();
 		if (result) {
 			result[0].paragraphs[0].numberingStartAt = 1;
 			result[0].paragraphs[0].numberingContinue = false;
 		}			
 	}
 
-	story.characters[-1].contents = "";
-	deleteNotemarkers (story);
+	endnoteStory.characters[-1].contents = "";
+	deleteNotemarkers (endnoteStory);
 	
 	// Seiten auflösen 
-	idsTools.checkOverflow(story);
-//~ 		} //if
-//~ 	} // for
-
+	idsTools.checkOverflow(endnoteStory);
+	dok.crossReferenceSources.everyItem().update();
 		
 	if (pBar) {
 		var newPages = dok.pages.length - oldPages ;
 		if (dok.pages.length != oldPages ) {
 			alertMsg (localize (px.ui.newPagesAdded, newPages));
 		}
-		dok.crossReferenceSources.everyItem().update();
 		pBar.close();
 	}
 }
@@ -1694,10 +1691,11 @@ function getSections (story) {
 }
 
 function getCurrentEndnotes (dok, endnoteStory) {
+	fixHyperlinks(dok);
 	// Die aktuellen Endnoten einsammeln
 	var hLink;	
 	var hLinksPerStory = [];
-	hLinksPerStory[0] = ["first", -1];
+	hLinksPerStory[0] = ["first", -1, "Dummy Endnote Postion Start"];
 	
 	for (var j = 0; j < dok.hyperlinks.length; j++) {
 		hLink = dok.hyperlinks[j];
@@ -1706,7 +1704,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 				if(hLink.destination != null) {
 					if (hLink.source.sourceText.parentStory.id == endnoteStory.id) {
 						px.log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
-						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index]);
+						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index,  hLink.destination.destinationText.paragraphs[0].contents]);
 					}
 				}
 				else {
@@ -1720,20 +1718,40 @@ function getCurrentEndnotes (dok, endnoteStory) {
 
 	// Endnoten nach Position in der Story sortieren 
 	hLinksPerStory.sort(sortSecondEntry);
-	hLinksPerStory.push(["last", endnoteStory.insertionPoints[-1].index]);
+	hLinksPerStory.push(["last", endnoteStory.insertionPoints[-1].index, "Dummy Endnote Postion End"]);
 
-	if (px.debug) {
-		for (var m =0; m < hLinksPerStory.length; m++) {
-			px.log.debug(hLinksPerStory[m]);
+	// Prüfen ob die Reihenfolge in den Stories noch stimmt - Copy & Paste Bugs könnten so auffalen. 
+	var lastPosition = -2;
+	for (var m =0; m < hLinksPerStory.length; m++) {
+		px.log.debug(hLinksPerStory[m]);
+		if (hLinksPerStory[m][1] > lastPosition) {
+			lastPosition = hLinksPerStory[m][1];
+		}
+		else {
+			px.log.warnAlert(localize (px.ui.wrongEndnoteOrder, hLinksPerStory[m][2] ))
+			lastPosition = hLinksPerStory[m][1];
+		}
+		if (px.debug) {
 			$.writeln(hLinksPerStory[m]);
 		}
 	}
 	
-	// TODO prüfen ob die Reihenfolge in den Stories noch stimmt - Copy & Paste Bugs könnten so auffalen. 
-	// Wenn ja, dann sollte erstmal nach Korrektur gefragt werden und automatisch korrigiert werden. 
-	
-	
 	return hLinksPerStory;
+}
+
+
+// Fixes Hyperlink Labels lost thru Copy&Paste
+function fixHyperlinks(dok) {
+	var hLink;
+	for (var i = 0; i  < dok.hyperlinks.length; i++) {
+		hLink = dok.hyperlinks[i];
+		if (hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
+			hLink.insertLabel(px.hyperlinkLabel, "true");
+		}
+		if (hLink.destination.extractLabel(px.hyperlinkLabel) == "backlink") {
+			hLink.insertLabel(px.hyperlinkLabel, "backlink");
+		}
+	}
 }
 
 function getPosition(index, endNoteArray) {
