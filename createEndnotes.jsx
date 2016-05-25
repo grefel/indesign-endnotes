@@ -1400,7 +1400,7 @@ function foot2end (dok, endnoteStory) {
 		}
 	}
 
-	// Dokument gespeichert? 
+	// Sicherheitskopie anlegen? 
 	if (px.createBackupCopy && !px.debug) {
 		var date = new Date();
 		var day = idsTools.pad(date.getDate(), 2);
