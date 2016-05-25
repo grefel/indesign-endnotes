@@ -54,7 +54,7 @@ var px = {
 		createSelection:{en:"More than one story with footnotes, place cursor in story and restart", de:"Mehr als ein Textabschnitt enthält Fußnoten, bitte positionieren Sie die Einfügemarke im gewünschten Textabschnitt"},
 		endnoteAndFootnotesAreNotInTheSameStory:{en:"Endnotes and Footnotes are not in the same story", de:"Endnoten und Fußnoten sind nicht im gleichen Textabschnitt!"},
 		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
-		wrongEndnoteOrder:{en:"Position of Endnote [%1] is not in sync with story flow. Check your document", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss. Prüfen Sie das Dokument"},
+		wrongEndnoteOrder:{en:"Position of Endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by Parargaph Style",de:"Anhand von Absatzformat trennen"},

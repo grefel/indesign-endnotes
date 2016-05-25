@@ -1322,7 +1322,7 @@ function getEndnoteStory(dok) {
 		}
 		for (var k = 0; k < dok.hyperlinks.length; k++) {
 			var hlink = dok.hyperlinks[k];
-			if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination.destinationText.parentStory.id == story.id ) {
+			if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText.parentStory.id == story.id ) {
 				endnoteStoryMap.pushItem(story.id, story);
 			}
 		}
@@ -1434,6 +1434,9 @@ function foot2end (dok, endnoteStory) {
 	checkStyles (dok);
 						
 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
+	if (!hLinksPerStory) {
+		return;
+	}
 	
 	// Fußnoten zu Endnoten konvertieren 
 	var firstHlink, firstHlinkIndex, headingParagraph, footnote, endnote, endnote_link, cue, hlink, nextHlink,  hyperLinkID;	
@@ -1695,7 +1698,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 	// Die aktuellen Endnoten einsammeln
 	var hLink;	
 	var hLinksPerStory = [];
-	hLinksPerStory[0] = ["first", -1, "Dummy Endnote Postion Start"];
+	hLinksPerStory[0] = ["first", -1, -1,  "Dummy Endnote Postion Start"];
 	
 	for (var j = 0; j < dok.hyperlinks.length; j++) {
 		hLink = dok.hyperlinks[j];
@@ -1704,7 +1707,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 				if(hLink.destination != null) {
 					if (hLink.source.sourceText.parentStory.id == endnoteStory.id) {
 						px.log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
-						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index,  hLink.destination.destinationText.paragraphs[0].contents]);
+						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index,  hLink.destination.destinationText.index, hLink.destination.destinationText.paragraphs[0].contents]);
 					}
 				}
 				else {
@@ -1718,21 +1721,21 @@ function getCurrentEndnotes (dok, endnoteStory) {
 
 	// Endnoten nach Position in der Story sortieren 
 	hLinksPerStory.sort(sortSecondEntry);
-	hLinksPerStory.push(["last", endnoteStory.insertionPoints[-1].index, "Dummy Endnote Postion End"]);
+	hLinksPerStory.push(["last", endnoteStory.insertionPoints[-1].index, endnoteStory.insertionPoints[-1].index, "Dummy Endnote Postion End"]);
 
 	// Prüfen ob die Reihenfolge in den Stories noch stimmt - Copy & Paste Bugs könnten so auffalen. 
 	var lastPosition = -2;
 	for (var m =0; m < hLinksPerStory.length; m++) {
-		px.log.debug(hLinksPerStory[m]);
-		if (hLinksPerStory[m][1] > lastPosition) {
-			lastPosition = hLinksPerStory[m][1];
-		}
-		else {
-			px.log.warnAlert(localize (px.ui.wrongEndnoteOrder, hLinksPerStory[m][2] ))
-			lastPosition = hLinksPerStory[m][1];
-		}
 		if (px.debug) {
 			$.writeln(hLinksPerStory[m]);
+		}
+		px.log.debug(hLinksPerStory[m]);
+		if (hLinksPerStory[m][2] > lastPosition) {
+			lastPosition = hLinksPerStory[m][2];
+		}
+		else {
+			px.log.warnAlert(localize (px.ui.wrongEndnoteOrder, hLinksPerStory[m][3].replace(/\r/g, ' ').substring(0,40) ))
+			return null;
 		}
 	}
 	
