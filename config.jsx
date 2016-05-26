@@ -28,11 +28,17 @@ var px = {
 	pStyleEndnoteName:"Endnote", // Absatzformat der Endnote. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
 	pStyleEndnoteFollowName:"Anm~folge", // Absatzformat für Endnoten mit mehr als einem Absatz. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
 	pStyleEndnoteHeadingName:"EndnotenTitel", // Absatzformat der Endnotenüberschrift
+	
 	pStyleEndnoteSplitHeadingName:"EndnotenAbschnitt", // Absatzformat für die wiederholten Überschriften
+	pStyleSecondaryEndnoteSplitHeadingName:"U1_Num_Backmatter", // Absatzformat für die zusätzlich wiederholten Überschriften
+	
 	cStyleEndnoteMarkerName:"Endnotenzähler", // Zeichenformat des Endnotenmarkers.Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
 	crossRefStyleEndnoteName:"EndnotenMarker", // Querverweisformat. Kann nicht in der GUI ausgewählt werden.
 	endnoteHeadingString:"Endnoten", // Default Text für die Entnotenüberschrift
+	
 	pStylePrefix:"u1", // Präfix der Überschriften an denen die Endnotenzählung geteilt wird.
+	pStylePrefixSecondary:"u1_Num", // Präfix der zuästzlichen Überschriften an denen die Endnotenzählung geteilt wird.
+	
 
 	// User interface strings -- translation and changes are save
 	ui:{
@@ -68,7 +74,12 @@ var px = {
 		splitFormatPanel:{en:"Split endnote configuration",de:"Formatpräfix an dem die Endnoten geteilt werden"},
 		splitByHeadingStyle:{en:"Split Parargaph Style/Heading",de:"Format zur Aufteilung in Abschnitte"},
 		endNoteSplitHeadingParagraphStyle:{en:"Parargaph Style for repeated Headings",de:"Absatzformat wiederholte Überschriften"},
-		formatWarnung:{en:"Caution: Any Text formatted in Parargaph Style for repeated Headings will be deleted. Use only for splitting Endnotes!",de:"Texte mit diesem Absatzformat werden gelöscht, verwenden Sie dieses Format nur für den Endnotenblock!"},
+
+		secondaryHeading:{en:"Optional: Additionally split Information",de:"Optional: Weitere Aufteilung"},
+		splitByHeadingStyleNum:{en:"Additional split Parargaph Style/Heading",de:"Zusätzliches Format zur Aufteilung in Abschnitte"},
+		endNoteSplitHeadingParagraphStyleNum:{en:"Parargaph Style for additional repeated Headings",de:"Absatzformat zusätzliche wiederholte Überschriften"},
+		
+		formatWarnung:{en:"Caution: Any Text formatted in Parargaph Style for repeated Headings will be deleted. Use only in Endnote Area!",de:"Achtung: Texte, die mit den Absatzformaten für wiederholte Schriften formatiert sind, werden gelöscht. Verwenden Sie dies nur im Bereich Endnoten."},
 		
 		formatPanel:{en:"Endnote styling",de:"Formate der Endnoten"},
 		endnoteParagraphStyle:{en:"Parargaph Style endnote",de:"Absatzformat Endnote"},
@@ -138,7 +149,12 @@ var px = {
 	pStyleEndnoteSplitHeading:undefined,
 	pStyleEndnoteSplitHeadingIndex:0,
 	pStyleEndnoteSplitHeadingLabel:"px:Foot2EndnoteParagraphStyleSplitHeading",
-	
+
+	pStyleSecondaryEndnoteSplitHeading:undefined,
+	pStyleSecondaryEndnoteSplitHeadingIndex:0,
+	pStyleSecondaryEndnoteSplitHeadingLabel:"px:Foot2EndnoteParagraphStyleSecondarySplitHeading",
+
+
 	cStyleEndnoteMarker:undefined,
 	cStyleEndnoteMarkerIndex:0,
 	cStyleEndnoteMarkerLabel:"px:Foot2EndnoteCharacterStyle",	
@@ -147,6 +163,7 @@ var px = {
 	dokParagraphStylePrefixStyles:[],
 	
 	pStylePrefixMarkerLabel:"px:Foot2EndnoteSplitPrefix",
+	pStylePrefixSecondaryMarkerLabel:"px:Foot2EndnoteSecondarySplitPrefix",
 	numberBySectionLabel:"px:numberBySection",
 	
 	foot2EndCounter:0,
@@ -154,5 +171,5 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"1.2-2016-05-16"
+	version:"2.0-2016-05-25"
 }
