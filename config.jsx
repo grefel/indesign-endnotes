@@ -29,8 +29,8 @@ var px = {
 	pStyleEndnoteFollowName:"Anm~folge", // Absatzformat für Endnoten mit mehr als einem Absatz. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
 	pStyleEndnoteHeadingName:"EndnotenTitel", // Absatzformat der Endnotenüberschrift
 	
-	pStyleEndnoteSplitHeadingName:"EndnotenAbschnitt", // Absatzformat für die wiederholten Überschriften
-	pStyleEndnoteSplitHeadingPrecedingName:"EndnotenAbschnittVor", // Absatzformat für Absätze vor wiederholten Überschriften
+	pStyleEndnoteSplitHeadingName:"EndnotenAbschnitt", // Absatzformat für die wiederholten Überschriften	
+	pStyleEndnoteSplitHeadingPrecedingRepeatName:"EndnotenAbschnittVor", // Absatzformat für Absätze vor wiederholten Überschriften
 	pStyleEndnoteSplitHeadingFollowingName:"EndnotenAbschnittNach", //  Absatzformat für Absätze nach wiederholten Überschriften
 	
 	cStyleEndnoteMarkerName:"Endnotenzähler", // Zeichenformat des Endnotenmarkers.Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
@@ -38,6 +38,9 @@ var px = {
 	endnoteHeadingString:"Endnoten", // Default Text für die Entnotenüberschrift
 	
 	pStylePrefix:"u1", // Präfix der Überschriften an denen die Endnotenzählung geteilt wird.
+	pStyleEndnoteSplitHeadingPrecedingName:"U1_Pre", // Absatzformat für Absätze die kopiert werden sollen
+	pStyleEndnoteSplitHeadingFollowingName:"U1_Follow", //  Absatzformat für Absätze die kopiert werden sollen
+
 
 	// User interface strings -- translation and changes are save
 	ui:{
@@ -64,14 +67,16 @@ var px = {
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by Parargaph Style",de:"Anhand von Absatzformat trennen"},
-		continuousNumbering:{en:"Continuous Numbering",de:"Fortlaufend nummerieren"},		
+		continuousNumbering:{en:"Continuous Numbering",de:"Fortlaufend nummerieren"},
+		manualNumbering:{en:"Manual numbering of endnotes (list function in paragraph style will be disabled )",de:"Manuelle Nummerierung der Endnoten (Listenfunktion im Absatzformat wird ggfs. deaktiviert)"},
 		
 		splitFormatPanel:{en:"Split endnote configuration",de:"Formatpräfix an dem die Endnoten geteilt werden"},
 		splitByHeadingStyle:{en:"Split Parargaph Style/Heading",de:"Format zur Aufteilung in Abschnitte"},
 		endNoteSplitHeadingParagraphStyle:{en:"Parargaph Style for repeated Headings",de:"Absatzformat wiederholte Überschriften"},
 
-		endNoteSplitHeadingParagraphStylePreceding:{en:"Copy preceding Parargaph. Format with:",de:"Vorherigen Absatz kopieren. Formatiere mit:"},
-		endNoteSplitHeadingParagraphStyleFollowing:{en:"Copy following Parargaph. Format with:",de:"Folgenden Absatz kopieren. Formatiere mit:"},		
+		endNoteSplitHeadingParagraphStylePreceding:{en:"Copy preceding Parargaph formated by:",de:"Vorherigen Absatz kopieren, Formatvorgabe:"},
+		endNoteSplitHeadingParagraphStyleFollowing:{en:"Copy following Parargaph formated by:",de:"Folgenden Absatz kopieren, Formatvorgabe:"},		
+		endNoteSplitHeadingParagraphStylePrecedingFollowingRepeat:{en:"Parargaph Style for repeated Paragraphs:",de:"Wiederholten Absatz formatieren:"},
 		
 		formatWarnung:{en:"Caution: Any Text formatted in Parargaph Style for repeated Headings will be deleted. Use only in Endnote Area!",de:"Achtung: Texte, die mit den Absatzformaten für wiederholte Schriften formatiert sind, werden gelöscht. Verwenden Sie dies nur im Bereich Endnoten."},
 		
@@ -88,7 +93,8 @@ var px = {
 		
 		
 		invalidSelection:{en:"Invalid Selection", de:"Ungültige Auswahl"},
-		headingStyleFail :{en:"The choosen heading [%1] does not match the heading text [%2] in your document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] stimmt nicht mit dem Überschriftentext [%2] im Dokument überein. \n\nBitte prüfen Sie das Ergebnis!"},
+		headingStyleFail:{en:"The choosen heading [%1] does not match the heading text [%2] in your document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] stimmt nicht mit dem Überschriftentext [%2] im Dokument überein. \n\nBitte prüfen Sie das Ergebnis!"},
+		headingStyleFailBlock:{en:"The choosen heading [%1] in format [%1] cannot be found in the document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] mit dem Format [%2] kann nicht gefunden werden. \n\nBitte prüfen Sie das Ergebnis!"},
 		statusFail:{en:"Undocumented Error! - Please send the document to the support!", de:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!"},
 		numberingFail:{en:"Followup paragraph not found! Numbering may be faulty!", de:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!"},
 		newPagesAdded:{en:"There were added %1 pages . Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
@@ -119,6 +125,8 @@ var px = {
 //~ 	convertAllStories:true,
 //~ 	convertSelection:false,
 	numberBySection:true,
+	manualNumbering:false,
+	manualNumberingLabel:"px:Foot2EndnoteManualNumbering",
 	
 	hyperlinkLabel:"px:Foot2EndnoteHyperlink", // Markierung der SkriptQuerverweise
 	endnoteHeadingStringLabel:"px:Foot2EndnoteHeadingString", 
@@ -148,12 +156,20 @@ var px = {
 	pStyleEndnoteSplitHeadingPrecedingIndex:0,
 	pStyleEndnoteSplitHeadingPrecedingLabel:"px:Foot2EndnoteParagraphStyleSplitHeadingPreceding",
 
+	pStyleEndnoteSplitHeadingPrecedingRepeat:undefined,
+	pStyleEndnoteSplitHeadingPrecedingRepeatIndex:0,
+	pStyleEndnoteSplitHeadingPrecedingRepeatLabel:"px:Foot2EndnoteParagraphStyleSplitHeadingPrecedingRepeat",
+
 	pStyleEndnoteSplitHeadingPrecedingCopy:false,
 	pStyleEndnoteSplitHeadingPrecedingCopyLabel:"px:Foot2EndnoteParagraphStyleSplitHeadingPrecedingCopy",
 	
 	pStyleEndnoteSplitHeadingFollowing:undefined,
 	pStyleEndnoteSplitHeadingFollowingIndex:0,
 	pStyleEndnoteSplitHeadingFollowingLabel:"px:Foot2EndnoteParagraphStyleSplitHeadingFollowing",
+
+	pStyleEndnoteSplitHeadingFollowingRepeat:undefined,
+	pStyleEndnoteSplitHeadingFollowingRepeatIndex:0,
+	pStyleEndnoteSplitHeadingFollowingRepeatLabel:"px:Foot2EndnoteParagraphStyleSplitHeadingRepeatFollowing",
 
 	pStyleEndnoteSplitHeadingFollowingCopy:false,
 	pStyleEndnoteSplitHeadingFollowingCopyLabel:"px:Foot2EndnoteParagraphStyleSplitHeadingFollowingCopy",
