@@ -1450,8 +1450,29 @@ function foot2end (dok, endnoteStory) {
 	dok.insertLabel(px.numberBySectionLabel, px.numberBySection +"");
 	dok.insertLabel(px.manualNumberingLabel, px.manualNumbering +"");
 
+	if (px.manualNumbering) {
+		// Nummerierung wieder aktivieren 
+		
+		// 1. backlink auf den ganzen Absatz legen 		
+		for (var h = 0; h < dok.hyperlinks.length; h++) {
+			hlink = dok.hyperlinks[h];
+			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
+				if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {					
+					hlink.source.sourceText = hlink.source.sourceText.paragraphs[0];
+				}
+			}
+		}
+			
+		// 2. Nummerierung löschen 		
+		app.findGrepPreferences = NothingEnum.NOTHING;
+		app.changeGrepPreferences = NothingEnum.NOTHING;
+		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
+		app.findGrepPreferences.findWhat = "^\\d+\\.\\t";
+		endnoteStory.changeGrep();
+	}
+
 	checkStyles (dok);
-						
+												
 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 	if (!hLinksPerStory) {
 		return;
@@ -1470,7 +1491,7 @@ function foot2end (dok, endnoteStory) {
 	}
 	else {
 		firstHlink = dok.hyperlinks.itemByID(hyperLinkID);
-		firstHlinkIndex = firstHlink.destination.destinationText.insertionPoints[0].index;
+		firstHlinkIndex = firstHlink.destination.destinationText.paragraphs[0].insertionPoints[0].index;
 		if (firstHlink.destination.destinationText.parentStory.id != endnoteStory.id) {
 			px.log.warnAlert( localize(px.ui.endnoteStoryMoved) );
 			return;
@@ -1478,9 +1499,13 @@ function foot2end (dok, endnoteStory) {
 		firstEndnote = endnoteStory.insertionPoints[firstHlinkIndex].paragraphs[0];
 		headingParagraph = endnoteStory.insertionPoints[firstHlinkIndex-1].paragraphs[0];
 		if (px.numberBySection) {
+			var checkPar = endnoteStory.insertionPoints[firstHlinkIndex-1].paragraphs[0];
 			var checkPreviousParagraph = 0;
-			while (checkPreviousParagraph < 3 && headingParagraph.appliedParagraphStyle != px.pStyleEndnoteHeading) {
-				headingParagraph = endnoteStory.insertionPoints[headingParagraph.insertionPoints[0].index-1].paragraphs[0];
+			while (checkPreviousParagraph < 4) {
+				checkPar = endnoteStory.insertionPoints[checkPar.insertionPoints[0].index-1].paragraphs[0];
+				if (checkPar.appliedParagraphStyle.id == px.pStyleEndnoteHeading.id) {
+					headingParagraph = checkPar;
+				}
 				checkPreviousParagraph++;				
 			}			
 		}
@@ -1537,7 +1562,7 @@ function foot2end (dok, endnoteStory) {
 		else {
 			// Vor dem Hyperlink mit der ID muss die Endnote eingefügt werden:
 			nextHlink = dok.hyperlinks.itemByID(hyperLinkID);					
-			endnote = footnote.texts[0].move (LocationOptions.BEFORE, nextHlink.destination.destinationText.insertionPoints[0]);
+			endnote = footnote.texts[0].move (LocationOptions.BEFORE, nextHlink.destination.destinationText.paragraphs[0].insertionPoints[0]);
 		}
 	
 		// Verlinkung herstellen 
@@ -1566,24 +1591,21 @@ function foot2end (dok, endnoteStory) {
 	} // for
 
 	
+	var endnoteBlock = getEndnoteBlock(endnoteStory, dok);
+	// Endnoten Nummerierung  zurücksetzen... 
+	app.findGrepPreferences = NothingEnum.NOTHING;
+	app.changeGrepPreferences = NothingEnum.NOTHING;
+	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
+	app.changeGrepPreferences.numberingContinue = true;
+	var result = endnoteBlock.changeGrep();
+	if (result) {
+		result[0].paragraphs[0].numberingStartAt = 1;
+		result[0].paragraphs[0].numberingContinue = false;
+	}
+	
 	// Wenn wir nach Section splitten müssen, werden jetzt die Positionen der Sections ausgewertet die ggf. zugeordnent werden müssen
 	// Problem zweiter Durchlauf, hier muss geprüft werden ob die neue eingefügte Endnote bereits die richtige Überschrift hat.
-	if (px.numberBySection) {
-		var sectionIndexArray = getSections(endnoteStory);
-		
-		// Hyperlinks wieder einsammeln... 
-		endnotenStartEndPositions = [];
-		for (var h = 0; h < dok.hyperlinks.length; h++) {
-			hlink = dok.hyperlinks[h];
-			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "true") {
-				if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {
-					endnotenStartEndPositions.push([hlink.destination.destinationText.index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
-				}
-			}
-		}
-		
-		var endnoteBlock = getEndnoteBlock(endnoteStory, endnotenStartEndPositions);
-		
+	if (px.numberBySection) {		
 		// Alte Abschnittsüberschriften löschen...
 		app.findGrepPreferences = NothingEnum.NOTHING;
 		app.changeGrepPreferences = NothingEnum.NOTHING;
@@ -1597,20 +1619,9 @@ function foot2end (dok, endnoteStory) {
 			app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteSplitHeadingFollowingRepeat;
 			endnoteBlock.changeGrep();
 		}
-			
-	
-		// Endnoten Nummerierung wieder zurücksetzen... 
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-		app.changeGrepPreferences.numberingContinue = true;
-		var result = endnoteStory.changeGrep();
-		if (result) {
-			result[0].paragraphs[0].numberingStartAt = 1;
-			result[0].paragraphs[0].numberingContinue = false;
-		}			
-
-		endnotenStartEndPositions.sort(sortSecondEntry);
+		
+		var sectionIndexArray = getSections(endnoteStory);		
+		var endnotenStartEndPositions = getEndnotenStartEndPositions(dok, endnoteStory)
 		
 		// In length -1 steckt nur der leere String für den letzten Insertion Point der Story
 		sectionCounter = sectionIndexArray.length-2;
@@ -1655,11 +1666,6 @@ function foot2end (dok, endnoteStory) {
 			
 				endnoteStory.insertionPoints[endnotenIndex].contents = currentSection[2];				
 				endnoteStory.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
-				
-				if (px.pStyleEndnoteSplitHeadingPrecedingCopy && currentSection[3] != "") {
-					endnoteStory.insertionPoints[endnotenIndex].contents = currentSection[3];
-					endnoteStory.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeadingPrecedingRepeat;
-				}		
 
 				var nextPar = idsTools.nextParagraph (endnoteStory.insertionPoints[endnotenIndex].paragraphs[0]);
 				if (nextPar != null) {
@@ -1669,6 +1675,12 @@ function foot2end (dok, endnoteStory) {
 				else {
 					px.log.warnAlert(localize(px.ui.numberingFail));
 				}
+
+				if (px.pStyleEndnoteSplitHeadingPrecedingCopy && currentSection[3] != "") {
+					endnoteStory.insertionPoints[endnotenIndex].contents = currentSection[3];
+					endnoteStory.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeadingPrecedingRepeat;
+				}		
+
 				sectionCounter--;
 			}
 			else if (endnotenTextIndex < currentSectionStartIndex && sectionCounter > 0) {
@@ -1677,21 +1689,41 @@ function foot2end (dok, endnoteStory) {
 			}
 		}
 	}		
-	// Schneller fix wenn fortlaufend nummeriert wird
-	else { 
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-		app.changeGrepPreferences.numberingContinue = true;
-		var result = endnoteStory.changeGrep();
-		if (result) {
-			result[0].paragraphs[0].numberingStartAt = 1;
-			result[0].paragraphs[0].numberingContinue = false;
-		}			
-	}
 
 	endnoteStory.characters[-1].contents = "";
-	deleteNotemarkers (endnoteStory);
+	deleteNotemarkers (endnoteStory);	 	
+	
+	if (px.manualNumbering) {
+		var endnoteBlock = getEndnoteBlock(endnoteStory, dok);
+
+		px.crossRefStyleEndnote.buildingBlocks[0].blockType = BuildingBlockTypes.PARAGRAPH_TEXT_BUILDING_BLOCK;
+		px.crossRefStyleEndnote.buildingBlocks[0].appliedDelimiter = "."
+		px.crossRefStyleEndnote.buildingBlocks[0].includeDelimiter = false;
+		endnoteBlock.convertBulletsAndNumberingToText ();
+		
+		px.pStyleEndnote.bulletsAndNumberingListType = ListType.NO_LIST;
+		
+		// Backlinks korrigieren 	
+		app.findGrepPreferences = NothingEnum.NOTHING;
+		app.changeGrepPreferences = NothingEnum.NOTHING;
+		app.findGrepPreferences.findWhat = "^\\d+\\.\\t";
+		
+		for (var h = 0; h < dok.hyperlinks.length; h++) {
+			hlink = dok.hyperlinks[h];
+			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
+				if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {
+					
+					var newSourceText = hlink.source.sourceText.paragraphs[0].findGrep();
+					if (newSourceText.length == 1) {
+						hlink.source.sourceText = newSourceText[0];
+					}
+					else {
+							// ?? 
+					}	
+				}
+			}
+		}
+	}	
 	
 	// Seiten auflösen 
 	idsTools.checkOverflow(endnoteStory);
@@ -1766,7 +1798,8 @@ function getSections (story) {
 }
 
 
-function getEndnoteBlock (endnoteStory, endnotenStartEndPositions) {
+function getEndnoteBlock (endnoteStory, dok) {
+	var endnotenStartEndPositions = getEndnotenStartEndPositions(dok, endnoteStory)
 	var startOfTextRange = endnoteStory.characters[-1].index;
 	var endOfTextRange = endnoteStory.characters[-1].index;
 	
@@ -1779,9 +1812,18 @@ function getEndnoteBlock (endnoteStory, endnotenStartEndPositions) {
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.findWhat = px.endnoteHeadingString;
 	app.findGrepPreferences.appliedParagraphStyle =px.pStyleEndnoteHeading	
-	var results = endnoteStory.findGrep();			
+	if (app.findChangeGrepOptions.hasOwnProperty ("searchBackwards")) {
+		app.findChangeGrepOptions.searchBackwards = false;
+	}	
+	
+	var results = endnoteStory.findGrep();
+	
 	if (results.length == 1) {
 		startOfTextRange = results[0].index;
+	}
+	else if (results.length > 1) {
+		startOfTextRange = results[0].index;
+		alert (localize (px.ui.headingStyleFailBlockMoreThanOne, px.endnoteHeadingString, px.pStyleEndnoteHeading.name ));
 	}
 	else {
 		// Kann eigentlich nicht auftreten
@@ -1790,6 +1832,22 @@ function getEndnoteBlock (endnoteStory, endnotenStartEndPositions) {
 	
 	return endnoteStory.characters.itemByRange(startOfTextRange, endOfTextRange).getElements()[0]
 }
+
+function getEndnotenStartEndPositions(dok, endnoteStory) {
+	// Hyperlinks wieder einsammeln... 
+	var endnotenStartEndPositions = [];
+	for (var h = 0; h < dok.hyperlinks.length; h++) {
+		hlink = dok.hyperlinks[h];
+		if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "true") {
+			if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {
+				endnotenStartEndPositions.push([hlink.destination.destinationText.paragraphs[0].characters[0].index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
+			}
+		}
+	}
+	endnotenStartEndPositions.sort(sortSecondEntry);	
+	return endnotenStartEndPositions;
+}
+
 
 function getCurrentEndnotes (dok, endnoteStory) {
 	fixHyperlinks(dok);
@@ -1805,7 +1863,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 				if(hLink.destination != null) {
 					if (hLink.source.sourceText.parentStory.id == endnoteStory.id) {
 						px.log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
-						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index,  hLink.destination.destinationText.index, hLink.destination.destinationText.paragraphs[0].contents]);
+						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index,  hLink.destination.destinationText.paragraphs[0].index, hLink.destination.destinationText.paragraphs[0].contents]);
 					}
 				}
 				else {
@@ -1825,7 +1883,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 	var lastPosition = -2;
 	for (var m =0; m < hLinksPerStory.length; m++) {
 		if (px.debug) {
-			$.writeln(hLinksPerStory[m]);
+//~ 			$.writeln(hLinksPerStory[m]);
 		}
 		px.log.debug(hLinksPerStory[m]);
 		if (hLinksPerStory[m][2] > lastPosition) {
@@ -2024,7 +2082,11 @@ function checkStyles (dok) {
 	}		
 	if (px.pStyleEndnote.bulletsAndNumberingListType != ListType.numberedList) {
 		px.pStyleEndnote.bulletsAndNumberingListType = ListType.numberedList;
-		alertMsg( localize (px.ui.endnoteStyleNumberingFail, px.pStyleEndnoteName ) );	
+		px.pStyleEndnote.numberingExpression  = "^#.^t"
+		px.pStyleEndnote.numberingFormat = NumberingStyle.ARABIC		
+		if (!px.manualNumbering) {
+			alertMsg( localize (px.ui.endnoteStyleNumberingFail, px.pStyleEndnoteName ) );	
+		}
 	}
 	if (px.pStyleEndnoteFollow.bulletsAndNumberingListType == ListType.numberedList) {
 		px.pStyleEndnoteFollow.bulletsAndNumberingListType = ListType.NO_LIST;
