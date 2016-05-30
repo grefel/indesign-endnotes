@@ -1416,14 +1416,14 @@ function foot2end (dok, endnoteStory) {
 	}
 
 	// Sicherheitskopie anlegen? 
-	if (px.createBackupCopy && !px.debug) {
+	if (px.createBackupCopy /*&& !px.debug*/) {
 		var date = new Date();
 		var day = idsTools.pad(date.getDate(), 2);
 		var month = idsTools.pad(date.getMonth() + 1, 2);
 		var year = date.getYear() + 1900;
 		var year = date.getYear() + 1900;
 		
-		var backupFile = File( Folder.temp + "/" + dok.name.replace(/.indd$/, "") + "__" + year + month + day + "_" + date.getTime() + "_" + px.backupCopySuffix);
+		var backupFile = File( dok.fullName.toString().replace(/.indd$/, "") + "__" + year + month + day + "_" + date.getTime() + "_" + px.backupCopySuffix);
 		dok.saveACopy(backupFile);
 	}
 
@@ -1468,12 +1468,16 @@ function foot2end (dok, endnoteStory) {
 		}
 		firstEndnote = endnoteStory.insertionPoints[firstHlinkIndex].paragraphs[0];
 		headingParagraph = endnoteStory.insertionPoints[firstHlinkIndex-1].paragraphs[0];
-		if (px.numberBySection && headingParagraph.appliedParagraphStyle == px.pStyleEndnoteSplitHeading) {
-			headingParagraph = endnoteStory.insertionPoints[headingParagraph.insertionPoints[0].index-1].paragraphs[0];
+		if (px.numberBySection) {
+			var checkPreviousParagraph = 0;
+			while (checkPreviousParagraph < 3 && headingParagraph.appliedParagraphStyle != px.pStyleEndnoteHeading) {
+				headingParagraph = endnoteStory.insertionPoints[headingParagraph.insertionPoints[0].index-1].paragraphs[0];
+				checkPreviousParagraph++;				
+			}			
 		}
 		if (headingParagraph.contents != px.endnoteHeadingString + "\r") {
 			alert (localize (px.ui.headingStyleFail , px.endnoteHeadingString, headingParagraph.contents.replace(/\r/g,'') ));
-			headingParagraph.contents = px.endnoteHeadingString + "\r";
+			headingParagraph.insertionPoints[0].contents = px.endnoteHeadingString + "\r";
 		}
 		headingParagraph.appliedParagraphStyle = px.pStyleEndnoteHeading;
 		firstEndnote.appliedParagraphStyle = px.pStyleEndnote;
