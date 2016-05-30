@@ -1452,23 +1452,24 @@ function foot2end (dok, endnoteStory) {
 
 	if (px.manualNumbering) {
 		// Nummerierung wieder aktivieren 
-		
-		// 1. backlink auf den ganzen Absatz legen 		
+		var endnoteBlock = getEndnoteBlock(endnoteStory, dok, false);
+
+		app.findGrepPreferences = NothingEnum.NOTHING;
+		app.changeGrepPreferences = NothingEnum.NOTHING;
+		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
+		app.findGrepPreferences.findWhat = "^\\d+\\.\\h+";
+
 		for (var h = 0; h < dok.hyperlinks.length; h++) {
 			hlink = dok.hyperlinks[h];
 			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
 				if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {					
+					// 1. backlink auf den ganzen Absatz legen 		
 					hlink.source.sourceText = hlink.source.sourceText.paragraphs[0];
+					// 2. Nummerierung löschen 		
+					hlink.source.sourceText.changeGrep();
 				}
 			}
-		}
-			
-		// 2. Nummerierung löschen 		
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-		app.findGrepPreferences.findWhat = "^\\d+\\.\\t";
-		endnoteStory.changeGrep();
+		}			
 	}
 
 	checkStyles (dok);
@@ -1591,7 +1592,7 @@ function foot2end (dok, endnoteStory) {
 	} // for
 
 	
-	var endnoteBlock = getEndnoteBlock(endnoteStory, dok);
+	var endnoteBlock = getEndnoteBlock(endnoteStory, dok, true);
 	// Endnoten Nummerierung  zurücksetzen... 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
@@ -1694,7 +1695,7 @@ function foot2end (dok, endnoteStory) {
 	deleteNotemarkers (endnoteStory);	 	
 	
 	if (px.manualNumbering) {
-		var endnoteBlock = getEndnoteBlock(endnoteStory, dok);
+		var endnoteBlock = getEndnoteBlock(endnoteStory, dok, false);
 
 		px.crossRefStyleEndnote.buildingBlocks[0].blockType = BuildingBlockTypes.PARAGRAPH_TEXT_BUILDING_BLOCK;
 		px.crossRefStyleEndnote.buildingBlocks[0].appliedDelimiter = "."
@@ -1706,7 +1707,7 @@ function foot2end (dok, endnoteStory) {
 		// Backlinks korrigieren 	
 		app.findGrepPreferences = NothingEnum.NOTHING;
 		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.findWhat = "^\\d+\\.\\t";
+		app.findGrepPreferences.findWhat = "^\\d+\\.\\h+";
 		
 		for (var h = 0; h < dok.hyperlinks.length; h++) {
 			hlink = dok.hyperlinks[h];
@@ -1798,7 +1799,8 @@ function getSections (story) {
 }
 
 
-function getEndnoteBlock (endnoteStory, dok) {
+function getEndnoteBlock (endnoteStory, dok, alertMessage) {
+	if (alertMessage == undefined) alertMessage = true;
 	var endnotenStartEndPositions = getEndnotenStartEndPositions(dok, endnoteStory)
 	var startOfTextRange = endnoteStory.characters[-1].index;
 	var endOfTextRange = endnoteStory.characters[-1].index;
@@ -1823,7 +1825,9 @@ function getEndnoteBlock (endnoteStory, dok) {
 	}
 	else if (results.length > 1) {
 		startOfTextRange = results[0].index;
-		alert (localize (px.ui.headingStyleFailBlockMoreThanOne, px.endnoteHeadingString, px.pStyleEndnoteHeading.name ));
+		if (alertMessage) {
+			alert (localize (px.ui.headingStyleFailBlockMoreThanOne, px.endnoteHeadingString, px.pStyleEndnoteHeading.name ));
+		}
 	}
 	else {
 		// Kann eigentlich nicht auftreten
