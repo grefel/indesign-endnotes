@@ -28,7 +28,7 @@ I picked the idea of using InDesign cross references for endnotes from Peter Kah
 
 #include config.jsx 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
 	px.debug = true;
 	px.showGui = true;
 }
@@ -2045,24 +2045,6 @@ function deleteNotemarkers (endnoteStory) {
 	app.findChangeGrepOptions.includeFootnotes = true;
 	app.findGrepPreferences.findWhat = "~F";
 	endnoteStory.changeGrep();
-//~ 	if (app.findChangeGrepOptions.hasOwnProperty ("searchBackwards")) {
-//~ 		app.findChangeGrepOptions.searchBackwards = false;
-//~ 	}
-//~ 	var results = endnoteStory.findGrep(true);
-//~ 	for (var i = results.length -1; i >= 0; i--) {
-//~ 		var fnchar = results[i];
-//~ 		if (fnchar.parent instanceof Footnote) {
-//~ 			// ignored footnote
-//~ 			continue;
-//~ 		}
-//~ 		if (fnchar.footnotes.length == 1 && fnchar.footnotes.everyItem().contents != "") {
-//~ 			// ignored footnote
-//~ 			continue;			
-//~ 		}
-//~ 		if (fnchar.footnotes.length == 0) {
-//~ 			fnchar.contents = "";
-//~ 		}
-//~ 	}
 	endnoteStory.characters[-1].contents = "";
 }
 function trimFootnoteSpace (footNote) {
@@ -2211,7 +2193,7 @@ function checkStyles(dok) {
 		px.pStyleEndnote.numberingExpression  = "^#.^t"
 		px.pStyleEndnote.numberingFormat = NumberingStyle.ARABIC		
 		if (!px.manualNumbering) {
-			log.warnAlert( localize (px.ui.endnoteStyleNumberingFail, px.pStyleEndnoteName ) );	
+			log.info( localize (px.ui.endnoteStyleNumberingFail, px.pStyleEndnoteName ) );	
 		}
 	}
 	if (px.pStyleEndnoteFollow.bulletsAndNumberingListType == ListType.numberedList) {
