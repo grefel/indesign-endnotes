@@ -1319,11 +1319,12 @@ function startProcessing() {
 		log.infoAlert(resultInfo);
 	}
 	else {
-		log.debug(resultInfo);
+		log.info(resultInfo);
+		log.info(" --- ");
 	}
 }
 
-// Returns a valid EndnoteStory for processing
+/* Returns a valid endnote story for processing or null*/
 function getEndnoteStory(dok) {
 	// Check for valid stories
 	var endnoteStory = null;
@@ -1445,6 +1446,7 @@ function foot2end (dok, endnoteStory) {
 			}
 		}
 	}
+	log.info("Run footnote to endnote conversion with version " + px.version);
 
 	// Sicherheitskopie anlegen? 
 	if (px.createBackupCopy && !px.debug) {
@@ -1481,7 +1483,7 @@ function foot2end (dok, endnoteStory) {
 		}			
 	}
 
-	checkStyles (dok);
+	checkStyles(dok);
 												
 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 	if (!hLinksPerStory) {
@@ -1496,10 +1498,12 @@ function foot2end (dok, endnoteStory) {
 	hyperLinkID =  hLinksPerStory[1][0];
 	
 	if (hyperLinkID == "last") { // --> There is no Endnote Hyperlink in the story.
+		log.info("Create new endnote block");
 		endnoteStory.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
 		endnoteStory.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
 	}
 	else {
+		log.info("update exisiting endnote block");
 		firstHlink = dok.hyperlinks.itemByID(hyperLinkID);
 		firstHlinkIndex = firstHlink.destination.destinationText.paragraphs[0].insertionPoints[0].index;
 		if (firstHlink.destination.destinationText.parentStory.id != endnoteStory.id) {
