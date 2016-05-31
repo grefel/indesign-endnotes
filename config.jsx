@@ -25,22 +25,27 @@ Shared configuration settings
 
 var px = {
 	// Configurations settings for style names -- changes is save 
-	pStyleEndnoteName:"Endnote", // Absatzformat der Endnote. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
+	pStyleEndnoteName:"Anm", // Absatzformat der Endnote. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
 	pStyleEndnoteFollowName:"Anm~folge", // Absatzformat für Endnoten mit mehr als einem Absatz. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
-	pStyleEndnoteHeadingName:"EndnotenTitel", // Absatzformat der Endnotenüberschrift
 	
-	pStyleEndnoteSplitHeadingName:"EndnotenAbschnitt", // Absatzformat für die wiederholten Überschriften	
-	pStyleEndnoteSplitHeadingPrecedingRepeatName:"EndnotenAbschnittVor", // Absatzformat für Absätze vor wiederholten Überschriften
-	pStyleEndnoteSplitHeadingFollowingName:"EndnotenAbschnittNach", //  Absatzformat für Absätze nach wiederholten Überschriften
+	// Endnote block structure 
+	pStyleEndnoteHeadingName:"endnote_block_title", // Absatzformat der Endnotenüberschrift
+	pStyleEndnoteSplitHeadingName:"endnote_block_section", // Absatzformat für die wiederholten Überschriften (wdh von: pStylePrefix) 
+	pStyleEndnoteSplitHeadingPrecedingRepeatName:"endnote_block_section_preceding", // Absatzformat für Absätze vor wiederholten Überschriften (wdh von: pStyleEndnoteSplitHeadingPrecedingName)
+	pStyleEndnoteSplitHeadingFollowingRepeatName:"endnote_block_section_following", // Absatzformat für Absätze vor wiederholten Überschriften (wdh von: pStyleEndnoteSplitHeadingPrecedingName)
 	
 	cStyleEndnoteMarkerName:"Endnotenzähler", // Zeichenformat des Endnotenmarkers.Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
 	crossRefStyleEndnoteName:"EndnotenMarker", // Querverweisformat. Kann nicht in der GUI ausgewählt werden.
-	endnoteHeadingString:"Endnoten", // Default Text für die Entnotenüberschrift
 	
+	endnoteHeadingString:"Endnoten", // Default Text für die Entnotenüberschrift
+
+	// Section Structure
 	pStylePrefix:"u1", // Präfix der Überschriften an denen die Endnotenzählung geteilt wird.
 	pStyleEndnoteSplitHeadingPrecedingName:"U1_Pre", // Absatzformat für Absätze die kopiert werden sollen
 	pStyleEndnoteSplitHeadingFollowingName:"U1_Follow", //  Absatzformat für Absätze die kopiert werden sollen
 
+	// Ignore Footnote Style
+	pStyleFootnoteIgnoreName:"footnote_keep", // Absatzfromate für Fußnoten die nicht konvertiert werden sollen
 
 	// User interface strings -- translation and changes are save
 	ui:{
@@ -49,7 +54,7 @@ var px = {
 		saveDocInfo:{en:"Save your document first!\rSave and continue?", de:"Das Dokument muss zuerst gespeichert werden!\rSpeichern und fortfahren?"},
 		saveDocFail:{en:"Could not save File.\n", de:"Die Datei konnte nicht gespeichert werden.\n"},
 		errorInfo:{en:"Error during execution: ", de:"Fehler bei der Ausführung: "},		
-		versionWarning:{en:"To run this script InDesign CS5 is required", de:"Für dieses Skript wird mindestens InDesign CS5 benötigt"},
+		versionWarning:{en:"To run this script InDesign CS6 is required", de:"Für dieses Skript wird mindestens InDesign CS6 benötigt"},
 		scriptVersionWarning:{en:"The document has been created with Version (v%1). Compatibility can not be guaranteed.\nPlease check carefully.", de:"Das Dokument wurde mit Version (v%1) erstellt. Die Kompatibilität kann nicht garantiert werden.\nBitte prüfen Sie genau."},
 		
 		// createEndnotes.jsx		
@@ -65,11 +70,13 @@ var px = {
 		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
 		wrongEndnoteOrder:{en:"Position of Endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
 		emptyFootnote:{en:"Cannot process Footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
+		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by Parargaph Style",de:"Anhand von Absatzformat trennen"},
 		continuousNumbering:{en:"Continuous Numbering",de:"Fortlaufend nummerieren"},
-		manualNumbering:{en:"Manual numbering of endnotes (list function in paragraph style will be disabled )",de:"Manuelle Nummerierung der Endnoten (Listenfunktion im Absatzformat wird ggfs. deaktiviert)"},
+		manualNumbering:{en:"Manual numbering of endnotes (list function in paragraph style will be disabled)",de:"Manuelle Nummerierung der Endnoten (Listenfunktion im Absatzformat wird ggfs. deaktiviert)"},
+		ignoreFootnotesByStyle:{en:"Ignore footnotes with paragraph style",de:"Ignoriere Fußnote mit dem Absatzformat"},		
 		
 		splitFormatPanel:{en:"Split endnote configuration",de:"Formatpräfix an dem die Endnoten geteilt werden"},
 		splitByHeadingStyle:{en:"Split Parargaph Style/Heading",de:"Format zur Aufteilung in Abschnitte"},
@@ -126,7 +133,7 @@ var px = {
 	backupCopySuffix:"_endnoteBackupt.indd",
 	
 	numberBySection:true,
-	manualNumbering:false,
+	manualNumbering:true,
 	manualNumberingLabel:"px:Foot2EndnoteManualNumbering",
 	
 	hyperlinkLabel:"px:Foot2EndnoteHyperlink", // Markierung der SkriptQuerverweise
@@ -171,6 +178,14 @@ var px = {
 	pStyleEndnoteSplitHeadingFollowingRepeat:undefined,
 	pStyleEndnoteSplitHeadingFollowingRepeatIndex:0,
 	pStyleEndnoteSplitHeadingFollowingRepeatLabel:"px:Foot2EndnoteParagraphStyleSplitHeadingRepeatFollowing",
+
+	footnoteIgnore:false,
+	footnoteIgnoreLabel:"px:Foot2EndnoteFootnoteIgnore",
+	
+	pStyleFootnoteIgnore:undefined,
+	pStyleFootnoteIgnoreIndex:0,
+	pStyleFootnoteIgnoreLabel:"px:Foot2EndnoteParagraphStyleFootnoteIgnore",
+	
 
 	pStyleEndnoteSplitHeadingFollowingCopy:false,
 	pStyleEndnoteSplitHeadingFollowingCopyLabel:"px:Foot2EndnoteParagraphStyleSplitHeadingFollowingCopy",
