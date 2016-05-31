@@ -19,7 +19,7 @@
 /*
 Shared configuration settings 
 @Version: 2
-@Date: 2016-05-24
+@Date: 2016-05-31
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -49,7 +49,8 @@ var px = {
 		saveDocInfo:{en:"Save your document first!\rSave and continue?", de:"Das Dokument muss zuerst gespeichert werden!\rSpeichern und fortfahren?"},
 		saveDocFail:{en:"Could not save File.\n", de:"Die Datei konnte nicht gespeichert werden.\n"},
 		errorInfo:{en:"Error during execution: ", de:"Fehler bei der Ausführung: "},		
-		versionWarning:{en:"To run this script InDesign CS4 is required", de:"Für dieses Skript wird mindestens InDesign CS4 benötigt"},
+		versionWarning:{en:"To run this script InDesign CS5 is required", de:"Für dieses Skript wird mindestens InDesign CS5 benötigt"},
+		scriptVersionWarning:{en:"The document has been created with Version (v%1). Compatibility can not be guaranteed.\nPlease check carefully.", de:"Das Dokument wurde mit Version (v%1) erstellt. Die Kompatibilität kann nicht garantiert werden.\nBitte prüfen Sie genau."},
 		
 		// createEndnotes.jsx		
 		menuTitle:{en:"Convert Footnotes to Endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
@@ -89,7 +90,8 @@ var px = {
 		endNoteHeading:{en:"Heading",de:"Titelzeile"},
 		endNoteHeadingParagraphStyle:{en:"Parargaph Style Heading",de:"Absatzformat Endnotentitel"},
 		cancelButton:{en:"Cancel",de:"Abbrechen"},
-		okButton:{en:"Convert",de:"Konvertieren"},
+		okButton:{en:"Convert Footnotes",de:"Konvertiere Fußnoten"},
+		saveButton:{en:"Save Settings in Document",de:"Einstellungen im Dokument speichern"},
 		
 		
 		invalidSelection:{en:"Invalid Selection", de:"Ungültige Auswahl"},
@@ -123,8 +125,6 @@ var px = {
 	createBackupCopy:true,
 	backupCopySuffix:"_endnoteBackupt.indd",
 	
-//~ 	convertAllStories:true,
-//~ 	convertSelection:false,
 	numberBySection:true,
 	manualNumbering:false,
 	manualNumberingLabel:"px:Foot2EndnoteManualNumbering",
@@ -175,7 +175,6 @@ var px = {
 	pStyleEndnoteSplitHeadingFollowingCopy:false,
 	pStyleEndnoteSplitHeadingFollowingCopyLabel:"px:Foot2EndnoteParagraphStyleSplitHeadingFollowingCopy",
 	
-
 	cStyleEndnoteMarker:undefined,
 	cStyleEndnoteMarkerIndex:0,
 	cStyleEndnoteMarkerLabel:"px:Foot2EndnoteCharacterStyle",	
@@ -186,10 +185,13 @@ var px = {
 	pStylePrefixMarkerLabel:"px:Foot2EndnoteSplitPrefix",
 	numberBySectionLabel:"px:numberBySection",
 	
+	scriptVersionLabel:"px:Foot2EndnoteVersion",
+	scriptMajorVersion:"2",
+	
 	foot2EndCounter:0,
 	debug:false,
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"2.0-2016-05-25"
+	version:"2.0-2016-05-31"
 }
