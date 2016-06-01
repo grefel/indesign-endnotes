@@ -54,7 +54,7 @@ var px = {
 		saveDocInfo:{en:"Save your document first!\rSave and continue?", de:"Das Dokument muss zuerst gespeichert werden!\rSpeichern und fortfahren?"},
 		saveDocFail:{en:"Could not save File.\n", de:"Die Datei konnte nicht gespeichert werden.\n"},
 		errorInfo:{en:"Error during execution: ", de:"Fehler bei der Ausführung: "},		
-		versionWarning:{en:"To run this script InDesign CS6 is required", de:"Für dieses Skript wird mindestens InDesign CS6 benötigt"},
+		versionWarning:{en:"To run this script InDesign CS5 is required", de:"Für dieses Skript wird mindestens InDesign CS5 benötigt"},
 		scriptVersionWarning:{en:"The document has been created with Version (v%1). Compatibility can not be guaranteed.\nPlease check carefully.", de:"Das Dokument wurde mit Version (v%1) erstellt. Die Kompatibilität kann nicht garantiert werden.\nBitte prüfen Sie genau."},
 		
 		// createEndnotes.jsx		

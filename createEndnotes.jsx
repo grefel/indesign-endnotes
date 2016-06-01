@@ -1227,7 +1227,7 @@ function startProcessing() {
 		return;
 	}
 
-	if (parseInt(app.version) < 8) {
+	if (parseInt(app.version) < 7) {
 		alert(localize(px.ui.versionWarning));
 		return;
 	}
@@ -1496,9 +1496,9 @@ function foot2end (dok, endnoteStory) {
 					try {
 						app.findGrepPreferences.findWhat = "^\\d+\\.";
 						hlink.source.sourceText.changeGrep();
-						app.findGrepPreferences.findWhat = "^\\h";
+						app.findGrepPreferences.findWhat = "^\\t";
 						hlink.source.sourceText.changeGrep();
-						app.findGrepPreferences.findWhat = "^\\h";
+						app.findGrepPreferences.findWhat = "^\\t";
 						hlink.source.sourceText.changeGrep();
 					} catch (e) {}
 				}
@@ -1764,7 +1764,7 @@ function foot2end (dok, endnoteStory) {
 	// Rückverlinkung erstellen 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
-	app.findGrepPreferences.findWhat = "^\\d+\\.\\h+";
+	app.findGrepPreferences.findWhat = "^\\d+\\.\\t+";
 
 	for (var h = 0; h < dok.hyperlinkTextDestinations.length; h++) {
 		var endnote_backlink = dok.hyperlinkTextDestinations[h];
