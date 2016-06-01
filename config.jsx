@@ -75,7 +75,7 @@ var px = {
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by Parargaph Style",de:"Anhand von Absatzformat trennen"},
 		continuousNumbering:{en:"Continuous Numbering",de:"Fortlaufend nummerieren"},
-		manualNumbering:{en:"Manual numbering of endnotes (list function in paragraph style will be disabled)",de:"Manuelle Nummerierung der Endnoten (Listenfunktion im Absatzformat wird ggfs. deaktiviert)"},
+		manualNumbering:{en:"Manual numbering of endnotes (links only the counter, the list function in paragraph style will be disabled)",de:"Manuelle Nummerierung der Endnoten (Verlinkt nur die Ziffer. Für Hyperlinks in Endnoten sollte diese Option ausgewählt sein. Listenfunktion im Absatzformat wird deaktviert)"},
 		ignoreFootnotesByStyle:{en:"Ignore footnotes with paragraph style",de:"Ignoriere Fußnote mit dem Absatzformat"},		
 		
 		splitFormatPanel:{en:"Split endnote configuration",de:"Formatpräfix an dem die Endnoten geteilt werden"},
@@ -86,7 +86,7 @@ var px = {
 		endNoteSplitHeadingParagraphStyleFollowing:{en:"Copy following Parargaph formated by:",de:"Folgenden Absatz kopieren, Formatvorgabe:"},		
 		endNoteSplitHeadingParagraphStylePrecedingFollowingRepeat:{en:"Parargaph Style for repeated Paragraphs:",de:"Wiederholten Absatz formatieren:"},
 		
-		formatWarnung:{en:"Caution: Any Text formatted in Parargaph Style for repeated Headings will be deleted. Use only in Endnote Area!",de:"Achtung: Texte, die mit den Absatzformaten für wiederholte Schriften formatiert sind, werden gelöscht. Verwenden Sie dies nur im Bereich Endnoten."},
+		formatWarnung:{en:"Caution: Any Text formatted in Parargaph Style for repeated Headings will be deleted. Use only in Endnote Area!",de:"Achtung: Texte, die mit den Absatzformaten für wiederholte Überschriften formatiert sind, werden gelöscht. Verwenden Sie diese Formate nur im Bereich der Endnoten."},
 		
 		formatPanel:{en:"Endnote styling",de:"Formate der Endnoten"},
 		endnoteParagraphStyle:{en:"Parargaph Style endnote",de:"Absatzformat Endnote"},
