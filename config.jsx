@@ -118,6 +118,7 @@ var px = {
 		styleSelectionFail:{en:"Error in the format selection", de:"Fehler bei der Formatauswahl"},
 		styleSelectionFailSection:{en:"Error in the format selection of selections", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
 		endnoteStoryMoved:{en:"Text and Endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
+		manualNumberingFail:{en:"Could not create manual numbering - Numbering format wrong? Use [^#.^t]", de:"Konnte die manuelle Nummerierung nicht erstellen. Vielleicht wurde ein falsches Nummerierungsformat verwendet. Notwendig ist: [^#.^t]"},
 		
 
 		// deleteEndnotes.jsx

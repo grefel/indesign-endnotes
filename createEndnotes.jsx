@@ -1773,9 +1773,14 @@ function foot2end (dok, endnoteStory) {
 			 endnote_backlink.insertLabel("px:paragraphDestinationID","");
 			var endnote_link = dok.hyperlinkTextDestinations.itemByID(pargraphTextDestinationID);
 			var endnoteSource = endnote_link.destinationText.paragraphs[0];
+			
 			if (px.manualNumbering) {
 				endnoteSource = endnoteSource.findGrep()[0];
-			}						
+			}
+			if (endnoteSource == null) {
+				log.warnAlert(localize (px.ui.manualNumberingFail));
+				break;
+			}
 			if (endnoteSource.findHyperlinks().length > 0) {
 				endnoteSource = endnoteSource.characters[0];
 			}			
