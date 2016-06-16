@@ -73,7 +73,7 @@ function jump() {
 				hLink.showDestination();				
 				return true;
 			}
-			if (hLink.destination.destinationText.index == parIndex) {
+			if (hLink.destination.destinationText.paragraphs[0].index == parIndex) {
 				hLink.showSource();
 				return true;
 			} 

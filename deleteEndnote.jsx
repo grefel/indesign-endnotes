@@ -106,7 +106,7 @@ function remove() {
 				removeHL(hLink);
 				return true;
 			}
-			if (hLink.destination.destinationText.index == parIndex) {
+			if (hLink.destination.destinationText.paragraphs[0].index == parIndex) {
 				removeHL(hLink);
 				return true;
 			} 

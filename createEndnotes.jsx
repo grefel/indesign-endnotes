@@ -2220,11 +2220,10 @@ function checkStyles(dok) {
 			log.info( localize (px.ui.endnoteStyleNumberingFail, px.pStyleEndnoteName ) );	
 		}
 	}
-	if (px.manualNumbering && px.pStyleEndnote.numberingExpression  != "^#^t") {
-		px.pStyleEndnote.numberingExpression  = "^#^t";		
-		log.warnAlert(localize (px.ui.wrongNumberingExpression, px.pStyleEndnote.name));
-	}
-
+//~ 	if (px.manualNumbering && px.pStyleEndnote.numberingExpression  != "^#^t") {
+//~ 		px.pStyleEndnote.numberingExpression  = "^#^t";		
+//~ 		log.warnAlert(localize (px.ui.wrongNumberingExpression, px.pStyleEndnote.name));
+//~ 	}
 
 	if (px.pStyleEndnoteFollow.bulletsAndNumberingListType == ListType.numberedList) {
 		px.pStyleEndnoteFollow.bulletsAndNumberingListType = ListType.NO_LIST;
