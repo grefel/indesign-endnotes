@@ -19,7 +19,7 @@
 /*
 Shared configuration settings 
 @Version: 2
-@Date: 2016-05-31
+@Date: 2016-06-15
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -73,8 +73,8 @@ var px = {
 		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
-		splitByHeading:{en:"Split by Parargaph Style",de:"Anhand von Absatzformat trennen"},
-		continuousNumbering:{en:"Continuous Numbering",de:"Fortlaufend nummerieren"},
+		splitByHeading:{en:"Split by Parargaph Style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
+		continuousNumbering:{en:"Continuous Numbering",de:"Fortlaufend nummerieren (Alle Endnoten in einem Abschnitt)"},
 		manualNumbering:{en:"Manual numbering of endnotes",de:"Manuelle Nummerierung der Endnoten"},
 		manualNumberingInfo:{en:"Llinks only the counter. Use this if you need to process Hyperlinks in Endnotes. The list function in endnote paragraph style will be disabled.",de:"Verlinkt nur die Ziffer im Endnotenabsatz. Für Hyperlinks in Endnoten sollte diese Option ausgewählt sein. Die Listenfunktion im Absatzformat wird deaktviert)"},
 		ignoreFootnotesByStyle:{en:"Ignore footnotes with paragraph style",de:"Ignoriere Fußnote mit dem Absatzformat"},		
@@ -118,8 +118,8 @@ var px = {
 		styleSelectionFail:{en:"Error in the format selection", de:"Fehler bei der Formatauswahl"},
 		styleSelectionFailSection:{en:"Error in the format selection of selections", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
 		endnoteStoryMoved:{en:"Text and Endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
-		manualNumberingFail:{en:"Could not create manual numbering - Numbering format wrong? Use [^#.^t]", de:"Konnte die manuelle Nummerierung nicht erstellen. Vielleicht wurde ein falsches Nummerierungsformat verwendet. Notwendig ist: [^#.^t]"},
-		
+		manualNumberingFail:{en:"Could not create manual numbering - Numbering format wrong? Use [^#^t]", de:"Konnte die manuelle Nummerierung nicht erstellen. Vielleicht wurde ein falsches Nummerierungsformat verwendet. Notwendig ist: [^#^t]"},		
+		wrongNumberingExpression:{en:"Changed numbering format of [%1] to [^#^t].", de:"Das Nummerierungsformat für das Absatzformat [%1] wurde auf [^#^t] geändert."},
 
 		// deleteEndnotes.jsx
 		noEndnoteOrMarker:{en:"The insertion point must be placed within an endnote or before the endnote marker.", de:"Die Einfügemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein."},

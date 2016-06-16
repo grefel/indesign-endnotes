@@ -19,7 +19,7 @@
 /*  
 //DESCRIPTION: Convert Footnotes to Endnotes  ( Uses the cross-reference function from InDesign )
 ## Acknowledgements
-I picked the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
+I derivec the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
 @Version: 2
 @Date: 2016-05-31
@@ -1494,12 +1494,21 @@ function foot2end (dok, endnoteStory) {
 					hlink.source.sourceText = endnoteSource;
 					// 2. Nummerierung löschen 
 					try {
-						app.findGrepPreferences.findWhat = "^\\d+\\.";
-						hlink.source.sourceText.changeGrep();
 						app.findGrepPreferences.findWhat = "^\\t";
 						hlink.source.sourceText.changeGrep();
 						app.findGrepPreferences.findWhat = "^\\t";
 						hlink.source.sourceText.changeGrep();
+						app.findGrepPreferences.findWhat = "^\\d+";
+						hlink.source.sourceText.changeGrep();
+						// Dont use "^\\t+" it will kill HyperlinkDestinations
+						app.findGrepPreferences.findWhat = "^\\t";
+						hlink.source.sourceText.changeGrep();
+						app.findGrepPreferences.findWhat = "^\\t";
+						hlink.source.sourceText.changeGrep();
+						app.findGrepPreferences.findWhat = "^\\t";
+						hlink.source.sourceText.changeGrep();						
+						app.findGrepPreferences.findWhat = "^~h";
+						hlink.source.sourceText.changeGrep();						
 					} catch (e) {}
 				}
 			}
@@ -1526,7 +1535,7 @@ function foot2end (dok, endnoteStory) {
 		endnoteStory.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
 	}
 	else {
-		log.info("update exisiting endnote block");
+		log.info("Update exisiting endnote block");
 		firstHlink = dok.hyperlinks.itemByID(hyperLinkID);
 		firstHlinkIndex = firstHlink.destination.destinationText.paragraphs[0].insertionPoints[0].index;
 		if (firstHlink.destination.destinationText.parentStory.id != endnoteStory.id) {
@@ -1754,17 +1763,27 @@ function foot2end (dok, endnoteStory) {
 
 	if (px.manualNumbering) {
 		var endnoteBlock = getEndnoteBlock(endnoteStory, dok, false);
-		px.crossRefStyleEndnote.buildingBlocks[0].blockType = BuildingBlockTypes.PARAGRAPH_TEXT_BUILDING_BLOCK;
-		px.crossRefStyleEndnote.buildingBlocks[0].appliedDelimiter = "."
+	
+		// Marker (End nested style here) insertion for CrossRefFormat
+		app.findGrepPreferences = NothingEnum.NOTHING;
+		app.changeGrepPreferences = NothingEnum.NOTHING;
+		app.findGrepPreferences.findWhat = "(.|\\n)+";
+		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
+		app.changeGrepPreferences.changeTo = "~h$0";
+		endnoteBlock.changeGrep();
+
+		px.crossRefStyleEndnote.buildingBlocks[0].blockType = BuildingBlockTypes.FULL_PARAGRAPH_BUILDING_BLOCK;
+		px.crossRefStyleEndnote.buildingBlocks[0].appliedDelimiter = ""; // ~h End nested style here
 		px.crossRefStyleEndnote.buildingBlocks[0].includeDelimiter = false;
-		endnoteBlock.convertBulletsAndNumberingToText ();		
+
+		endnoteBlock.convertBulletsAndNumberingToText ();
 		px.pStyleEndnote.bulletsAndNumberingListType = ListType.NO_LIST;
 	}
 
 	// Rückverlinkung erstellen 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
-	app.findGrepPreferences.findWhat = "^\\d+\\.\\t+";
+	app.findGrepPreferences.findWhat = "^\\t*\\d+\\t+";
 
 	for (var h = 0; h < dok.hyperlinkTextDestinations.length; h++) {
 		var endnote_backlink = dok.hyperlinkTextDestinations[h];
@@ -1802,7 +1821,7 @@ function foot2end (dok, endnoteStory) {
 	if (px.manualNumbering) {
 		app.findGrepPreferences = NothingEnum.NOTHING;
 		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.findWhat = "(?<=\\d\\.\\t)\\t";
+		app.findGrepPreferences.findWhat = "(?<=\\d\\t)\\t";
 		endnoteBlock.changeGrep();
 	}	
 	
@@ -2041,7 +2060,6 @@ function pushHLink ( endNoteArray, hyperLinkID, hLink) {
 	return null; 
 }
 
-
 function deleteNotemarkers (endnoteStory) {
 //~ 	// Es gibt Abstürze bei wenn der Footnote Marker am Ende des Textabschnitts steht Suche Ersetze Kombinationen in CS6
 	endnoteStory.insertionPoints[-1].contents = " ";
@@ -2052,6 +2070,7 @@ function deleteNotemarkers (endnoteStory) {
 	endnoteStory.changeGrep();
 	endnoteStory.characters[-1].contents = "";
 }
+
 function trimFootnoteSpace (footNote) {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
@@ -2185,6 +2204,7 @@ function readStyles (dok) {
 		px.dokCharacterStyles[i] = style;
 	}
 }
+
 /* Check endnote style and cross ref format for usability in script */
 function checkStyles(dok) {
 	// Absätze von Endnoten müssen immer nummeriert sein!
@@ -2195,12 +2215,17 @@ function checkStyles(dok) {
 	}		
 	if (px.pStyleEndnote.bulletsAndNumberingListType != ListType.numberedList) {
 		px.pStyleEndnote.bulletsAndNumberingListType = ListType.numberedList;
-		px.pStyleEndnote.numberingExpression  = "^#.^t"
 		px.pStyleEndnote.numberingFormat = NumberingStyle.ARABIC		
 		if (!px.manualNumbering) {
 			log.info( localize (px.ui.endnoteStyleNumberingFail, px.pStyleEndnoteName ) );	
 		}
 	}
+	if (px.manualNumbering && px.pStyleEndnote.numberingExpression  != "^#^t") {
+		px.pStyleEndnote.numberingExpression  = "^#^t";		
+		log.warnAlert(localize (px.ui.wrongNumberingExpression, px.pStyleEndnote.name));
+	}
+
+
 	if (px.pStyleEndnoteFollow.bulletsAndNumberingListType == ListType.numberedList) {
 		px.pStyleEndnoteFollow.bulletsAndNumberingListType = ListType.NO_LIST;
 		log.warnAlert( localize (px.ui.endnoteStyleNumberingDeactivate, px.pStyleEndnoteFollowName) );	
