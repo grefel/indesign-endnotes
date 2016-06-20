@@ -68,7 +68,7 @@ function jump() {
 	for (var i = 0; i  < dok.hyperlinks.length; i++) {
 		if (dok.hyperlinks[i].extractLabel(px.hyperlinkLabel) == "true") {
 			var hLink = dok.hyperlinks[i];
-			$.writeln(hLink.source.sourceText.index + " - " +  hLink.destination.destinationText.index);
+//~ 			$.writeln(hLink.source.sourceText.index + " - " +  hLink.destination.destinationText.index);
 			if (hLink.source.sourceText.index == index) {
 				hLink.showDestination();				
 				return true;
