@@ -1453,6 +1453,17 @@ function foot2end (dok, endnoteStory) {
 		}
 	}
 	log.info("Run footnote to endnote conversion with version " + px.version);
+	
+	
+	app.findGrepPreferences = NothingEnum.NOTHING;
+	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
+	app.findGrepPreferences.findWhat = "^[~m~>~f~|~S~s~<~/~.~3~4~% ]*\r";
+	var emptyEndnotes = endnoteStory.findGrep();
+	if (emptyEndnotes.length > 0) {
+		log.warnAlert(localize(px.ui.emptyEndnotePar, emptyEndnotes.length, px.pStyleEndnote.name));
+		emptyEndnotes[0].select();
+		return;
+	}
 
 	// Sicherheitskopie anlegen? 
 	if (px.createBackupCopy && !px.debug) {
@@ -1514,6 +1525,8 @@ function foot2end (dok, endnoteStory) {
 			}
 		}			
 	}
+
+	
 
 	checkStyles(dok);
 										
