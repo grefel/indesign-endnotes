@@ -1796,7 +1796,7 @@ function foot2end (dok, endnoteStory) {
 	// Rückverlinkung erstellen 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
-	app.findGrepPreferences.findWhat = "^\\t*\\d+\\t+";
+	app.findGrepPreferences.findWhat = "^.+?\\t";
 
 	for (var h = 0; h < dok.hyperlinkTextDestinations.length; h++) {
 		var endnote_backlink = dok.hyperlinkTextDestinations[h];
