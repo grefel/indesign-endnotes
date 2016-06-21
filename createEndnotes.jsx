@@ -1490,36 +1490,30 @@ function foot2end (dok, endnoteStory) {
 //~ 			$.writeln(hlink.extractLabel(px.hyperlinkLabel))
 			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
 				if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {					
-//~ 					$.writeln(hlink.source.sourceText.contents)
 					// 1. backlink auf den ganzen Absatz legen 
 					var endnoteSource = hlink.source.sourceText.paragraphs[0];					
 					if (endnoteSource.findHyperlinks().length > 1) {
 						endnoteSource = endnoteSource.characters[0];
-					}			
+					}
 					if (endnoteSource.findHyperlinks().length > 1) {
 						endnoteSource = hlink.source.sourceText.paragraphs[0];
 						endnoteSource = endnoteSource.characters[-1];
 						log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnoteSource.contents.substring(0,20)))
-					}			
-										
+					}
 					hlink.source.sourceText = endnoteSource;
+
 					// 2. Nummerierung löschen 
 					try {
-						app.findGrepPreferences.findWhat = "^\\t";
-						hlink.source.sourceText.changeGrep();
-						app.findGrepPreferences.findWhat = "^\\t";
-						hlink.source.sourceText.changeGrep();
-						app.findGrepPreferences.findWhat = "^\\d+";
-						hlink.source.sourceText.changeGrep();
-						// Dont use "^\\t+" it will kill HyperlinkDestinations
-						app.findGrepPreferences.findWhat = "^\\t";
-						hlink.source.sourceText.changeGrep();
-						app.findGrepPreferences.findWhat = "^\\t";
-						hlink.source.sourceText.changeGrep();
-						app.findGrepPreferences.findWhat = "^\\t";
-						hlink.source.sourceText.changeGrep();						
-						app.findGrepPreferences.findWhat = "^~h";
-						hlink.source.sourceText.changeGrep();						
+						var deleteIndex = 0;						
+						while (hlink.source.sourceText.characters[deleteIndex].isValid && hlink.source.sourceText.characters[deleteIndex].contents﻿ != SpecialCharacters.END_NESTED_STYLE) {
+							if (hlink.source.sourceText.characters[deleteIndex].contents == "\uFEFF") {
+								deleteIndex++;
+							}
+							else {
+								hlink.source.sourceText.characters[deleteIndex].contents = "";
+							}
+						}
+						hlink.source.sourceText.characters[deleteIndex].contents = "";						
 					} catch (e) {}
 				}
 			}
@@ -1652,7 +1646,7 @@ function foot2end (dok, endnoteStory) {
 		
 		endnote_backlink = dok.hyperlinkTextDestinations.add (footn[i].storyOffset);
 		endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");
-		endnote_backlink.insertLabel("px:paragraphDestinationID", endnote_link.id + "");		
+		endnote_backlink.insertLabel("px:paragraphDestinationID", endnote_link.id + "");
 		
 		px.foot2EndCounter++;
 	} // footnoteLoop : for
@@ -1796,13 +1790,13 @@ function foot2end (dok, endnoteStory) {
 	// Rückverlinkung erstellen 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
-	app.findGrepPreferences.findWhat = "^.+?\\t";
+	app.findGrepPreferences.findWhat = "^.+~h";
 
 	for (var h = 0; h < dok.hyperlinkTextDestinations.length; h++) {
 		var endnote_backlink = dok.hyperlinkTextDestinations[h];
 		if (endnote_backlink != null &&  endnote_backlink.extractLabel(px.hyperlinkLabel) == "backlink" &&  endnote_backlink.extractLabel("px:paragraphDestinationID") != "") {
 			var pargraphTextDestinationID  = endnote_backlink.extractLabel("px:paragraphDestinationID") * 1;
-			 endnote_backlink.insertLabel("px:paragraphDestinationID","");
+			endnote_backlink.insertLabel("px:paragraphDestinationID","");
 			var endnote_link = dok.hyperlinkTextDestinations.itemByID(pargraphTextDestinationID);
 			var endnoteSource = endnote_link.destinationText.paragraphs[0];
 			
@@ -1834,7 +1828,27 @@ function foot2end (dok, endnoteStory) {
 	if (px.manualNumbering) {
 		app.findGrepPreferences = NothingEnum.NOTHING;
 		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.findWhat = "(?<=\\d\\t)\\t";
+		app.findGrepPreferences.findWhat = "^.+~h";
+
+		// Vorhandene Backlinks wieder zurück auf die Nummerierung legen 
+		for (var h = 0; h < dok.hyperlinks.length; h++) {
+			hlink = dok.hyperlinks[h];
+			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
+				if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {					
+					endnoteSource = hlink.source.sourceText.paragraphs[0].findGrep();
+					if (endnoteSource.length == 1) {
+						hlink.source.sourceText = endnoteSource[0];						
+					}
+					else {
+						log.warnAlert(localize (px.ui.statusFail));
+					}
+				}
+			}
+		}
+		
+		app.findGrepPreferences = NothingEnum.NOTHING;
+		app.changeGrepPreferences = NothingEnum.NOTHING;
+		app.findGrepPreferences.findWhat = "(?<=~h)\\t";
 		endnoteBlock.changeGrep();
 	}	
 	
