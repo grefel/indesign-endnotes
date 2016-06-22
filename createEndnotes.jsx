@@ -102,6 +102,9 @@ var px = {
 		wrongEndnoteOrder:{en:"Position of endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
 		emptyFootnote:{en:"Cannot process footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
 		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
+		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
+		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
+		
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
@@ -1694,6 +1697,7 @@ function foot2end (dok, endnoteStory) {
 		dok.saveACopy(backupFile);
 	}
 
+	fixHyperlinks(dok); // Fix broken Links before processing
 
 	if (px.manualNumbering || px.previousManualNumbering) {
 		// Nummerierung wieder aktivieren 
@@ -1717,8 +1721,12 @@ function foot2end (dok, endnoteStory) {
 						endnoteSource = endnoteSource.characters[-1];
 						log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnoteSource.contents.substring(0,20)))
 					}
-					hlink.source.sourceText = endnoteSource;
-
+					try {
+						hlink.source.sourceText = endnoteSource;
+					}
+					catch (e) {
+							log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnoteSource.contents.substring(0,20)))
+					}
 					// 2. Nummerierung löschen 
 					try {
 						var deleteIndex = 0;						
@@ -2230,7 +2238,6 @@ function getEndnotenStartEndPositions(dok, endnoteStory) {
 
 
 function getCurrentEndnotes (dok, endnoteStory) {
-	fixHyperlinks(dok);
 	// Die aktuellen Endnoten einsammeln
 	var hLink;	
 	var hLinksPerStory = [];
@@ -2281,10 +2288,32 @@ function fixHyperlinks(dok) {
 	var hLink;
 	for (var i = 0; i  < dok.hyperlinks.length; i++) {
 		hLink = dok.hyperlinks[i];
-		if (hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
+		if (hLink.destination == null) {
+			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
+			}
+			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
+			}
+			continue;
+		}
+		if (hLink.source == null) {
+			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
+			}
+			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
+			}
+			continue;
+		}
+	
+// 	
+	
+	
+		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
 			hLink.insertLabel(px.hyperlinkLabel, "true");
 		}
-		if (hLink.destination.extractLabel(px.hyperlinkLabel) == "backlink") {
+		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "backlink") {
 			hLink.insertLabel(px.hyperlinkLabel, "backlink");
 		}
 	}
