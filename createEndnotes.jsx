@@ -2283,7 +2283,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 }
 
 
-// Fixes Hyperlink Labels lost thru Copy&Paste
+// Fixes Hyperlink Labels lost thru Copy&Paste and shows deleted/orphaned Hyperlinks
 function fixHyperlinks(dok) {
 	var hLink;
 	for (var i = 0; i  < dok.hyperlinks.length; i++) {
@@ -2305,11 +2305,7 @@ function fixHyperlinks(dok) {
 				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
 			}
 			continue;
-		}
-	
-// 	
-	
-	
+		}	
 		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
 			hLink.insertLabel(px.hyperlinkLabel, "true");
 		}

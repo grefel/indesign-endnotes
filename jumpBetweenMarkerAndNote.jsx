@@ -19,7 +19,7 @@
 /*  
 //DESCRIPTION: Gehe zur Endnote (Gehe zum Hyperlink der diesen Textanker nutzt); 
 @Version: 1.1
-@Date: 2016-01-15
+@Date: 2016-06-23
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -98,6 +98,9 @@ var px = {
 		wrongEndnoteOrder:{en:"Position of endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
 		emptyFootnote:{en:"Cannot process footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
 		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
+		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
+		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
+		
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
@@ -237,8 +240,9 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"2.0-2016-05-31"
+	version:"2.0-2016-06-23"
 }
+
 
 
 // Debug Einstellungen publishingX
@@ -299,14 +303,33 @@ function jump() {
 	return false;
 }
 
+// Fixes Hyperlink Labels lost thru Copy&Paste and shows deleted/orphaned Hyperlinks
 function fixHyperlinks(dok) {
 	var hLink;
 	for (var i = 0; i  < dok.hyperlinks.length; i++) {
 		hLink = dok.hyperlinks[i];
-		if (hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
+		if (hLink.destination == null) {
+			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
+			}
+			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
+			}
+			continue;
+		}
+		if (hLink.source == null) {
+			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
+			}
+			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
+			}
+			continue;
+		}	
+		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
 			hLink.insertLabel(px.hyperlinkLabel, "true");
 		}
-		if (hLink.destination.extractLabel(px.hyperlinkLabel) == "backlink") {
+		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "backlink") {
 			hLink.insertLabel(px.hyperlinkLabel, "backlink");
 		}
 	}
