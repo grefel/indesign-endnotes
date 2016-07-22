@@ -244,7 +244,7 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"2.0-2016-05-31"
+	version:"2.0-2016-06-24"
 }
 
 // Debug Einstellungen publishingX 
