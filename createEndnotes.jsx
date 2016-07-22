@@ -22,7 +22,7 @@
 I derivec the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
 @Version: 2
-@Date: 2016-06-21
+@Date: 2016-07-21
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -153,7 +153,7 @@ var px = {
 		styleSelectionFailSection:{en:"Error in the format selection of the section creation.", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
 		endnoteStoryMoved:{en:"Text and endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
 		manualNumberingFail:{en:"Could not create manual numbering, did not find number at start", de:"Konnte die manuelle Nummerierung nicht erstellen. Die Aufzählung zu Beginn konnte nicht ermittelt werden."},       
-//~		wrongNumberingExpression:{en:"Changed numbering format of [%1] to [^#^t].", de:"Das Nummerierungsformat für das Absatzformat [%1] wurde auf [^#^t] geändert."},
+		wrongNumberingExpression:{en:"Changed numbering format of [%1] to [^#^t].", de:"Das Nummerierungsformat für das Absatzformat [%1] wurde auf [^#^t] geändert."},
 
 		// deleteEndnotes.jsx
 		noEndnoteOrMarker:{en:"The insertion point must be placed within an endnote or before the endnote marker.", de:"Die Einfügemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein."},
@@ -2496,10 +2496,10 @@ function checkStyles(dok) {
 			log.info( localize (px.ui.endnoteStyleNumberingFail, px.pStyleEndnoteName ) );	
 		}
 	}
-//~ 	if (px.manualNumbering && px.pStyleEndnote.numberingExpression  != "^#^t") {
-//~ 		px.pStyleEndnote.numberingExpression  = "^#^t";		
-//~ 		log.warnAlert(localize (px.ui.wrongNumberingExpression, px.pStyleEndnote.name));
-//~ 	}
+	if (px.manualNumbering && px.pStyleEndnote.numberingExpression  != "^#^t") {
+		px.pStyleEndnote.numberingExpression  = "^#^t";		
+		log.warnAlert(localize (px.ui.wrongNumberingExpression, px.pStyleEndnote.name));
+	}
 
 	if (px.pStyleEndnoteFollow.bulletsAndNumberingListType == ListType.numberedList) {
 		px.pStyleEndnoteFollow.bulletsAndNumberingListType = ListType.NO_LIST;
