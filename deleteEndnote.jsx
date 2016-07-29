@@ -1498,7 +1498,7 @@ function removeStart() {
 			app.findGrepPreferences = NothingEnum.NOTHING;
 			app.changeGrepPreferences = NothingEnum.NOTHING;
 
-			for (var h = 0; h < dok.hyperlinks.length; h++) {
+			for (var h = dok.hyperlinks.length - 1; h >= 0; h--) {
 				hlink = dok.hyperlinks[h];
 	//~ 			$.writeln(hlink.extractLabel(px.hyperlinkLabel))
 				if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
@@ -1520,21 +1520,23 @@ function removeStart() {
 								log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnoteSource.contents.substring(0,20)))
 						}
 						// 2. Nummerierung löschen 
+						var st = hlink.source.sourceText.paragraphs[0];
+						var deleteIndex = st.index;					
 						try {
-							var deleteIndex = 0;						
-							while (hlink.source.sourceText.characters[deleteIndex].isValid && hlink.source.sourceText.characters[deleteIndex].contents﻿ != SpecialCharacters.END_NESTED_STYLE) {
-								if (hlink.source.sourceText.characters[deleteIndex].contents == "\uFEFF") {
+							while (endnoteStory.characters[deleteIndex].isValid && endnoteStory.characters[deleteIndex].contents﻿ != SpecialCharacters.END_NESTED_STYLE) {
+								if (endnoteStory.characters[deleteIndex].contents == "\uFEFF") {
 									deleteIndex++;
 								}
 								else {
-									hlink.source.sourceText.characters[deleteIndex].contents = "";
+									endnoteStory.characters[deleteIndex].contents = "";
 								}
 							}
-							hlink.source.sourceText.characters[deleteIndex].contents = "";						
+							endnoteStory.characters[deleteIndex].contents = "";						
 						} catch (e) {}
 					}
 				}
 			}
+		
 			checkStyles(dok);
 			
 			var endnoteBlock = getEndnoteBlock(endnoteStory, dok, false);

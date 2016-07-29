@@ -1225,7 +1225,7 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 	};
 	INNER.showAlert = function(msg){
 		if (!INNER.disableAlerts) {
-			alert(msg) 
+			alert(msg);
 		}
 	};
 	INNER.showMessages = function(title, msgArray) { 
@@ -1706,7 +1706,7 @@ function foot2end (dok, endnoteStory) {
 		app.findGrepPreferences = NothingEnum.NOTHING;
 		app.changeGrepPreferences = NothingEnum.NOTHING;
 
-		for (var h = 0; h < dok.hyperlinks.length; h++) {
+		for (var h = dok.hyperlinks.length - 1; h >= 0; h--) {
 			hlink = dok.hyperlinks[h];
 //~ 			$.writeln(hlink.extractLabel(px.hyperlinkLabel))
 			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
@@ -1728,24 +1728,23 @@ function foot2end (dok, endnoteStory) {
 							log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnoteSource.contents.substring(0,20)))
 					}
 					// 2. Nummerierung löschen 
+					var st = hlink.source.sourceText.paragraphs[0];
+					var deleteIndex = st.index;					
 					try {
-						var deleteIndex = 0;						
-						while (hlink.source.sourceText.characters[deleteIndex].isValid && hlink.source.sourceText.characters[deleteIndex].contents﻿ != SpecialCharacters.END_NESTED_STYLE) {
-							if (hlink.source.sourceText.characters[deleteIndex].contents == "\uFEFF") {
+						while (endnoteStory.characters[deleteIndex].isValid && endnoteStory.characters[deleteIndex].contents﻿ != SpecialCharacters.END_NESTED_STYLE) {
+							if (endnoteStory.characters[deleteIndex].contents == "\uFEFF") {
 								deleteIndex++;
 							}
 							else {
-								hlink.source.sourceText.characters[deleteIndex].contents = "";
+								endnoteStory.characters[deleteIndex].contents = "";
 							}
 						}
-						hlink.source.sourceText.characters[deleteIndex].contents = "";						
+						endnoteStory.characters[deleteIndex].contents = "";						
 					} catch (e) {}
 				}
 			}
-		}			
+		}				
 	}
-
-	
 
 	checkStyles(dok);
 										
@@ -2254,7 +2253,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 					}
 				}
 				else {
-					log.warn("Ein Hyperlink [ID: " + hLink.id + "] hat kein Ziel mehr. Der Ursprungstext vermutlich gelöscht!");
+					log.warnAlert("Ein Hyperlink [ID: " + hLink.id + "] hat kein Ziel mehr. Der Ursprungstext vermutlich gelöscht!");
 				}
 			} catch (e) {
 				log.warn("Fehler bei der Verarbeitung der Hyperlinks, Hyperlinks sind eventuell nicht mehr gültig?\n" + e);
