@@ -294,7 +294,7 @@ function jump() {
 				hLink.showDestination();				
 				return true;
 			}
-			if (hLink.destination.destinationText.paragraphs[0].index == parIndex) {
+			if (hLink.destination && hLink.destination.destinationText.paragraphs[0].index == parIndex) {
 				hLink.showSource();
 				return true;
 			} 
@@ -310,10 +310,10 @@ function fixHyperlinks(dok) {
 		hLink = dok.hyperlinks[i];
 		if (hLink.destination == null) {
 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
+				alert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
 			}
 			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
+				alert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
 			}
 			continue;
 		}
