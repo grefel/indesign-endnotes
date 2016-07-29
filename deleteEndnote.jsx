@@ -1500,13 +1500,17 @@ function removeStart() {
 
 			for (var h = dok.hyperlinks.length - 1; h >= 0; h--) {
 				hlink = dok.hyperlinks[h];
-	//~ 			$.writeln(hlink.extractLabel(px.hyperlinkLabel))
 				if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
 					if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {					
 						// 1. backlink auf den ganzen Absatz legen 
 						var endnoteSource = hlink.source.sourceText.paragraphs[0];					
 						if (endnoteSource.findHyperlinks().length > 1) {
-							endnoteSource = endnoteSource.characters[0];
+							var checkIndex = endnoteSource.index;
+							while (endnoteStory.characters[checkIndex].isValid &&
+							endnoteStory.characters[checkIndex].contents﻿ != SpecialCharacters.END_NESTED_STYLE) {
+								checkIndex++;
+							}						
+							endnoteSource = endnoteStory.characters[checkIndex+1];
 						}
 						if (endnoteSource.findHyperlinks().length > 1) {
 							endnoteSource = hlink.source.sourceText.paragraphs[0];
@@ -1535,8 +1539,8 @@ function removeStart() {
 						} catch (e) {}
 					}
 				}
-			}
-		
+			}			
+
 			checkStyles(dok);
 			
 			var endnoteBlock = getEndnoteBlock(endnoteStory, dok, false);
