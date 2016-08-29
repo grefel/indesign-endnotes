@@ -48,8 +48,8 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 
 /*
 Shared configuration settings 
-@Version: 2
-@Date: 2016-06-21
+@Version: 3
+@Date: 2016-08-29
 @Author Gregor Fellenz http://www.publishingx.de/
 Typos and GUI Texts by Maren Pufe 
 */
@@ -109,8 +109,6 @@ var px = {
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
 		continuousNumbering:{en:"Continuous numbering",de:"Fortlaufend nummerieren (Alle Endnoten in einem Abschnitt)"},
-		manualNumbering:{en:"Manual numbering of endnotes",de:"Manuelle Nummerierung der Endnoten"},
-		manualNumberingInfo:{en:"Links only the counter. Use this if you need to process hyperlinks in endnotes. The list function in endnote paragraph style will be disabled.",de:"Verlinkt nur die Ziffer im Endnotenabsatz. Für Hyperlinks in Endnoten sollte diese Option ausgewählt sein. Die Listenfunktion im Absatzformat wird deaktviert."},
 		ignoreFootnotesByStyle:{en:"Ignore footnotes with paragraph style",de:"Ignoriere Fußnote mit dem Absatzformat"},		
 		
 		splitFormatPanel:{en:"Split endnote configuration",de:"Formatpräfix an dem die Endnoten geteilt werden"},
@@ -145,15 +143,12 @@ var px = {
 		newPagesAdded:{en:"There were %1 pages added. Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
 		positionFail:{en:"There was an error in the endnote position analysis!\Please contact support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
 		samePStyle:{en:"The paragraph format [%1] was also selected for the followup paragraphs, this could lead to numbering errors! The format has been duplicated.", de:"Das Absatzformat [%1] wurde auch für die Folgeabsätze ausgewählt, dies führt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert."},
-		endnoteStyleNumberingFail:{en:"In paragraph style [%1] the option [Bullets and Numbering] -> [List Type : Numbes ] was activated.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] aktiviert."},
 		crossrefFormatFail:{en:"The cross-reference format [%1] already exists.\nThe selected different character style [%2] was set!", de:"Das Querverweisformat [%1] ist bereits vorhanden.\nDas ausgewählte aber abweichende Zeichenformat [%2] wurde eingestellt!"},
 		endnoteStyleNumberingDeactivate:{en:"In Paragraph Style [%1] the option \n[Bullets and Numbering] -> [List Type : Numbes ] was deactivated.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] deaktiviert."},
 		headingFail:{en:"For the title at least one character must be entered.",de:"Für den Titel muss mindestens ein Zeichen eingegeben werden."},
 		styleSelectionFail:{en:"Error in the format selection", de:"Fehler bei der Formatauswahl"},
 		styleSelectionFailSection:{en:"Error in the format selection of the section creation.", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
 		endnoteStoryMoved:{en:"Text and endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
-		manualNumberingFail:{en:"Could not create manual numbering, did not find number at start", de:"Konnte die manuelle Nummerierung nicht erstellen. Die Aufzählung zu Beginn konnte nicht ermittelt werden."},       
-		wrongNumberingExpression:{en:"Changed numbering format of [%1] to [^#^t].", de:"Das Nummerierungsformat für das Absatzformat [%1] wurde auf [^#^t] geändert."},
 
 		// deleteEndnotes.jsx
 		noEndnoteOrMarker:{en:"The insertion point must be placed within an endnote or before the endnote marker.", de:"Die Einfügemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein."},
@@ -169,8 +164,6 @@ var px = {
 	backupCopySuffix:"_endnoteBackupt.indd",
 	
 	numberBySection:true,
-	manualNumbering:true,
-	manualNumberingLabel:"px:Foot2EndnoteManualNumbering",
 	
 	hyperlinkLabel:"px:Foot2EndnoteHyperlink", // Markierung der SkriptQuerverweise
 	endnoteHeadingStringLabel:"px:Foot2EndnoteHeadingString", 
@@ -237,14 +230,14 @@ var px = {
 	numberBySectionLabel:"px:numberBySection",
 	
 	scriptVersionLabel:"px:Foot2EndnoteVersion",
-	scriptMajorVersion:"2",
+	scriptMajorVersion:"3",
 	
 	foot2EndCounter:0,
 	debug:false,
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"2.0-2016-06-24"
+	version:"3.0-2016-08-29"
 }
 
 // Debug Einstellungen publishingX 
@@ -1467,7 +1460,6 @@ function startProcessing() {
 	initLog(logFile);
 
 	if (dok.extractLabel(px.scriptVersionLabel) != "" || dok.extractLabel(px.pStyleEndnoteLabel) != "") {
-		px.updateEndnotes;
 		var dokVersion = "1";
 		if (dok.extractLabel(px.scriptVersionLabel) != "") {
 			dokVersion = dok.extractLabel(px.scriptVersionLabel);
@@ -1698,54 +1690,6 @@ function foot2end (dok, endnoteStory) {
 	}
 
 	fixHyperlinks(dok); // Fix broken Links before processing
-
-	if (px.manualNumbering || px.previousManualNumbering) {
-		// Nummerierung wieder aktivieren 
-		var endnoteBlock = getEndnoteBlock(endnoteStory, dok, false);
-
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-
-		for (var h = 0; h < dok.hyperlinks.length; h++) {
-			hlink = dok.hyperlinks[h];
-//~ 			$.writeln(hlink.extractLabel(px.hyperlinkLabel))
-			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
-				if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {					
-					// 1. backlink auf den ganzen Absatz legen 
-					var endnoteSource = hlink.source.sourceText.paragraphs[0];					
-					if (endnoteSource.findHyperlinks().length > 1) {
-						endnoteSource = endnoteSource.characters[0];
-					}
-					if (endnoteSource.findHyperlinks().length > 1) {
-						endnoteSource = hlink.source.sourceText.paragraphs[0];
-						endnoteSource = endnoteSource.characters[-1];
-						log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnoteSource.contents.substring(0,20)))
-					}
-					try {
-						hlink.source.sourceText = endnoteSource;
-					}
-					catch (e) {
-							log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnoteSource.contents.substring(0,20)))
-					}
-					// 2. Nummerierung löschen 
-					try {
-						var deleteIndex = 0;						
-						while (hlink.source.sourceText.characters[deleteIndex].isValid && hlink.source.sourceText.characters[deleteIndex].contents﻿ != SpecialCharacters.END_NESTED_STYLE) {
-							if (hlink.source.sourceText.characters[deleteIndex].contents == "\uFEFF") {
-								deleteIndex++;
-							}
-							else {
-								hlink.source.sourceText.characters[deleteIndex].contents = "";
-							}
-						}
-						hlink.source.sourceText.characters[deleteIndex].contents = "";						
-					} catch (e) {}
-				}
-			}
-		}			
-	}
-
-	
 
 	checkStyles(dok);
 										
@@ -1991,27 +1935,6 @@ function foot2end (dok, endnoteStory) {
 		footNoteIgnoreCondition.remove();
 	}
 
-
-
-	if (px.manualNumbering) {
-		var endnoteBlock = getEndnoteBlock(endnoteStory, dok, false);
-	
-		// Marker (End nested style here) insertion for CrossRefFormat
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.findWhat = "(.|\\n)+";
-		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-		app.changeGrepPreferences.changeTo = "~h$0";
-		endnoteBlock.changeGrep();
-
-		px.crossRefStyleEndnote.buildingBlocks[0].blockType = BuildingBlockTypes.FULL_PARAGRAPH_BUILDING_BLOCK;
-		px.crossRefStyleEndnote.buildingBlocks[0].appliedDelimiter = ""; // ~h End nested style here
-		px.crossRefStyleEndnote.buildingBlocks[0].includeDelimiter = false;
-
-		endnoteBlock.convertBulletsAndNumberingToText ();
-		px.pStyleEndnote.bulletsAndNumberingListType = ListType.NO_LIST;
-	}
-
 	// Rückverlinkung erstellen 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
@@ -2025,20 +1948,15 @@ function foot2end (dok, endnoteStory) {
 			var endnote_link = dok.hyperlinkTextDestinations.itemByID(pargraphTextDestinationID);
 			var endnoteSource = endnote_link.destinationText.paragraphs[0];
 			
-			if (px.manualNumbering) {
-				endnoteSource = endnoteSource.findGrep()[0];
-			}
-			if (endnoteSource == null) {
-				log.warnAlert(localize (px.ui.manualNumberingFail));
-				break;
-			}
+			if (endnoteSource.findHyperlinks().length > 0) {
+				endnoteSource = endnoteSource.characters[2];
+			}			
 			if (endnoteSource.findHyperlinks().length > 0) {
 				endnoteSource = endnoteSource.characters[0];
 			}			
 			if (endnoteSource.findHyperlinks().length > 0) {
 				endnoteSource = endnote_link.destinationText.paragraphs[0];
 				endnoteSource = endnoteSource.characters[-1];
-				log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnote.contents.substring(0,20)))
 			}			
 			if (endnoteSource.findHyperlinks().length  == 0) {
 				hyperlinkTextSource = dok.hyperlinkTextSources.add(endnoteSource);
@@ -2047,42 +1965,18 @@ function foot2end (dok, endnoteStory) {
 				hlink.name = "EndnoteBacklink_" + (((1+Math.random())*0x10000)|0).toString(16).substring(1) + new Date().getTime();
 				hlink.insertLabel(px.hyperlinkLabel, "backlink");		
 			}
-		}
-	}
-
-	if (px.manualNumbering) {
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.findWhat = "^.+~h";
-
-		// Vorhandene Backlinks wieder zurück auf die Nummerierung legen 
-		for (var h = 0; h < dok.hyperlinks.length; h++) {
-			hlink = dok.hyperlinks[h];
-			if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "backlink") {
-				if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {					
-					endnoteSource = hlink.source.sourceText.paragraphs[0].findGrep();
-					if (endnoteSource.length == 1) {
-						hlink.source.sourceText = endnoteSource[0];						
-					}
-					else {
-						log.warnAlert(localize (px.ui.statusFail));
-					}
-				}
+			else {
+				log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnote.contents.substring(0,20)))
 			}
 		}
-		
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-		app.findGrepPreferences.findWhat = "(?<=~h)\\t";
-		endnoteBlock.changeGrep();
-	} else {
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-		app.findGrepPreferences.findWhat = "^\\t";
-		endnoteBlock.changeGrep();		
 	}
+
+
+	app.findGrepPreferences = NothingEnum.NOTHING;
+	app.changeGrepPreferences = NothingEnum.NOTHING;
+	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
+	app.findGrepPreferences.findWhat = "^\\t";
+	endnoteBlock.changeGrep();		
 	
 	// Seiten auflösen 
 	idsTools.checkOverflow(endnoteStory);
@@ -2114,7 +2008,6 @@ function saveSettings(dok) {
 	dok.insertLabel(px.endnoteHeadingStringLabel, px.endnoteHeadingString);
 	dok.insertLabel(px.pStylePrefixMarkerLabel, px.pStylePrefix);
 	dok.insertLabel(px.numberBySectionLabel, px.numberBySection +"");
-	dok.insertLabel(px.manualNumberingLabel, px.manualNumbering +"");	
 	dok.insertLabel(px.footnoteIgnoreLabel, px.footnoteIgnore +"");		
 	dok.insertLabel(px.pStyleFootnoteIgnoreLabel, px.pStyleFootnoteIgnoreName);
 
@@ -2427,13 +2320,6 @@ function getStyleInformation (dok) {
 		px.numberBySection = dok.extractLabel(px.numberBySectionLabel) == "true" ? true : false;
 		log.debug ("px.numberBySection" + px.numberBySection);
 	}
-	if (dok.extractLabel(px.manualNumberingLabel) != "") {
-		px.manualNumbering = dok.extractLabel(px.manualNumberingLabel) == "true" ? true : false;
-		if (px.manualNumbering) {
-			px.previousManualNumbering = px.manualNumbering;
-		}
-		log.debug ("px.manualNumbering" + px.manualNumbering);
-	}
 	if (dok.extractLabel(px.footnoteIgnoreLabel) != "") {
 		px.footnoteIgnore = dok.extractLabel(px.footnoteIgnoreLabel) == "true" ? true : false;
 		log.debug ("px.footnoteIgnore" + px.footnoteIgnore);
@@ -2491,14 +2377,7 @@ function checkStyles(dok) {
 	}		
 	if (px.pStyleEndnote.bulletsAndNumberingListType != ListType.numberedList) {
 		px.pStyleEndnote.bulletsAndNumberingListType = ListType.numberedList;
-		px.pStyleEndnote.numberingFormat = NumberingStyle.ARABIC		
-		if (!px.manualNumbering) {
-			log.info( localize (px.ui.endnoteStyleNumberingFail, px.pStyleEndnoteName ) );	
-		}
-	}
-	if (px.manualNumbering && px.pStyleEndnote.numberingExpression  != "^#^t") {
-		px.pStyleEndnote.numberingExpression  = "^#^t";		
-		log.warnAlert(localize (px.ui.wrongNumberingExpression, px.pStyleEndnote.name));
+		px.pStyleEndnote.numberingFormat = NumberingStyle.ARABIC;
 	}
 
 	if (px.pStyleEndnoteFollow.bulletsAndNumberingListType == ListType.numberedList) {
@@ -2541,14 +2420,7 @@ function getConfig() {
 				win.pMethod.gMethod.radioSplit.value = px.numberBySection;
 				win.pMethod.gMethod.radioCont = add( "radiobutton", undefined, localize(px.ui.continuousNumbering) );
 				win.pMethod.gMethod.radioCont.value = !px.numberBySection;				
-			}
-		
-			win.pMethod.gMethod.manualNumberingCBox = add( "checkbox", undefined, localize(px.ui.manualNumbering) );
-			win.pMethod.gMethod.manualNumberingCBox.value = px.manualNumbering;
-			
-			win.pMethod.gMethod.xsText = add( "statictext", undefined, localize(px.ui.manualNumberingInfo) , {multiline:true});
-			win.pMethod.gMethod.xsText.preferredSize.width = 515;
-			win.pMethod.gMethod.xsText.preferredSize.height = 35;
+			}					
 			win.pMethod.spacing = 0;
 						
 			win.pMethod.gMethod.gInfo = add("group");
@@ -2783,7 +2655,6 @@ function getConfig() {
 
 	function setValues() {		
 		px.numberBySection = win.pMethod.gMethod.radioSplit.value;
-		px.manualNumbering = win.pMethod.gMethod.manualNumberingCBox.value;
 		px.footnoteIgnore = win.pMethod.gMethod.gInfo.footnoteIgnoreCBox.value;
 		px.pStyleFootnoteIgnoreName = px.dokParagraphStyleNames[win.pMethod.gMethod.gInfo.ddList.selection.index];
 		px.pStyleFootnoteIgnore = px.dokParagraphStyles[win.pMethod.gMethod.gInfo.ddList.selection.index];
