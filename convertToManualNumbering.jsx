@@ -1554,27 +1554,31 @@ function getEndnoteStory(dok) {
 	var endnoteStory = null;
 	var footnoteStories = [];
 	var endnoteStoryMap = idsMap();
+	var hlinkStoryMap = idsMap();
+	for (var k = 0; k < dok.hyperlinks.length; k++) {
+		var hlink = dok.hyperlinks[k];
+		if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText.parentStory.isValid ) {
+			hlinkStoryMap.pushItem(hlink.destination.destinationText.parentStory.id, "true");
+		}
+	}
 	
 	for (var i = 0; i < dok.stories.length; i++) {
 		story = dok.stories[i];
 		if (story.footnotes.length > 0 ) {
 			footnoteStories.push(story);
 		}
-		for (var k = 0; k < dok.hyperlinks.length; k++) {
-			var hlink = dok.hyperlinks[k];
-			if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText.parentStory.id == story.id ) {
-				endnoteStoryMap.pushItem(story.id, story);
-			}
+		if ( hlinkStoryMap.getItem(story.id) == "true") {
+			endnoteStoryMap.pushItem(story.id, story);
+			endnoteStory = story;
 		}
 	}
 
 	// Die einfachen Fälle 
-
 	if (endnoteStoryMap.length > 1) {
 		alert(localize(px.ui.multipleEndnoteLinks)); 
 		return null;
 	}
-	if (endnoteStory != 1) {
+	if (endnoteStoryMap.length != 1) {
 		alert(localize(px.ui.unknownSelectionError)); 
 		return null;
 	}
@@ -1757,18 +1761,21 @@ function getEndnotenStartEndPositions(dok, endnoteStory) {
 
 function getCurrentEndnotes (dok, endnoteStory) {
 	// Die aktuellen Endnoten einsammeln
-	var hLink;	
+	var hLink, j, destination, sourceText, destPar;
 	var hLinksPerStory = [];
 	hLinksPerStory[0] = ["first", -1, -1,  "Dummy Endnote Postion Start"];
 	
-	for (var j = 0; j < dok.hyperlinks.length; j++) {
+	for (j = 0; j < dok.hyperlinks.length; j++) {
 		hLink = dok.hyperlinks[j];
 		if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+			destination = hLink.destination;
+			sourceText = hLink.source.sourceText;
 			try {
-				if(hLink.destination != null) {
-					if (hLink.source.sourceText.parentStory.id == endnoteStory.id) {
-						log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
-						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index,  hLink.destination.destinationText.paragraphs[0].index, hLink.destination.destinationText.paragraphs[0].contents]);
+				if(destination != null) {
+					if (sourceText.parentStory.id == endnoteStory.id) {
+						destPar = destPar;
+//~ 						log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + sourceText.index + "sourceText: " + sourceText.contents + " destination: " +  destPar.contents);
+						hLinksPerStory.push([hLink.id, sourceText.index,  destPar.index, destPar.contents]);
 					}
 				}
 				else {

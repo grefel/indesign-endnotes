@@ -1545,17 +1545,21 @@ function getEndnoteStory(dok) {
 	var endnoteStory = null;
 	var footnoteStories = [];
 	var endnoteStoryMap = idsMap();
+	var hlinkStoryMap = idsMap();
+	for (var k = 0; k < dok.hyperlinks.length; k++) {
+		var hlink = dok.hyperlinks[k];
+		if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText.parentStory.isValid ) {
+			hlinkStoryMap.pushItem(hlink.destination.destinationText.parentStory.id, "true");
+		}
+	}
 	
 	for (var i = 0; i < dok.stories.length; i++) {
 		story = dok.stories[i];
 		if (story.footnotes.length > 0 ) {
 			footnoteStories.push(story);
 		}
-		for (var k = 0; k < dok.hyperlinks.length; k++) {
-			var hlink = dok.hyperlinks[k];
-			if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText.parentStory.id == story.id ) {
-				endnoteStoryMap.pushItem(story.id, story);
-			}
+		if ( hlinkStoryMap.getItem(story.id) == "true") {
+			endnoteStoryMap.pushItem(story.id, story);
 		}
 	}
 
@@ -2135,7 +2139,6 @@ function getEndnotenStartEndPositions(dok, endnoteStory) {
 }
 
 
-function getCurrentEndnotes (dok, endnoteStory) {
 	// Die aktuellen Endnoten einsammeln
 	var hLink;	
 	var hLinksPerStory = [];
