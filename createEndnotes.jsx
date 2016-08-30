@@ -2117,15 +2117,20 @@ function getEndnoteBlock (endnoteStory, dok, alertMessage) {
 function getEndnotenStartEndPositions(dok, endnoteStory) {
 	// Hyperlinks wieder einsammeln... 
 	var endnotenStartEndPositions = [];
-	for (var h = 0; h < dok.hyperlinks.length; h++) {
+	var h, source, destination, destinationTextPar, hlink;
+	
+	for (h = 0; h < dok.hyperlinks.length; h++) {
 		hlink = dok.hyperlinks[h];
-		if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "true") {
-			if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {
-				endnotenStartEndPositions.push([hlink.destination.destinationText.paragraphs[0].characters[0].index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
+		source = hlink.source;
+		destination = hlink.destination;
+		if (hlink.extractLabel(px.hyperlinkLabel) == "true" && destination != null && source != null) {
+			if (source.sourceText.parentStory.id == endnoteStory.id) {
+				destinationTextPar = hlink.destination.destinationText.paragraphs[0];
+				endnotenStartEndPositions.push([destinationTextPar.characters[0].index, source.sourceText.index, destinationTextPar.contents]);
 			}
 		}
 	}
-	endnotenStartEndPositions.sort(sortSecondEntry);	
+	endnotenStartEndPositions.sort(sortSecondEntry);
 	return endnotenStartEndPositions;
 }
 
