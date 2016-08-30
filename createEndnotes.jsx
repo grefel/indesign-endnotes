@@ -2138,7 +2138,7 @@ function getEndnotenStartEndPositions(dok, endnoteStory) {
 	return endnotenStartEndPositions;
 }
 
-
+function getCurrentEndnotes (dok, endnoteStory) {
 	// Die aktuellen Endnoten einsammeln
 	var hLink;	
 	var hLinksPerStory = [];
