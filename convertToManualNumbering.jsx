@@ -1676,6 +1676,7 @@ function foot2manual (dok, endnoteStory) {
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
 	app.findGrepPreferences.findWhat = "^.+?\\t";
 
+	var createList = []
 
 	for (var i = dok.hyperlinks.length - 1; i >= 0; i--) {
 		var hlink = dok.hyperlinks[i];
@@ -1687,14 +1688,20 @@ function foot2manual (dok, endnoteStory) {
 			var endnote_backlink = dok.hyperlinkTextDestinations.add (hlink.source.sourceText.insertionPoints[0]);
 			endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");			
 			
-			hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);
+			hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);			
 			hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
-			hlink = dok.hyperlinks.add (hyperlinkTextSource, endnote_backlink, {visible: false});
-			hlink.name = "EndnoteBacklink_" + (((1+Math.random())*0x10000)|0).toString(16).substring(1) + new Date().getTime();
-			hlink.insertLabel(px.hyperlinkLabel, "backlink");
-			i++;
+			createList.push([hyperlinkTextSource, endnote_backlink]);
 		}
 	}
+	
+	for (var x = 0; x < createList.length; x++) {
+		var hlink = dok.hyperlinks.add (createList[x][0], createList[x][1], {visible: false});
+		hlink.name = "EndnoteBacklink_" + (((1+Math.random())*0x10000)|0).toString(16).substring(1) + new Date().getTime();
+		hlink.insertLabel(px.hyperlinkLabel, "backlink");
+	}
+
+
+
 
 }
 
