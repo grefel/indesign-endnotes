@@ -242,7 +242,7 @@ var px = {
 
 // Debug Einstellungen publishingX 
 if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
-	px.debug = true;
+	px.debug = false;
 	px.showGui = false;
 }
 
@@ -1715,7 +1715,7 @@ function foot2manual (dok, endnoteStory) {
 		if (hlink.extractLabel(px.hyperlinkLabel) == "true") {
 			var hlinkPar = hlink.destination.destinationText.paragraphs[0];
 			var numberingText = hlinkPar.findGrep()[0];
-			numberingText = numberingText.characters.itemByRange(0,numberingText.characters.length-1);
+			numberingText = numberingText.characters.itemByRange(1,numberingText.characters.length-1);
 			
 			var endnote_backlink = dok.hyperlinkTextDestinations.add (hlink.source.sourceText.insertionPoints[0]);
 			endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");			
