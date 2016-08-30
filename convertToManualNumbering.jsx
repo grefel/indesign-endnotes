@@ -1569,49 +1569,12 @@ function getEndnoteStory(dok) {
 	}
 
 	// Die einfachen Fälle 
-	if (footnoteStories.length == 0) {
-		alert(localize(px.ui.noFootnoteInDoc)); 
-		return null;
-	}
+
 	if (endnoteStoryMap.length > 1) {
 		alert(localize(px.ui.multipleEndnoteLinks)); 
 		return null;
 	}
-	if (footnoteStories.length == 1 && endnoteStoryMap.length == 0) { // New doc
-		endnoteStory = footnoteStories[0];
-	}
-	else if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && endnoteStoryMap.hasItem(footnoteStories[0].id)) { // Update Doc
-		endnoteStory = footnoteStories[0];
-	}
-
-	if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && !endnoteStoryMap.hasItem(footnoteStories[0].id)) { 
-		alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
-		return null;
-	}
-	
-	// Auswahl der gültigen Story durch user 
-	if (footnoteStories.length > 1) {		
-		if (checkSelection() ) {
-			var selectionID = app.selection[0].parentStory.id;
-			for (var i = 0; i < footnoteStories.length; i++) {
-				if (selectionID == footnoteStories[i].id) {
-					log.infoAlert (localize(px.ui.willProcessCurrentSelection));
-					endnoteStory = footnoteStories[i];
-					break;
-				}
-			}
-			if (endnoteStoryMap.length > 0 && !endnoteStoryMap.hasItem(footnoteStories[0].id) ) {
-				alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
-				return null;
-			}
-		}
-		else {
-			alert (localize(px.ui.createSelection));
-			return null;
-		}
-	}
-	if (endnoteStory == null) {
-		// Darf eigentlich nicht passieren 
+	if (endnoteStory != 1) {
 		alert(localize(px.ui.unknownSelectionError)); 
 		return null;
 	}
@@ -1773,17 +1736,23 @@ function getEndnoteBlock (endnoteStory, dok, alertMessage) {
 function getEndnotenStartEndPositions(dok, endnoteStory) {
 	// Hyperlinks wieder einsammeln... 
 	var endnotenStartEndPositions = [];
-	for (var h = 0; h < dok.hyperlinks.length; h++) {
+	var h, source, destination, destinationTextPar, hlink;
+	
+	for (h = 0; h < dok.hyperlinks.length; h++) {
 		hlink = dok.hyperlinks[h];
-		if (hlink.destination != null && hlink.source != null &&  hlink.extractLabel(px.hyperlinkLabel) == "true") {
-			if (hlink.source.sourceText.parentStory.id == endnoteStory.id) {
-				endnotenStartEndPositions.push([hlink.destination.destinationText.paragraphs[0].characters[0].index, hlink.source.sourceText.index, hlink.destination.destinationText.paragraphs[0].contents]);
+		source = hlink.source;
+		destination = hlink.destination;
+		if (hlink.extractLabel(px.hyperlinkLabel) == "true" && destination != null && source != null) {
+			if (source.sourceText.parentStory.id == endnoteStory.id) {
+				destinationTextPar = hlink.destination.destinationText.paragraphs[0];
+				endnotenStartEndPositions.push([destinationTextPar.characters[0].index, source.sourceText.index, destinationTextPar.contents]);
 			}
 		}
 	}
-	endnotenStartEndPositions.sort(sortSecondEntry);	
+	endnotenStartEndPositions.sort(sortSecondEntry);
 	return endnotenStartEndPositions;
 }
+
 
 
 function getCurrentEndnotes (dok, endnoteStory) {
