@@ -1679,7 +1679,7 @@ function foot2manual (dok, endnoteStory) {
 
 	for (var i = dok.hyperlinks.length - 1; i >= 0; i--) {
 		var hlink = dok.hyperlinks[i];
-		if (hlink.extractLabel(px.hyperlinkLabel) == "true") {
+		if (hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText) {
 			var hlinkPar = hlink.destination.destinationText.paragraphs[0];
 			var numberingText = hlinkPar.findGrep()[0];
 			numberingText = numberingText.characters.itemByRange(1,numberingText.characters.length-1);
