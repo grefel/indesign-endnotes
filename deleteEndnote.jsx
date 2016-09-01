@@ -44,8 +44,8 @@
 
 /*
 Shared configuration settings 
-@Version: 2
-@Date: 2016-06-21
+@Version: 3
+@Date: 2016-08-29
 @Author Gregor Fellenz http://www.publishingx.de/
 Typos and GUI Texts by Maren Pufe 
 */
@@ -97,13 +97,13 @@ var px = {
 		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
 		wrongEndnoteOrder:{en:"Position of endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
 		emptyFootnote:{en:"Cannot process footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
-		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
+		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
+		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
+		
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
 		continuousNumbering:{en:"Continuous numbering",de:"Fortlaufend nummerieren (Alle Endnoten in einem Abschnitt)"},
-		manualNumbering:{en:"Manual numbering of endnotes",de:"Manuelle Nummerierung der Endnoten"},
-		manualNumberingInfo:{en:"Links only the counter. Use this if you need to process hyperlinks in endnotes. The list function in endnote paragraph style will be disabled.",de:"Verlinkt nur die Ziffer im Endnotenabsatz. Für Hyperlinks in Endnoten sollte diese Option ausgewählt sein. Die Listenfunktion im Absatzformat wird deaktviert."},
 		ignoreFootnotesByStyle:{en:"Ignore footnotes with paragraph style",de:"Ignoriere Fußnote mit dem Absatzformat"},		
 		
 		splitFormatPanel:{en:"Split endnote configuration",de:"Formatpräfix an dem die Endnoten geteilt werden"},
@@ -138,15 +138,12 @@ var px = {
 		newPagesAdded:{en:"There were %1 pages added. Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
 		positionFail:{en:"There was an error in the endnote position analysis!\Please contact support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
 		samePStyle:{en:"The paragraph format [%1] was also selected for the followup paragraphs, this could lead to numbering errors! The format has been duplicated.", de:"Das Absatzformat [%1] wurde auch für die Folgeabsätze ausgewählt, dies führt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert."},
-		endnoteStyleNumberingFail:{en:"In paragraph style [%1] the option [Bullets and Numbering] -> [List Type : Numbes ] was activated.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] aktiviert."},
 		crossrefFormatFail:{en:"The cross-reference format [%1] already exists.\nThe selected different character style [%2] was set!", de:"Das Querverweisformat [%1] ist bereits vorhanden.\nDas ausgewählte aber abweichende Zeichenformat [%2] wurde eingestellt!"},
 		endnoteStyleNumberingDeactivate:{en:"In Paragraph Style [%1] the option \n[Bullets and Numbering] -> [List Type : Numbes ] was deactivated.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] deaktiviert."},
 		headingFail:{en:"For the title at least one character must be entered.",de:"Für den Titel muss mindestens ein Zeichen eingegeben werden."},
 		styleSelectionFail:{en:"Error in the format selection", de:"Fehler bei der Formatauswahl"},
 		styleSelectionFailSection:{en:"Error in the format selection of the section creation.", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
 		endnoteStoryMoved:{en:"Text and endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
-		manualNumberingFail:{en:"Could not create manual numbering, did not find number at start", de:"Konnte die manuelle Nummerierung nicht erstellen. Die Aufzählung zu Beginn konnte nicht ermittelt werden."},       
-//~		wrongNumberingExpression:{en:"Changed numbering format of [%1] to [^#^t].", de:"Das Nummerierungsformat für das Absatzformat [%1] wurde auf [^#^t] geändert."},
 
 		// deleteEndnotes.jsx
 		noEndnoteOrMarker:{en:"The insertion point must be placed within an endnote or before the endnote marker.", de:"Die Einfügemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein."},
@@ -162,8 +159,6 @@ var px = {
 	backupCopySuffix:"_endnoteBackupt.indd",
 	
 	numberBySection:true,
-	manualNumbering:true,
-	manualNumberingLabel:"px:Foot2EndnoteManualNumbering",
 	
 	hyperlinkLabel:"px:Foot2EndnoteHyperlink", // Markierung der SkriptQuerverweise
 	endnoteHeadingStringLabel:"px:Foot2EndnoteHeadingString", 
@@ -230,14 +225,14 @@ var px = {
 	numberBySectionLabel:"px:numberBySection",
 	
 	scriptVersionLabel:"px:Foot2EndnoteVersion",
-	scriptMajorVersion:"2",
+	scriptMajorVersion:"3",
 	
 	foot2EndCounter:0,
 	debug:false,
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"2.0-2016-05-31"
+	version:"3.0-2016-08-29"
 }
 
 // Debug Einstellungen publishingX

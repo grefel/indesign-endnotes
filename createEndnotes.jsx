@@ -101,7 +101,6 @@ var px = {
 		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
 		wrongEndnoteOrder:{en:"Position of endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
 		emptyFootnote:{en:"Cannot process footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
-		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
 		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
 		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
 		
@@ -237,7 +236,7 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"3.0-2016-08-29"
+	version:"3.0-2016-08-31"
 }
 
 // Debug Einstellungen publishingX 
@@ -1816,11 +1815,7 @@ function foot2end (dok, endnoteStory) {
 		hlink.insertLabel(px.hyperlinkLabel, "true");
 
 		pushHLink ( hLinksPerStory, hyperLinkID, hlink);		
-		
-		endnote_backlink = dok.hyperlinkTextDestinations.add (footn[i].storyOffset);
-		endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");
-		endnote_backlink.insertLabel("px:paragraphDestinationID", endnote_link.id + "");
-		
+				
 		px.foot2EndCounter++;
 	} // footnoteLoop : for
 
@@ -1938,43 +1933,6 @@ function foot2end (dok, endnoteStory) {
 		
 		footNoteIgnoreCondition.remove();
 	}
-
-	// Rückverlinkung erstellen 
-	app.findGrepPreferences = NothingEnum.NOTHING;
-	app.changeGrepPreferences = NothingEnum.NOTHING;
-	app.findGrepPreferences.findWhat = "^.+~h";
-
-	for (var h = 0; h < dok.hyperlinkTextDestinations.length; h++) {
-		var endnote_backlink = dok.hyperlinkTextDestinations[h];
-		if (endnote_backlink != null &&  endnote_backlink.extractLabel(px.hyperlinkLabel) == "backlink" &&  endnote_backlink.extractLabel("px:paragraphDestinationID") != "") {
-			var pargraphTextDestinationID  = endnote_backlink.extractLabel("px:paragraphDestinationID") * 1;
-			endnote_backlink.insertLabel("px:paragraphDestinationID","");
-			var endnote_link = dok.hyperlinkTextDestinations.itemByID(pargraphTextDestinationID);
-			var endnoteSource = endnote_link.destinationText.paragraphs[0];
-			
-			if (endnoteSource.findHyperlinks().length > 0) {
-				endnoteSource = endnoteSource.characters[2];
-			}			
-			if (endnoteSource.findHyperlinks().length > 0) {
-				endnoteSource = endnoteSource.characters[0];
-			}			
-			if (endnoteSource.findHyperlinks().length > 0) {
-				endnoteSource = endnote_link.destinationText.paragraphs[0];
-				endnoteSource = endnoteSource.characters[-1];
-			}			
-			if (endnoteSource.findHyperlinks().length  == 0) {
-				hyperlinkTextSource = dok.hyperlinkTextSources.add(endnoteSource);
-				hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
-				hlink = dok.hyperlinks.add (hyperlinkTextSource, endnote_backlink, {visible: false});
-				hlink.name = "EndnoteBacklink_" + (((1+Math.random())*0x10000)|0).toString(16).substring(1) + new Date().getTime();
-				hlink.insertLabel(px.hyperlinkLabel, "backlink");		
-			}
-			else {
-				log.warnAlert(localize (px.ui.hyperlinkAlreadyExists, endnote.contents.substring(0,20)))
-			}
-		}
-	}
-
 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
@@ -2193,25 +2151,16 @@ function fixHyperlinks(dok) {
 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
 				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
 			}
-			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
-			}
 			continue;
 		}
 		if (hLink.source == null) {
 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
 				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
 			}
-			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
-			}
 			continue;
 		}	
 		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
 			hLink.insertLabel(px.hyperlinkLabel, "true");
-		}
-		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "backlink") {
-			hLink.insertLabel(px.hyperlinkLabel, "backlink");
 		}
 	}
 }

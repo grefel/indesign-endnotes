@@ -18,35 +18,35 @@
 
 /*
 Shared configuration settings 
-@Version: 2
-@Date: 2016-06-21
+@Version: 3
+@Date: 2016-08-29
 @Author Gregor Fellenz http://www.publishingx.de/
 Typos and GUI Texts by Maren Pufe 
 */
 
 var px = {
 	// Configurations settings for style names -- changes is save 
-	pStyleEndnoteName:"Anm", // Absatzformat der Endnote. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
-	pStyleEndnoteFollowName:"Anm~folge", // Absatzformat für Endnoten mit mehr als einem Absatz. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
+	pStyleEndnoteName:"Anm", // Absatzformat der Endnote. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewŠhlt.
+	pStyleEndnoteFollowName:"Anm~folge", // Absatzformat fŸr Endnoten mit mehr als einem Absatz. Das Format sollte automatisch nummeriert sein. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewŠhlt.
 	
 	// Endnote block structure 
-	pStyleEndnoteHeadingName:"endnote_block_title", // Absatzformat der Endnotenüberschrift
-	pStyleEndnoteSplitHeadingName:"endnote_block_section", // Absatzformat für die wiederholten Überschriften (wdh von: pStylePrefix) 
-	pStyleEndnoteSplitHeadingPrecedingRepeatName:"endnote_block_section_preceding", // Absatzformat für Absätze vor wiederholten Überschriften (wdh von: pStyleEndnoteSplitHeadingPrecedingName)
-	pStyleEndnoteSplitHeadingFollowingRepeatName:"endnote_block_section_following", // Absatzformat für Absätze vor wiederholten Überschriften (wdh von: pStyleEndnoteSplitHeadingPrecedingName)
+	pStyleEndnoteHeadingName:"endnote_block_title", // Absatzformat der EndnotenŸberschrift
+	pStyleEndnoteSplitHeadingName:"endnote_block_section", // Absatzformat fŸr die wiederholten †berschriften (wdh von: pStylePrefix) 
+	pStyleEndnoteSplitHeadingPrecedingRepeatName:"endnote_block_section_preceding", // Absatzformat fŸr AbsŠtze vor wiederholten †berschriften (wdh von: pStyleEndnoteSplitHeadingPrecedingName)
+	pStyleEndnoteSplitHeadingFollowingRepeatName:"endnote_block_section_following", // Absatzformat fŸr AbsŠtze vor wiederholten †berschriften (wdh von: pStyleEndnoteSplitHeadingPrecedingName)
 	
-	cStyleEndnoteMarkerName:"Endnotenzähler", // Zeichenformat des Endnotenmarkers. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewählt.
-	crossRefStyleEndnoteName:"EndnotenMarker", // Querverweisformat. Kann nicht in der GUI ausgewählt werden.
+	cStyleEndnoteMarkerName:"EndnotenzŠhler", // Zeichenformat des Endnotenmarkers. Wenn es im Dokument vorhanden ist, wird es in der GUI vorausgewŠhlt.
+	crossRefStyleEndnoteName:"EndnotenMarker", // Querverweisformat. Kann nicht in der GUI ausgewŠhlt werden.
 	
-	endnoteHeadingString:"Endnoten", // Default Text für die Entnotenüberschrift
+	endnoteHeadingString:"Endnoten", // Default Text fŸr die EntnotenŸberschrift
 
 	// Section Structure
-	pStylePrefix:"u1", // Präfix der Überschriften an denen die Endnotenzählung geteilt wird.
-	pStyleEndnoteSplitHeadingPrecedingName:"U1_Pre", // Absatzformat für Absätze, die kopiert werden sollen
-	pStyleEndnoteSplitHeadingFollowingName:"U1_Follow", //  Absatzformat für Absätze, die kopiert werden sollen
+	pStylePrefix:"u1", // PrŠfix der †berschriften an denen die EndnotenzŠhlung geteilt wird.
+	pStyleEndnoteSplitHeadingPrecedingName:"U1_Pre", // Absatzformat fŸr AbsŠtze, die kopiert werden sollen
+	pStyleEndnoteSplitHeadingFollowingName:"U1_Follow", //  Absatzformat fŸr AbsŠtze, die kopiert werden sollen
 
 	// Ignore Footnote Style
-	pStyleFootnoteIgnoreName:"footnote_keep", // Absatzformate für Fußnoten, die nicht konvertiert werden sollen
+	pStyleFootnoteIgnoreName:"footnote_keep", // Absatzformate fŸr Fu§noten, die nicht konvertiert werden sollen
 
 	// User interface strings -- translation and changes are save
 	ui:{
@@ -54,43 +54,41 @@ var px = {
 		saveDoc:{en:"Document is not saved", de:"Dokument ist nicht gespeichert"},
 		saveDocInfo:{en:"Save your document first!\rSave and continue?", de:"Das Dokument muss zuerst gespeichert werden!\rSpeichern und fortfahren?"},
 		saveDocFail:{en:"Could not save file.\n", de:"Die Datei konnte nicht gespeichert werden.\n"},
-		errorInfo:{en:"Error during execution: ", de:"Fehler bei der Ausführung: "},		
-		versionWarning:{en:"To run this script InDesign CS5 is required", de:"Für dieses Skript wird mindestens InDesign CS5 benötigt"},
-		scriptVersionWarning:{en:"The document has been created with Version (v%1). Compatibility can not be guaranteed.\nPlease check carefully.", de:"Das Dokument wurde mit Version (v%1) erstellt. Die Kompatibilität kann nicht garantiert werden.\nBitte prüfen Sie genau."},
-		emptyEndnotePar:{en:"%1 empty Pargraph(s) with endnote format [%2]. Please delete or assign another format.", de:"%1 Absätze ohne Inhalt sind mit dem Format [%2] ausgezeichnet. Bitte weisen Sie ein anderes Format zu oder löschen Sie die Absätze."},	
+		errorInfo:{en:"Error during execution: ", de:"Fehler bei der AusfŸhrung: "},		
+		versionWarning:{en:"To run this script InDesign CS5 is required", de:"FŸr dieses Skript wird mindestens InDesign CS5 benštigt"},
+		scriptVersionWarning:{en:"The document has been created with Version (v%1). Compatibility can not be guaranteed.\nPlease check carefully.", de:"Das Dokument wurde mit Version (v%1) erstellt. Die KompatibilitŠt kann nicht garantiert werden.\nBitte prŸfen Sie genau."},
+		emptyEndnotePar:{en:"%1 empty Pargraph(s) with endnote format [%2]. Please delete or assign another format.", de:"%1 AbsŠtze ohne Inhalt sind mit dem Format [%2] ausgezeichnet. Bitte weisen Sie ein anderes Format zu oder lšschen Sie die AbsŠtze."},	
 		// createEndnotes.jsx		
-		menuTitle:{en:"Convert footnotes to endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
-		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
+		menuTitle:{en:"Convert footnotes to endnotes v%1", de:"Fu§noten zu Endnoten konvertieren v%1"},		
+		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fu§noten zu Endnoten konvertiert!"},
 		
 		noTextInDoc:{en:"No text in document", de:"Es ist kein Text im Dokument enthalten"},
-		noFootnoteInDoc:{en:"No footnote in document", de:"Es gibt keine Fußnote im Dokument"},
+		noFootnoteInDoc:{en:"No footnote in document", de:"Es gibt keine Fu§note im Dokument"},
 		multipleEndnoteLinks:{en:"More than one story with endnotes, cannot process this document.", de:"In mehr ale einem Textabschnitt befinden sich Endnoten, dieses Dokument kann nicht verarbeitet werden."},
-		willProcessCurrentSelection:{en:"More than one story with footnotes, will process the current story (cursor position)", de:"Mehr als ein Textabschnitt enthält Fußnoten, es wird der aktuelle Textabschnitt (Position der Einfügemarke) verarbeitet."},
-		createSelection:{en:"More than one story with footnotes, place cursor in story and restart", de:"Mehr als ein Textabschnitt enthält Fußnoten, bitte positionieren Sie die Einfügemarke im gewünschten Textabschnitt"},
-		endnoteAndFootnotesAreNotInTheSameStory:{en:"Endnotes and Footnotes are not in the same story", de:"Endnoten und Fußnoten sind nicht im gleichen Textabschnitt!"},
-		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
-		wrongEndnoteOrder:{en:"Position of endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
-		emptyFootnote:{en:"Cannot process footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
-		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
+		willProcessCurrentSelection:{en:"More than one story with footnotes, will process the current story (cursor position)", de:"Mehr als ein Textabschnitt enthŠlt Fu§noten, es wird der aktuelle Textabschnitt (Position der EinfŸgemarke) verarbeitet."},
+		createSelection:{en:"More than one story with footnotes, place cursor in story and restart", de:"Mehr als ein Textabschnitt enthŠlt Fu§noten, bitte positionieren Sie die EinfŸgemarke im gewŸnschten Textabschnitt"},
+		endnoteAndFootnotesAreNotInTheSameStory:{en:"Endnotes and Footnotes are not in the same story", de:"Endnoten und Fu§noten sind nicht im gleichen Textabschnitt!"},
+		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fu§noten konnte nicht ermittelt werden!"},
+		wrongEndnoteOrder:{en:"Position of endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrŸfen Sie das Dokument."},
+		emptyFootnote:{en:"Cannot process footnotes without text.", de:"Fu§noten ohne Text kšnnen nicht verarbeitet werden."},
 		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelšscht."},	
 		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelšscht."},	
 		
-		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
-		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
-		continuousNumbering:{en:"Continuous numbering",de:"Fortlaufend nummerieren (Alle Endnoten in einem Abschnitt)"},
-		manualNumbering:{en:"Manual numbering of endnotes",de:"Manuelle Nummerierung der Endnoten"},
-		manualNumberingInfo:{en:"Links only the counter. Use this if you need to process hyperlinks in endnotes. The list function in endnote paragraph style will be disabled.",de:"Verlinkt nur die Ziffer im Endnotenabsatz. Für Hyperlinks in Endnoten sollte diese Option ausgewählt sein. Die Listenfunktion im Absatzformat wird deaktviert."},
-		ignoreFootnotesByStyle:{en:"Ignore footnotes with paragraph style",de:"Ignoriere Fußnote mit dem Absatzformat"},		
 		
-		splitFormatPanel:{en:"Split endnote configuration",de:"Formatpräfix an dem die Endnoten geteilt werden"},
+		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
+		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte fŸr Kapitel)"},
+		continuousNumbering:{en:"Continuous numbering",de:"Fortlaufend nummerieren (Alle Endnoten in einem Abschnitt)"},
+		ignoreFootnotesByStyle:{en:"Ignore footnotes with paragraph style",de:"Ignoriere Fu§note mit dem Absatzformat"},		
+		
+		splitFormatPanel:{en:"Split endnote configuration",de:"FormatprŠfix an dem die Endnoten geteilt werden"},
 		splitByHeadingStyle:{en:"Split paragraph style/heading",de:"Format zur Aufteilung in Abschnitte"},
-		endNoteSplitHeadingParagraphStyle:{en:"Paragraph style for repeated headings",de:"Absatzformat wiederholte Überschriften"},
+		endNoteSplitHeadingParagraphStyle:{en:"Paragraph style for repeated headings",de:"Absatzformat wiederholte †berschriften"},
 
 		endNoteSplitHeadingParagraphStylePreceding:{en:"Copy preceding paragraph formated by:",de:"Vorherigen Absatz kopieren, Formatvorgabe:"},
 		endNoteSplitHeadingParagraphStyleFollowing:{en:"Copy following paragraph formated by:",de:"Folgenden Absatz kopieren, Formatvorgabe:"},		
 		endNoteSplitHeadingParagraphStylePrecedingFollowingRepeat:{en:"Paragraph style for repeated paragraphs:",de:"Wiederholten Absatz formatieren:"},
 		
-		formatWarnung:{en:"Caution: Any Text formatted in paragraph style for repeated headings will be deleted. Use only in endnote area!",de:"Achtung: Texte, die mit den Absatzformaten für wiederholte (Über)schriften formatiert sind, werden gelöscht. Verwenden Sie diese Formate nur im Bereich der Endnoten."},
+		formatWarnung:{en:"Caution: Any Text formatted in paragraph style for repeated headings will be deleted. Use only in endnote area!",de:"Achtung: Texte, die mit den Absatzformaten fŸr wiederholte (†ber)schriften formatiert sind, werden gelšscht. Verwenden Sie diese Formate nur im Bereich der Endnoten."},
 		
 		formatPanel:{en:"Endnote styling",de:"Formate der Endnoten"},
 		endnoteParagraphStyle:{en:"Paragraph style endnote",de:"Absatzformat Endnote"},
@@ -101,33 +99,30 @@ var px = {
 		endNoteHeading:{en:"Heading",de:"Titelzeile"},
 		endNoteHeadingParagraphStyle:{en:"Paragraph style heading",de:"Absatzformat Endnotentitel"},
 		cancelButton:{en:"Cancel",de:"Abbrechen"},
-		okButton:{en:"Convert footnotes",de:"Konvertiere Fußnoten"},
+		okButton:{en:"Convert footnotes",de:"Konvertiere Fu§noten"},
 		saveButton:{en:"Save Settings in document",de:"Einstellungen im Dokument speichern"},
 		
 		
-		invalidSelection:{en:"Invalid Selection", de:"Ungültige Auswahl"},
-		headingStyleFail:{en:"The choosen heading [%1] does not match the heading text [%2] in your document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] stimmt nicht mit dem Überschriftentext [%2] im Dokument überein. \n\nBitte prüfen Sie das Ergebnis!"},
-		headingStyleFailBlock:{en:"The chosen heading [%1] in format [%1] cannot be found in the document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] mit dem Format [%2] kann nicht gefunden werden. \n\nBitte prüfen Sie das Ergebnis!"},
-		headingStyleFailBlockMoreThanOne:{en:"The chosen heading [%1] in format [%1] is on more than one location in the document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] mit dem Format [%2] ist an mehreren Stellen im Dokument gefunden worden.\n\nBitte prüfen Sie das Ergebnis!"},
+		invalidSelection:{en:"Invalid Selection", de:"UngŸltige Auswahl"},
+		headingStyleFail:{en:"The choosen heading [%1] does not match the heading text [%2] in your document. \n\Please check the result!", de:"Die von Ihnen gewŸnschte †berschrift [%1] stimmt nicht mit dem †berschriftentext [%2] im Dokument Ÿberein. \n\nBitte prŸfen Sie das Ergebnis!"},
+		headingStyleFailBlock:{en:"The chosen heading [%1] in format [%1] cannot be found in the document. \n\Please check the result!", de:"Die von Ihnen gewŸnschte †berschrift [%1] mit dem Format [%2] kann nicht gefunden werden. \n\nBitte prŸfen Sie das Ergebnis!"},
+		headingStyleFailBlockMoreThanOne:{en:"The chosen heading [%1] in format [%1] is on more than one location in the document. \n\Please check the result!", de:"Die von Ihnen gewŸnschte †berschrift [%1] mit dem Format [%2] ist an mehreren Stellen im Dokument gefunden worden.\n\nBitte prŸfen Sie das Ergebnis!"},
 		statusFail:{en:"Undocumented Error! - Please send the document to the support!", de:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!"},
 		numberingFail:{en:"Followup paragraph not found! Numbering may be faulty!", de:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!"},
-		newPagesAdded:{en:"There were %1 pages added. Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
+		newPagesAdded:{en:"There were %1 pages added. Please check the document", de:"Es wurden %1 Seiten hinzugefŸgt. Bitte prŸfen Sie den Umfang"},
 		positionFail:{en:"There was an error in the endnote position analysis!\Please contact support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
-		samePStyle:{en:"The paragraph format [%1] was also selected for the followup paragraphs, this could lead to numbering errors! The format has been duplicated.", de:"Das Absatzformat [%1] wurde auch für die Folgeabsätze ausgewählt, dies führt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert."},
-		endnoteStyleNumberingFail:{en:"In paragraph style [%1] the option [Bullets and Numbering] -> [List Type : Numbes ] was activated.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] aktiviert."},
-		crossrefFormatFail:{en:"The cross-reference format [%1] already exists.\nThe selected different character style [%2] was set!", de:"Das Querverweisformat [%1] ist bereits vorhanden.\nDas ausgewählte aber abweichende Zeichenformat [%2] wurde eingestellt!"},
-		endnoteStyleNumberingDeactivate:{en:"In Paragraph Style [%1] the option \n[Bullets and Numbering] -> [List Type : Numbes ] was deactivated.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] deaktiviert."},
-		headingFail:{en:"For the title at least one character must be entered.",de:"Für den Titel muss mindestens ein Zeichen eingegeben werden."},
+		samePStyle:{en:"The paragraph format [%1] was also selected for the followup paragraphs, this could lead to numbering errors! The format has been duplicated.", de:"Das Absatzformat [%1] wurde auch fŸr die FolgeabsŠtze ausgewŠhlt, dies fŸhrt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert."},
+		crossrefFormatFail:{en:"The cross-reference format [%1] already exists.\nThe selected different character style [%2] was set!", de:"Das Querverweisformat [%1] ist bereits vorhanden.\nDas ausgewŠhlte aber abweichende Zeichenformat [%2] wurde eingestellt!"},
+		endnoteStyleNumberingDeactivate:{en:"In Paragraph Style [%1] the option \n[Bullets and Numbering] -> [List Type : Numbes ] was deactivated.", de:"Im Absatzformat [%1] wurde die Option \n[AufzŠhlungszeichen und Nummerierung] -> [Listentyp: Nummerierung] deaktiviert."},
+		headingFail:{en:"For the title at least one character must be entered.",de:"FŸr den Titel muss mindestens ein Zeichen eingegeben werden."},
 		styleSelectionFail:{en:"Error in the format selection", de:"Fehler bei der Formatauswahl"},
-		styleSelectionFailSection:{en:"Error in the format selection of the section creation.", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
-		endnoteStoryMoved:{en:"Text and endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
-		manualNumberingFail:{en:"Could not create manual numbering, did not find number at start", de:"Konnte die manuelle Nummerierung nicht erstellen. Die Aufzählung zu Beginn konnte nicht ermittelt werden."},       
-		wrongNumberingExpression:{en:"Changed numbering format of [%1] to [^#^t].", de:"Das Nummerierungsformat für das Absatzformat [%1] wurde auf [^#^t] geändert."},
+		styleSelectionFailSection:{en:"Error in the format selection of the section creation.", de:"Fehler bei der Formatauswahl fŸr die Abschnittsbildung"},
+		endnoteStoryMoved:{en:"Text and endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten mŸssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
 
 		// deleteEndnotes.jsx
-		noEndnoteOrMarker:{en:"The insertion point must be placed within an endnote or before the endnote marker.", de:"Die Einfügemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein."},
+		noEndnoteOrMarker:{en:"The insertion point must be placed within an endnote or before the endnote marker.", de:"Die EinfŸgemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein."},
 		deleteEndnoteName:{en:"Remove endnote",de:"Endnote entfernen"},
-		confirmEndnoteDelete:{en:"Remove Endnote %1 \n\n%2",de:"Endnote löschen %1 \n\n%2"},
+		confirmEndnoteDelete:{en:"Remove Endnote %1 \n\n%2",de:"Endnote lšschen %1 \n\n%2"},
 
 	},
 
@@ -138,8 +133,6 @@ var px = {
 	backupCopySuffix:"_endnoteBackupt.indd",
 	
 	numberBySection:true,
-	manualNumbering:true,
-	manualNumberingLabel:"px:Foot2EndnoteManualNumbering",
 	
 	hyperlinkLabel:"px:Foot2EndnoteHyperlink", // Markierung der SkriptQuerverweise
 	endnoteHeadingStringLabel:"px:Foot2EndnoteHeadingString", 
@@ -206,12 +199,12 @@ var px = {
 	numberBySectionLabel:"px:numberBySection",
 	
 	scriptVersionLabel:"px:Foot2EndnoteVersion",
-	scriptMajorVersion:"2",
+	scriptMajorVersion:"3",
 	
 	foot2EndCounter:0,
 	debug:false,
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"2.0-2016-05-31"
+	version:"3.0-2016-08-29"
 }
