@@ -61,6 +61,7 @@ var px = {
 		// createEndnotes.jsx		
 		menuTitle:{en:"Convert footnotes to endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
 		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
+		resultInfoConvert:{en:"[%1] backlinks created.\nDo not update the crossreferences!", de:"Es wurden [%1] Backlinks erstellt.\nDie Querverweise dürfen jetzt nicht mehr aktualisiert werden."},
 		
 		noTextInDoc:{en:"No text in document", de:"Es ist kein Text im Dokument enthalten"},
 		noFootnoteInDoc:{en:"No footnote in document", de:"Es gibt keine Fußnote im Dokument"},
