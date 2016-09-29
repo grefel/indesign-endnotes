@@ -13,13 +13,12 @@ Start **createEndnotes.jsx**
 
 I hope the user interface is quite self explaining. 
 
-![GUI of createEndnotes.jsx](docs/endnoteGUI.jpg)
+![GUI of createEndnotes.jsx](docs/endnoteGUIv3.jpg)
 
 Basically there are two modes:
 
-1. Split by Parargaph Style (Restart Numbering after a Heading)
-2. Continuous Numbering 
-
+1. Split by paragraph style (Restart Numbering after a Heading)
+2. Continuous numbering 
 
 
 #### Jump between note and marker
@@ -27,6 +26,12 @@ Place your cursor in a marker or endnote and start **jumpBetweenMarkerAndNote.js
 
 #### Delete Endnotes
 Start **deleteEndnotes.jsx**. This script will delete a single endnote including there cross reference. Do not delete endnotes paragraphs or markers manually, this will break the update process of the current document.
+
+#### CreateBacklinks
+Start **createBacklinks .jsx** to create backlinks from the endnote to the endnote-marker. You should run this script only after your're definitely finished with the document! **CAUTION** This script will convert the automatic numbering to manual numbering and will link the number to the  endnote-marker. AFTER THIS OPERATION NO FURTHER UPDATE IS POSSIBLE. This is due to the problem, that we cannot set a link to the automatic numbers and the endnotes often have hyperlinks within the endnote text itself.
+
+#### Clean Document
+Yo can delete all Hyperlinks created by the script with **deleteEndnoteHyperlinksAndBacklinks.jsx**. After this operation there is noch active link between endnote and text and no updates possible. 
 
 #### Default configuration 
 All default configuration parameters can be changed in **config.jsx**. 
@@ -43,4 +48,4 @@ The code is ready for localization but I had no time to complete the english tra
 ## Acknowledgements
 I picked the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
-The development of these scripts was made possible by publisher [C.H.Beck](http://www.chbeck.de/) [Beltz](http://www.beltz.de/) and [Campus](http://www.campus.de/)
+The development of these scripts was made possible by [le-tex](http://www.le-tex.de/de/index.html) and the publisher [C.H.Beck](http://www.chbeck.de/) [Beltz](http://www.beltz.de/) and [Campus](http://www.campus.de/)
