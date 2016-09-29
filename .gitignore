@@ -21,3 +21,8 @@ endnoteLog.txt
 localTestFiles/
 
 test/testLog.txt
+link-endnotes-letext-integrate.jsx
+
+test/.DS_Store
+
+.DS_Store
