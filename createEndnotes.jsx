@@ -1551,6 +1551,7 @@ function getEndnoteStory(dok) {
 		var hlink = dok.hyperlinks[k];
 		if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText.parentStory.isValid ) {
 			hlinkStoryMap.pushItem(hlink.destination.destinationText.parentStory.id, "true");
+			hlinkStoryMap.pushItem(hlink.source.sourceText.parentStory.id, "true");
 		}
 	}
 	
