@@ -87,7 +87,8 @@ var px = {
 		errorInfo:{en:"Error during execution: ", de:"Fehler bei der Ausführung: "},		
 		versionWarning:{en:"To run this script InDesign CS5 is required", de:"Für dieses Skript wird mindestens InDesign CS5 benötigt"},
 		scriptVersionWarning:{en:"The document has been created with Version (v%1). Compatibility can not be guaranteed.\nPlease check carefully.", de:"Das Dokument wurde mit Version (v%1) erstellt. Die Kompatibilität kann nicht garantiert werden.\nBitte prüfen Sie genau."},
-		emptyEndnotePar:{en:"%1 empty Pargraph(s) with endnote format [%2]. Please delete or assign another format.", de:"%1 Absätze ohne Inhalt sind mit dem Format [%2] ausgezeichnet. Bitte weisen Sie ein anderes Format zu oder löschen Sie die Absätze."},	
+		emptyEndnotePar:{en:"%1 empty Pargraph(s) with endnote format [%2]. Please delete or assign another format.\nSee log file for more information.", de:"%1 Absätze ohne Inhalt sind mit dem Format [%2] ausgezeichnet. Bitte weisen Sie ein anderes Format zu oder löschen Sie die Absätze.\nIn der Log-Datei finden sie weitere Informationen."},	
+		emptyEndnoteParContent:{en:"Preceeding Paragraph", de:"vorhergehender Absatz"},	
 		// createEndnotes.jsx		
 		menuTitle:{en:"Convert footnotes to endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
 		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
@@ -140,6 +141,7 @@ var px = {
 		headingStyleFailBlockMoreThanOne:{en:"The chosen heading [%1] in format [%1] is on more than one location in the document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] mit dem Format [%2] ist an mehreren Stellen im Dokument gefunden worden.\n\nBitte prüfen Sie das Ergebnis!"},
 		statusFail:{en:"Undocumented Error! - Please send the document to the support!", de:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!"},
 		numberingFail:{en:"Followup paragraph not found! Numbering may be faulty!", de:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!"},
+		endnoteLinkInCell:{en:"Endnote marker must not reside in a cell", de:"Der Endnotenmaker darf nicht in einer Zelle platziert sein!"},		
 		sectionIsEmpty:{en:"Section is empty! Numbering may be faulty!", de:"Abschnitt ist leer! Nummerierung ggf. fehlerhaft!"},
 		newPagesAdded:{en:"There were %1 pages added. Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
 		positionFail:{en:"There was an error in the endnote position analysis!\Please contact support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
@@ -1551,7 +1553,15 @@ function getEndnoteStory(dok) {
 		var hlink = dok.hyperlinks[k];
 		if ( hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText.parentStory.isValid ) {
 			hlinkStoryMap.pushItem(hlink.destination.destinationText.parentStory.id, "true");
+			if (hlink.destination.destinationText.parent instanceof Cell) {
+				alert(localize(px.ui.endnoteLinkInCell)); 
+				return null;
+			}
 			hlinkStoryMap.pushItem(hlink.source.sourceText.parentStory.id, "true");
+			if (hlink.source.sourceText.parent instanceof Cell) {
+				alert(localize(px.ui.endnoteLinkInCell)); 
+				return null;
+			}
 		}
 	}
 	
@@ -1675,11 +1685,14 @@ function foot2end (dok, endnoteStory) {
 	
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-	app.findGrepPreferences.findWhat = "^[~m~>~f~|~S~s~<~/~.~3~4~% ]*\r";
+	app.findGrepPreferences.findWhat = "(?-m)(?<=\\r)[~m~>~f~|~S~s~<~/~.~3~4~% \\n]*\\r";
 	var emptyEndnotes = endnoteStory.findGrep();
 	if (emptyEndnotes.length > 0) {
 		log.warnAlert(localize(px.ui.emptyEndnotePar, emptyEndnotes.length, px.pStyleEndnote.name));
-		emptyEndnotes[0].select();
+		for (var e = 0; e < emptyEndnotes.length; e++) {
+			log.warn(localize(px.ui.emptyEndnoteParContent) + emptyEndnotes[e].parentStory.insertionPoints[emptyEndnotes[e].index-1].paragraphs[0].contents  );
+		}
+		idsTools.showIt(emptyEndnotes[0]);
 		return;
 	}
 
