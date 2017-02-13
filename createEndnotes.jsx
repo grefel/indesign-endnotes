@@ -1886,7 +1886,7 @@ function foot2end (dok, endnoteStory) {
 				log.warnAlert(localize(px.ui.sectionIsEmpty));
 			}
 			else if (
-				&& previousEndnotenTextIndex < currentSectionStartIndex 
+				previousEndnotenTextIndex < currentSectionStartIndex 
 				&& endnotenTextIndex > currentSectionStartIndex 
 				&& endnotenTextIndex < nextSectionStartIndex) {
 				if (currentSection[2] == "") {
