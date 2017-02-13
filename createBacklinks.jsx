@@ -12,7 +12,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License 
+    You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
@@ -21,8 +21,8 @@
 ## Acknowledgements
 I derived the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
-@Version: 3
-@Date: 2016-08-29
+@Version: 3.1
+@Date: 2017-03-13
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -87,11 +87,13 @@ var px = {
 		errorInfo:{en:"Error during execution: ", de:"Fehler bei der Ausführung: "},		
 		versionWarning:{en:"To run this script InDesign CS5 is required", de:"Für dieses Skript wird mindestens InDesign CS5 benötigt"},
 		scriptVersionWarning:{en:"The document has been created with Version (v%1). Compatibility can not be guaranteed.\nPlease check carefully.", de:"Das Dokument wurde mit Version (v%1) erstellt. Die Kompatibilität kann nicht garantiert werden.\nBitte prüfen Sie genau."},
-		emptyEndnotePar:{en:"%1 empty Pargraph(s) with endnote format [%2]. Please delete or assign another format.", de:"%1 Absätze ohne Inhalt sind mit dem Format [%2] ausgezeichnet. Bitte weisen Sie ein anderes Format zu oder löschen Sie die Absätze."},	
+		emptyEndnotePar:{en:"%1 empty Pargraph(s) with endnote format [%2]. Please delete or assign another format.\nSee log file for more information.", de:"%1 Absätze ohne Inhalt sind mit dem Format [%2] ausgezeichnet. Bitte weisen Sie ein anderes Format zu oder löschen Sie die Absätze.\nIn der Log-Datei finden sie weitere Informationen."},	
+		emptyEndnoteParContent:{en:"Preceeding Paragraph", de:"vorhergehender Absatz"},	
 		// createEndnotes.jsx		
 		menuTitle:{en:"Convert footnotes to endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
 		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
 		resultInfoConvert:{en:"[%1] backlinks created.\nDo not update the crossreferences!", de:"Es wurden [%1] Backlinks erstellt.\nDie Querverweise dürfen jetzt nicht mehr aktualisiert werden."},
+		couldNotCreateBacklink:{en:"Could not create backlink for [%1]", de:"Konnte Backlink für [%1] nicht erstellen"},
 		
 		noTextInDoc:{en:"No text in document", de:"Es ist kein Text im Dokument enthalten"},
 		noFootnoteInDoc:{en:"No footnote in document", de:"Es gibt keine Fußnote im Dokument"},
@@ -105,7 +107,7 @@ var px = {
 		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
 		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
 		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
-		
+		parDestProblemDestination:{en:"There is a paragraph destination [%1] without hyperlink", de:"Es gibt den Zielanker [%1] ohne Hyperlink"},	
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
@@ -141,6 +143,8 @@ var px = {
 		headingStyleFailBlockMoreThanOne:{en:"The chosen heading [%1] in format [%1] is on more than one location in the document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] mit dem Format [%2] ist an mehreren Stellen im Dokument gefunden worden.\n\nBitte prüfen Sie das Ergebnis!"},
 		statusFail:{en:"Undocumented Error! - Please send the document to the support!", de:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!"},
 		numberingFail:{en:"Followup paragraph not found! Numbering may be faulty!", de:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!"},
+		endnoteLinkInCell:{en:"Endnote marker must not reside in a cell", de:"Der Endnotenmaker darf nicht in einer Zelle platziert sein!"},		
+		sectionIsEmpty:{en:"Section is empty! Numbering may be faulty!", de:"Abschnitt ist leer! Nummerierung ggf. fehlerhaft!"},
 		newPagesAdded:{en:"There were %1 pages added. Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
 		positionFail:{en:"There was an error in the endnote position analysis!\Please contact support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
 		samePStyle:{en:"The paragraph format [%1] was also selected for the followup paragraphs, this could lead to numbering errors! The format has been duplicated.", de:"Das Absatzformat [%1] wurde auch für die Folgeabsätze ausgewählt, dies führt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert."},
@@ -238,12 +242,12 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"3.0-2016-08-29"
+	version:"3.1-2017-02-13"
 }
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
-	px.debug = false;
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
+	px.debug = true;
 	px.showGui = true;
 }
 
@@ -1681,16 +1685,25 @@ function foot2manual (dok, endnoteStory) {
 	for (var i = dok.hyperlinks.length - 1; i >= 0; i--) {
 		var hlink = dok.hyperlinks[i];
 		if (hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText) {
+			if (! hlink.destination instanceof ParagraphDestination ) {
+				log.warnAlert(localize (px.ui.couldNotCreateBacklink, hlink.name) ); 
+				continue;
+			}
 			var hlinkPar = hlink.destination.destinationText.paragraphs[0];
 			var numberingText = hlinkPar.findGrep()[0];
-			numberingText = numberingText.characters.itemByRange(1,numberingText.characters.length-1);
-			
-			var endnote_backlink = dok.hyperlinkTextDestinations.add (hlink.source.sourceText.insertionPoints[0]);
-			endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");			
-			
-			hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);			
-			hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
-			createList.push([hyperlinkTextSource, endnote_backlink]);
+			if (numberingText) {
+				numberingText = numberingText.characters.itemByRange(1,numberingText.characters.length-1);
+				
+				var endnote_backlink = dok.hyperlinkTextDestinations.add (hlink.source.sourceText.insertionPoints[0]);
+				endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");			
+				
+				hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);			
+				hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
+				createList.push([hyperlinkTextSource, endnote_backlink]);
+			}
+			else  {
+				log.warnAlert(localize (px.ui.couldNotCreateBacklink, hlink.name) ); 
+			}
 		}
 	}
 	
@@ -1819,13 +1832,12 @@ function getCurrentEndnotes (dok, endnoteStory) {
 // Fixes Hyperlink Labels lost thru Copy&Paste and shows deleted/orphaned Hyperlinks
 function fixHyperlinks(dok) {
 	var hLink;
+	var parDestArray = [];
+
 	for (var i = 0; i  < dok.hyperlinks.length; i++) {
 		hLink = dok.hyperlinks[i];
 		if (hLink.destination == null) {
 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
-			}
-			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
 				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
 			}
 			continue;
@@ -1834,18 +1846,23 @@ function fixHyperlinks(dok) {
 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
 				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
 			}
-			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
-			}
 			continue;
 		}	
 		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
 			hLink.insertLabel(px.hyperlinkLabel, "true");
-		}
-		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "backlink") {
-			hLink.insertLabel(px.hyperlinkLabel, "backlink");
+			parDestArray[hLink.destination.id] = true;
 		}
 	}
+
+	for (var i = 0; i  < dok.paragraphDestinations.length; i++) {
+		parDest = dok.paragraphDestinations[i];
+		if (parDest.extractLabel(px.hyperlinkLabel, "true") ) {
+			if (parDestArray[parDest.id] == undefined ) {
+				log.warnAlert(localize (px.ui.parDestProblemDestination, parDest.name + " -> " + parDest.destinationText.paragraphs[0].contents));
+			}
+		}
+	}
+
 }
 
 

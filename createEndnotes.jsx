@@ -21,8 +21,8 @@
 ## Acknowledgements
 I derived the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
-@Version: 3
-@Date: 2016-08-29
+@Version: 3.1
+@Date: 2017-03-13
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -93,6 +93,7 @@ var px = {
 		menuTitle:{en:"Convert footnotes to endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
 		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
 		resultInfoConvert:{en:"[%1] backlinks created.\nDo not update the crossreferences!", de:"Es wurden [%1] Backlinks erstellt.\nDie Querverweise dürfen jetzt nicht mehr aktualisiert werden."},
+		couldNotCreateBacklink:{en:"Could not create backlink for [%1]", de:"Konnte Backlink für [%1] nicht erstellen"},
 		
 		noTextInDoc:{en:"No text in document", de:"Es ist kein Text im Dokument enthalten"},
 		noFootnoteInDoc:{en:"No footnote in document", de:"Es gibt keine Fußnote im Dokument"},
@@ -103,9 +104,10 @@ var px = {
 		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
 		wrongEndnoteOrder:{en:"Position of endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
 		emptyFootnote:{en:"Cannot process footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
+		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
 		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
 		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
-		
+		parDestProblemDestination:{en:"There is a paragraph destination [%1] without hyperlink", de:"Es gibt den Zielanker [%1] ohne Hyperlink"},	
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
@@ -240,7 +242,7 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"3.0-2016-08-31"
+	version:"3.1-2017-02-13"
 }
 
 // Debug Einstellungen publishingX 
@@ -2121,18 +2123,21 @@ function getEndnotenStartEndPositions(dok, endnoteStory) {
 
 function getCurrentEndnotes (dok, endnoteStory) {
 	// Die aktuellen Endnoten einsammeln
-	var hLink;	
+	var hLink, j, destination, sourceText, destPar;
 	var hLinksPerStory = [];
 	hLinksPerStory[0] = ["first", -1, -1,  "Dummy Endnote Postion Start"];
 	
-	for (var j = 0; j < dok.hyperlinks.length; j++) {
+	for (j = 0; j < dok.hyperlinks.length; j++) {
 		hLink = dok.hyperlinks[j];
 		if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+			destination = hLink.destination;
+			sourceText = hLink.source.sourceText;
 			try {
-				if(hLink.destination != null) {
-					if (hLink.source.sourceText.parentStory.id == endnoteStory.id) {
-						log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
-						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index,  hLink.destination.destinationText.paragraphs[0].index, hLink.destination.destinationText.paragraphs[0].contents]);
+				if(destination != null) {
+					if (sourceText.parentStory.id == endnoteStory.id) {
+						destPar = destPar;
+//~ 						log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + sourceText.index + "sourceText: " + sourceText.contents + " destination: " +  destPar.contents);
+						hLinksPerStory.push([hLink.id, sourceText.index,  destPar.index, destPar.contents]);
 					}
 				}
 				else {
@@ -2168,6 +2173,8 @@ function getCurrentEndnotes (dok, endnoteStory) {
 // Fixes Hyperlink Labels lost thru Copy&Paste and shows deleted/orphaned Hyperlinks
 function fixHyperlinks(dok) {
 	var hLink;
+	var parDestArray = [];
+
 	for (var i = 0; i  < dok.hyperlinks.length; i++) {
 		hLink = dok.hyperlinks[i];
 		if (hLink.destination == null) {
@@ -2184,10 +2191,20 @@ function fixHyperlinks(dok) {
 		}	
 		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
 			hLink.insertLabel(px.hyperlinkLabel, "true");
+			parDestArray[hLink.destination.id] = true;
 		}
 	}
-}
 
+	for (var i = 0; i  < dok.paragraphDestinations.length; i++) {
+		parDest = dok.paragraphDestinations[i];
+		if (parDest.extractLabel(px.hyperlinkLabel, "true") ) {
+			if (parDestArray[parDest.id] == undefined ) {
+				log.warnAlert(localize (px.ui.parDestProblemDestination, parDest.name + " -> " + parDest.destinationText.paragraphs[0].contents));
+			}
+		}
+	}
+
+}
 function getPosition(index, endNoteArray) {
 	for (var m =1; m < endNoteArray.length; m++) {
 		if (index <= endNoteArray[m][1] && index > endNoteArray[m-1][1]) {
