@@ -140,6 +140,7 @@ var px = {
 		headingStyleFailBlockMoreThanOne:{en:"The chosen heading [%1] in format [%1] is on more than one location in the document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] mit dem Format [%2] ist an mehreren Stellen im Dokument gefunden worden.\n\nBitte prüfen Sie das Ergebnis!"},
 		statusFail:{en:"Undocumented Error! - Please send the document to the support!", de:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!"},
 		numberingFail:{en:"Followup paragraph not found! Numbering may be faulty!", de:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!"},
+		sectionIsEmpty:{en:"Section is empty! Numbering may be faulty!", de:"Abschnitt ist leer! Nummerierung ggf. fehlerhaft!"},
 		newPagesAdded:{en:"There were %1 pages added. Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
 		positionFail:{en:"There was an error in the endnote position analysis!\Please contact support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
 		samePStyle:{en:"The paragraph format [%1] was also selected for the followup paragraphs, this could lead to numbering errors! The format has been duplicated.", de:"Das Absatzformat [%1] wurde auch für die Folgeabsätze ausgewählt, dies führt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert."},
@@ -1881,7 +1882,13 @@ function foot2end (dok, endnoteStory) {
 			nextSection = sectionIndexArray[sectionCounter+1];
 			nextSectionStartIndex = nextSection[1];
 			
-			if (previousEndnotenTextIndex < currentSectionStartIndex && endnotenTextIndex > currentSectionStartIndex && endnotenTextIndex < nextSectionStartIndex) {
+			if (currentSection == undefined) {
+				log.warnAlert(localize(px.ui.sectionIsEmpty));
+			}
+			else if (
+				&& previousEndnotenTextIndex < currentSectionStartIndex 
+				&& endnotenTextIndex > currentSectionStartIndex 
+				&& endnotenTextIndex < nextSectionStartIndex) {
 				if (currentSection[2] == "") {
 					currentSection[2] = "\r";
 				}
@@ -1910,12 +1917,13 @@ function foot2end (dok, endnoteStory) {
 				if (px.pStyleEndnoteSplitHeadingPrecedingCopy && currentSection[3] != "") {
 					endnoteStory.insertionPoints[endnotenIndex].contents = currentSection[3];
 					endnoteStory.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeadingPrecedingRepeat;
-				}		
+				}
+			
 
 				sectionCounter--;
 			}
 			else if (endnotenTextIndex < currentSectionStartIndex && sectionCounter > 0) {
-				i++; // endnote zurücksetzen , weil wir gucken müssen ob es in der nächsten Section steht.
+				i++; // endnote zurücksetzen, weil wir gucken müssen ob sie in der nächsten Section steht.
 				sectionCounter--;						
 			}
 		}
@@ -2135,7 +2143,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 		}
 		else {
 			log.warnAlert(localize (px.ui.wrongEndnoteOrder, hLinksPerStory[m][3].replace(/\r/g, ' ').substring(0,40) ))
-//~ 			return null;
+			return null;
 		}
 	}
 	
