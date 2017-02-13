@@ -12,7 +12,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
+    You should have received a copy of the GNU General Public License 
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
@@ -102,6 +102,7 @@ var px = {
 		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
 		wrongEndnoteOrder:{en:"Position of endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position der Endnote [%1] entspricht nicht dem Textfluss.\nPrüfen Sie das Dokument."},
 		emptyFootnote:{en:"Cannot process footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
+		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
 		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
 		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
 		
@@ -140,7 +141,6 @@ var px = {
 		headingStyleFailBlockMoreThanOne:{en:"The chosen heading [%1] in format [%1] is on more than one location in the document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] mit dem Format [%2] ist an mehreren Stellen im Dokument gefunden worden.\n\nBitte prüfen Sie das Ergebnis!"},
 		statusFail:{en:"Undocumented Error! - Please send the document to the support!", de:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!"},
 		numberingFail:{en:"Followup paragraph not found! Numbering may be faulty!", de:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!"},
-		sectionIsEmpty:{en:"Section is empty! Numbering may be faulty!", de:"Abschnitt ist leer! Nummerierung ggf. fehlerhaft!"},
 		newPagesAdded:{en:"There were %1 pages added. Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
 		positionFail:{en:"There was an error in the endnote position analysis!\Please contact support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
 		samePStyle:{en:"The paragraph format [%1] was also selected for the followup paragraphs, this could lead to numbering errors! The format has been duplicated.", de:"Das Absatzformat [%1] wurde auch für die Folgeabsätze ausgewählt, dies führt ggf. zu Nummerierungsfehlern! Das Format wurde dupliziert."},
@@ -238,12 +238,12 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"3.0-2016-08-31"
+	version:"3.0-2016-08-29"
 }
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
-	px.debug = true;
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
+	px.debug = false;
 	px.showGui = true;
 }
 
@@ -1456,6 +1456,12 @@ function startProcessing() {
 	if (endnoteStory == null) {
 		return;
 	}
+
+	if (px.showGui) {
+		if ( !confirm ("Nach der Konvertierung können die Endnoten nicht mehr per Skript erweitert/verändert werden!\nFortfahren?") ) {
+			return;
+		}
+	}
 	
 	var logFile = File ( getScriptFolderPath() + "/" + px.logFileName );
 	initLog(logFile);
@@ -1508,11 +1514,11 @@ function startProcessing() {
 	}
 
 	if (px.debug) {		
-		var result = foot2end (dok, endnoteStory);
+		var result = foot2manual (dok, endnoteStory);
 	}
 	else {
 		try {			
-			var result = foot2end (dok, endnoteStory);
+			var result = foot2manual (dok, endnoteStory);
 		} catch (e) {
 			log.warnAlert(localize (px.ui.errorInfo) +  e + "\nLine: " + e.line); 
 		}
@@ -1523,6 +1529,9 @@ function startProcessing() {
 		dok.layers[i].visible = layerState[i][0];
 		dok.layers[i].locked = layerState[i][1];
 	}
+
+	var newFileName = File (dok.fullName.parent + "/" + dok.name.replace(/\.indd/, "") + "_MANUELL_NUMMERIERT.indd");
+	dok.save (newFileName);
 	    
 	app.scriptPreferences.userInteractionLevel = userLevel; 
 	app.scriptPreferences.enableRedraw = redraw;
@@ -1530,7 +1539,7 @@ function startProcessing() {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 
-	var resultInfo = localize(px.ui.resultInfo, px.foot2EndCounter);
+	var resultInfo = localize(px.ui.resultInfoConvert, px.foot2EndCounter);
 	if (px.showGui && result != 2) {
 		log.infoAlert(resultInfo);
 	}
@@ -1561,53 +1570,16 @@ function getEndnoteStory(dok) {
 		}
 		if ( hlinkStoryMap.getItem(story.id) == "true") {
 			endnoteStoryMap.pushItem(story.id, story);
+			endnoteStory = story;
 		}
 	}
 
 	// Die einfachen Fälle 
-	if (footnoteStories.length == 0) {
-		alert(localize(px.ui.noFootnoteInDoc)); 
-		return null;
-	}
 	if (endnoteStoryMap.length > 1) {
 		alert(localize(px.ui.multipleEndnoteLinks)); 
 		return null;
 	}
-	if (footnoteStories.length == 1 && endnoteStoryMap.length == 0) { // New doc
-		endnoteStory = footnoteStories[0];
-	}
-	else if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && endnoteStoryMap.hasItem(footnoteStories[0].id)) { // Update Doc
-		endnoteStory = footnoteStories[0];
-	}
-
-	if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && !endnoteStoryMap.hasItem(footnoteStories[0].id)) { 
-		alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
-		return null;
-	}
-	
-	// Auswahl der gültigen Story durch user 
-	if (footnoteStories.length > 1) {		
-		if (checkSelection() ) {
-			var selectionID = app.selection[0].parentStory.id;
-			for (var i = 0; i < footnoteStories.length; i++) {
-				if (selectionID == footnoteStories[i].id) {
-					log.infoAlert (localize(px.ui.willProcessCurrentSelection));
-					endnoteStory = footnoteStories[i];
-					break;
-				}
-			}
-			if (endnoteStoryMap.length > 0 && !endnoteStoryMap.hasItem(footnoteStories[0].id) ) {
-				alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
-				return null;
-			}
-		}
-		else {
-			alert (localize(px.ui.createSelection));
-			return null;
-		}
-	}
-	if (endnoteStory == null) {
-		// Darf eigentlich nicht passieren 
+	if (endnoteStoryMap.length != 1) {
 		alert(localize(px.ui.unknownSelectionError)); 
 		return null;
 	}
@@ -1616,60 +1588,45 @@ function getEndnoteStory(dok) {
 
 
 // Main Script 
-function foot2end (dok, endnoteStory) {
-	if (px.showGui) {
-		var result = getConfig();
-		if ( result == 2) {
-			return 2;
+function foot2manual (dok, endnoteStory) {
+	log.info("Run footnote to manual numbering conversion with version " + px.version);
+	// Styles einsammeln 
+	for (var i = 0; i < dok.allParagraphStyles.length; i++) {
+		var style = dok.allParagraphStyles[i];
+		if (style.name == px.pStyleEndnoteName)  {
+			px.pStyleEndnote = style;			
 		}
-		else if (result == 3) {
-			saveSettings(dok);
-			return 2;
+		else if (style.name == px.pStyleEndnoteFollowName)  {
+			px.pStyleEndnoteFollow = style;
 		}
-		else {
-			saveSettings(dok);
+		else if (style.name == px.pStyleEndnoteSplitHeadingName) {
+			px.pStyleEndnoteSplitHeading = style;			
+		}				
+		else if (style.name == px.pStyleEndnoteSplitHeadingPrecedingName) {
+			px.pStyleEndnoteSplitHeadingPreceding = style;			
+		}				
+		else if (style.name == px.pStyleEndnoteSplitHeadingFollowingName) {
+			px.pStyleEndnoteSplitHeadingFollowing = style;			
+		}	
+		else if (style.name == px.pStyleFootnoteIgnoreName) {
+			px.pStyleFootnoteIgnore = style;			
 		}
-	}
-	else {
-		// Nur DEBUG 
-		for (var i = 0; i < dok.allParagraphStyles.length; i++) {
-			var style = dok.allParagraphStyles[i];
-			if (style.name == px.pStyleEndnoteName)  {
-				px.pStyleEndnote = style;			
-			}
-			else if (style.name == px.pStyleEndnoteFollowName)  {
-				px.pStyleEndnoteFollow = style;
-			}
-			else if (style.name == px.pStyleEndnoteSplitHeadingName) {
-				px.pStyleEndnoteSplitHeading = style;			
-			}				
-			else if (style.name == px.pStyleEndnoteSplitHeadingPrecedingName) {
-				px.pStyleEndnoteSplitHeadingPreceding = style;			
-			}				
-			else if (style.name == px.pStyleEndnoteSplitHeadingFollowingName) {
-				px.pStyleEndnoteSplitHeadingFollowing = style;			
-			}	
-			else if (style.name == px.pStyleFootnoteIgnoreName) {
-				px.pStyleFootnoteIgnore = style;			
-			}
-			else if (style.name == px.pStyleEndnoteSplitHeadingPrecedingRepeatName) {
-				px.pStyleEndnoteSplitHeadingPrecedingRepeat = style;			
-			}				
-			else if (style.name == px.pStyleEndnoteSplitHeadingFollowingRepeatName) {
-				px.pStyleEndnoteSplitHeadingFollowingRepeat = style;
-			}	
-			else if (style.name == px.pStyleEndnoteHeadingName) {
-				px.pStyleEndnoteHeading = style;			
-			}
-		}
-		for (var i = 0; i < dok.allCharacterStyles.length; i++) {
-			var style = dok.allCharacterStyles[i];
-			if (style.name == px.cStyleEndnoteMarkerName)  {
-				px.cStyleEndnoteMarker = style;			
-			}
+		else if (style.name == px.pStyleEndnoteSplitHeadingPrecedingRepeatName) {
+			px.pStyleEndnoteSplitHeadingPrecedingRepeat = style;			
+		}				
+		else if (style.name == px.pStyleEndnoteSplitHeadingFollowingRepeatName) {
+			px.pStyleEndnoteSplitHeadingFollowingRepeat = style;
+		}	
+		else if (style.name == px.pStyleEndnoteHeadingName) {
+			px.pStyleEndnoteHeading = style;			
 		}
 	}
-	log.info("Run footnote to endnote conversion with version " + px.version);
+	for (var i = 0; i < dok.allCharacterStyles.length; i++) {
+		var style = dok.allCharacterStyles[i];
+		if (style.name == px.cStyleEndnoteMarkerName)  {
+			px.cStyleEndnoteMarker = style;			
+		}
+	}
 	
 	
 	app.findGrepPreferences = NothingEnum.NOTHING;
@@ -1682,18 +1639,6 @@ function foot2end (dok, endnoteStory) {
 		return;
 	}
 
-	// Sicherheitskopie anlegen? 
-	if (px.createBackupCopy && !px.debug) {
-		var date = new Date();
-		var day = idsTools.pad(date.getDate(), 2);
-		var month = idsTools.pad(date.getMonth() + 1, 2);
-		var year = date.getYear() + 1900;
-		var year = date.getYear() + 1900;
-		
-		var backupFile = File( dok.fullName.toString().replace(/.indd$/, "") + "__" + year + month + day + "_" + date.getTime() + "_" + px.backupCopySuffix);
-		dok.saveACopy(backupFile);
-	}
-
 	fixHyperlinks(dok); // Fix broken Links before processing
 
 	checkStyles(dok);
@@ -1702,348 +1647,63 @@ function foot2end (dok, endnoteStory) {
 	if (!hLinksPerStory) {
 		return;
 	}
-	
-	// Fußnoten zu Endnoten konvertieren 
-	var firstHlink, firstHlinkIndex, headingParagraph, footnote, endnote, endnote_link, cue, hlink, nextHlink,  hyperLinkID;	
-	var oldPages = dok.pages.length;
-
-	// EndnotenTitel einfügen  					
-	hyperLinkID =  hLinksPerStory[1][0];
-	
-	if (hyperLinkID == "last") { // --> There is no Endnote Hyperlink in the story.
-		log.info("Create new endnote block");
-		endnoteStory.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
-		endnoteStory.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
-	}
-	else {
-		log.info("Update exisiting endnote block");
-		firstHlink = dok.hyperlinks.itemByID(hyperLinkID);
-		firstHlinkIndex = firstHlink.destination.destinationText.paragraphs[0].insertionPoints[0].index;
-		if (firstHlink.destination.destinationText.parentStory.id != endnoteStory.id) {
-			log.warnAlert( localize(px.ui.endnoteStoryMoved) );
-			return;
-		}
-		firstEndnote = endnoteStory.insertionPoints[firstHlinkIndex].paragraphs[0];
-		headingParagraph = endnoteStory.insertionPoints[firstHlinkIndex-1].paragraphs[0];
-		if (px.numberBySection) {
-			var checkPar = endnoteStory.insertionPoints[firstHlinkIndex-1].paragraphs[0];
-			var checkPreviousParagraph = 0;
-			while (checkPreviousParagraph < 4) {
-				checkPar = endnoteStory.insertionPoints[checkPar.insertionPoints[0].index-1].paragraphs[0];
-				if (checkPar.appliedParagraphStyle.id == px.pStyleEndnoteHeading.id) {
-					headingParagraph = checkPar;
-				}
-				checkPreviousParagraph++;				
-			}			
-		}
-		if (headingParagraph.contents != px.endnoteHeadingString + "\r") {
-			log.warnAlert (localize (px.ui.headingStyleFail , px.endnoteHeadingString, headingParagraph.contents.replace(/\r/g,'') ));
-			headingParagraph.insertionPoints[0].contents = px.endnoteHeadingString + "\r";
-		}
-		headingParagraph.appliedParagraphStyle = px.pStyleEndnoteHeading;
-		firstEndnote.appliedParagraphStyle = px.pStyleEndnote;
-	}
-
-	// Fußnoten konvertieren 
-	var footn = endnoteStory.footnotes;
-	if (px.showGui) {
-		var pBar = idsTools.getProgressBar(localize(px.ui.menuTitle, px.version));
-		pBar.reset("Verarbeite Endnoten", footn.length);
-	}
-
-	if (px.footnoteIgnore) {
-		footNoteIgnoreCondition = dok.conditions.add();
-		footNoteIgnoreCondition.visible = false;
-		footnoteLoop : for (var i = footn.length-1; i >=0 ; i--) {
-			footnote = footn[i];
-			for (var f = 0; f < footnote.paragraphs.length; f++) {
-				if (footnote.paragraphs[f].appliedParagraphStyle.id == px.pStyleFootnoteIgnore.id ) {
-					log.info("Footnote " +footnote.contents.substring(0,20) + " ignored by PargraphStyle ");
-					endnoteStory.characters[footnote.storyOffset.index].applyConditions ([footNoteIgnoreCondition]);					
-					continue footnoteLoop;
-				}
-			}
-		}
-	}
-
-	endnoteStory.insertionPoints[-1].contents = "\r";
-	einfuegeIndex = endnoteStory.insertionPoints[-1].index;
-
-	footnoteLoop : for (var i = footn.length-1; i >=0 ; i--) {
-		if (px.showGui) {
-			pBar.hit();
-		}
-	
-		footnote = footn[i];
-		
-		trimFootnoteSpace(footnote);
-		if (footnote.contents.replace(//, '').replace(/\s/g, '') == "") {
-			log.warnAlert(localize(px.ui.emptyFootnote));
-			continue;
-		}
-			
-		// Formatieren 				
-		footnote.paragraphs[0].applyParagraphStyle (px.pStyleEndnote, false);
-		if(footnote.paragraphs.length > 1) {
-			footnote.paragraphs.itemByRange(1,footnote.paragraphs.length-1).applyParagraphStyle (px.pStyleEndnoteFollow, false);
-		}				
-		
-		var fnIndex = footnote.storyOffset.index;
-		hyperLinkID = getPosition(fnIndex, hLinksPerStory); // Find the next existing Hyperlink in the story
-		if (hyperLinkID == null) {
-			// Fehler bei getPosition();
-			return;
-		}
-		if (hyperLinkID == "first") {
-			log.warnAlert( localize(px.ui.statusFail) ); 
-			continue;
-		}
-		else if (hyperLinkID == "last") {
-			endnote = footnote.texts[0].move (LocationOptions.after, endnoteStory.insertionPoints[einfuegeIndex]);
-		}
-		else {
-			// Vor dem Hyperlink mit der ID muss die Endnote eingefügt werden:
-			nextHlink = dok.hyperlinks.itemByID(hyperLinkID);					
-			endnote = footnote.texts[0].move (LocationOptions.BEFORE, nextHlink.destination.destinationText.paragraphs[0].insertionPoints[0]);
-		}
-	
-		// Verlinkung herstellen 
-		endnote_link = dok.paragraphDestinations.add (endnote.insertionPoints[0]);
-		endnote_link.insertLabel(px.hyperlinkLabel, "true");
-		cue = dok.crossReferenceSources.add (footn[i].storyOffset, px.crossRefStyleEndnote);
-		einfuegeIndex++;
-		cue.insertLabel(px.hyperlinkLabel, "true");
-		hlink = dok.hyperlinks.add (cue, endnote_link, {visible: false});
-		hlink.insertLabel(px.hyperlinkLabel, "true");
-
-		pushHLink ( hLinksPerStory, hyperLinkID, hlink);		
-				
-		px.foot2EndCounter++;
-	} // footnoteLoop : for
 
 	var endnoteBlock = getEndnoteBlock(endnoteStory, dok, true);
-	// Endnoten Nummerierung  zurücksetzen... 
+	endnoteBlock.convertBulletsAndNumberingToText ();
+
+	// Backlinks löschen 
+	for (var i = dok.hyperlinks.length -1; i >= 0; i--) {
+		hlink = dok.hyperlinks[i];
+		if (hlink.extractLabel(px.hyperlinkLabel) == "backlink" ) {
+			hlink.remove();
+		}
+	}
+
+	for (var i = dok.hyperlinkTextDestinations.length -1; i >= 0; i--) {
+		hlink = dok.hyperlinkTextDestinations[i];
+		if (hlink.extractLabel(px.hyperlinkLabel) == "backlink" ) {
+			hlink.remove();
+		}
+	}
+	for (var i = dok.hyperlinkTextSources.length -1; i >= 0; i--) {
+		hlink = dok.hyperlinkTextSources[i];
+		if (hlink.extractLabel(px.hyperlinkLabel) == "backlink" ) {
+			hlink.remove();
+		}
+	}
+
 	app.findGrepPreferences = NothingEnum.NOTHING;
-	app.changeGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-	app.changeGrepPreferences.numberingContinue = true;
-	var result = endnoteBlock.changeGrep();
-	if (result) {
-		result[0].paragraphs[0].numberingStartAt = 1;
-		result[0].paragraphs[0].numberingContinue = false;
+	app.findGrepPreferences.findWhat = "^.+?\\t";
+
+	var createList = []
+
+	for (var i = dok.hyperlinks.length - 1; i >= 0; i--) {
+		var hlink = dok.hyperlinks[i];
+		if (hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText) {
+			var hlinkPar = hlink.destination.destinationText.paragraphs[0];
+			var numberingText = hlinkPar.findGrep()[0];
+			numberingText = numberingText.characters.itemByRange(1,numberingText.characters.length-1);
+			
+			var endnote_backlink = dok.hyperlinkTextDestinations.add (hlink.source.sourceText.insertionPoints[0]);
+			endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");			
+			
+			hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);			
+			hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
+			createList.push([hyperlinkTextSource, endnote_backlink]);
+		}
 	}
 	
-	// Wenn wir nach Section splitten müssen, werden jetzt die Positionen der Sections ausgewertet die ggf. zugeordnent werden müssen
-	// Problem zweiter Durchlauf, hier muss geprüft werden ob die neue eingefügte Endnote bereits die richtige Überschrift hat.
-	if (px.numberBySection) {		
-		// Alte Abschnittsüberschriften löschen...
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
-		endnoteBlock.changeGrep();
-		if (px.pStyleEndnoteSplitHeadingPrecedingCopy) {
-			app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteSplitHeadingPrecedingRepeat;
-			endnoteBlock.changeGrep();
-		}		
-		if (px.pStyleEndnoteSplitHeadingFollowingCopy) {
-			app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteSplitHeadingFollowingRepeat;
-			endnoteBlock.changeGrep();
-		}
-		
-		var sectionIndexArray = getSections(endnoteStory);		
-		var endnotenStartEndPositions = getEndnotenStartEndPositions(dok, endnoteStory)
-		
-		// In length -1 steckt nur der leere String für den letzten Insertion Point der Story
-		sectionCounter = sectionIndexArray.length-2;
-		
-		var currentSection, nextSection, endnotenIndex, endnotenTextIndex;
-		
-		for (var i =  endnotenStartEndPositions.length-1; i >= 0; i--) {
-			// Endnoten
-			endnotenTextIndex = endnotenStartEndPositions[i][1];
-			endnotenIndex = endnotenStartEndPositions[i][0];
-			if (i > 0) {
-				previousEndnotenTextIndex = endnotenStartEndPositions[i-1][1];
-			}
-			else {
-				previousEndnotenTextIndex = -1;
-			}
-			
-			if (i ==  endnotenStartEndPositions.length-1) {
-				nextEndnotenIndex = endnotenIndex;
-			}
-			else {
-				nextEndnotenIndex = endnotenStartEndPositions[i+1][0];
-			}
-			
-			// Abschnitte 
-			currentSection = sectionIndexArray[sectionCounter];
-			currentSectionStartIndex = currentSection[1];
-			nextSection = sectionIndexArray[sectionCounter+1];
-			nextSectionStartIndex = nextSection[1];
-			
-			if (currentSection == undefined) {
-				log.warnAlert(localize(px.ui.sectionIsEmpty));
-			}
-			else if (
-				&& previousEndnotenTextIndex < currentSectionStartIndex 
-				&& endnotenTextIndex > currentSectionStartIndex 
-				&& endnotenTextIndex < nextSectionStartIndex) {
-				if (currentSection[2] == "") {
-					currentSection[2] = "\r";
-				}
-			
-				if (px.pStyleEndnoteSplitHeadingFollowingCopy && currentSection[4] != "") {
-					endnoteStory.insertionPoints[endnotenIndex].contents = currentSection[4];
-					endnoteStory.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeadingFollowingRepeat;
-				}
-			
-//~ 				$.bp(currentSection[2].indexOf("Chapter 2") > -1);
-				endnoteStory.insertionPoints[endnotenIndex].contents = currentSection[2];				
-				endnoteStory.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeading;
-
-				var nextPar = idsTools.nextParagraph (endnoteStory.insertionPoints[endnotenIndex].paragraphs[0]);
-				if (px.pStyleEndnoteSplitHeadingFollowingCopy && currentSection[4] != "") {
-					var nextPar = idsTools.nextParagraph (nextPar);
-				}
-				if (nextPar != null) {
-					nextPar.numberingStartAt = 1;
-					nextPar.numberingContinue = false;
-				}
-				else {
-					log.warnAlert(localize(px.ui.numberingFail));
-				}
-
-				if (px.pStyleEndnoteSplitHeadingPrecedingCopy && currentSection[3] != "") {
-					endnoteStory.insertionPoints[endnotenIndex].contents = currentSection[3];
-					endnoteStory.insertionPoints[endnotenIndex].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteSplitHeadingPrecedingRepeat;
-				}
-			
-
-				sectionCounter--;
-			}
-			else if (endnotenTextIndex < currentSectionStartIndex && sectionCounter > 0) {
-				i++; // endnote zurücksetzen, weil wir gucken müssen ob sie in der nächsten Section steht.
-				sectionCounter--;						
-			}
-		}
-	}		
-
-
-	deleteNotemarkers (endnoteStory);
-	endnoteStory.characters[-1].contents = "";
-	
-	if (px.footnoteIgnore) {
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.appliedParagraphStyle = px.pStyleFootnoteIgnore;
-		app.findGrepPreferences.findWhat = "\\r\\Z";
-		endnoteStory.changeGrep();
-		
-		footNoteIgnoreCondition.remove();
+	for (var x = 0; x < createList.length; x++) {
+		var hlink = dok.hyperlinks.add (createList[x][0], createList[x][1], {visible: false});
+		hlink.name = "EndnoteBacklink_" + (((1+Math.random())*0x10000)|0).toString(16).substring(1) + new Date().getTime();
+		hlink.insertLabel(px.hyperlinkLabel, "backlink");
+		px.foot2EndCounter++;
 	}
 
-	app.findGrepPreferences = NothingEnum.NOTHING;
-	app.changeGrepPreferences = NothingEnum.NOTHING;
-	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-	app.findGrepPreferences.findWhat = "^\\t";
-	endnoteBlock.changeGrep();		
-	
-	// Seiten auflösen 
-	idsTools.checkOverflow(endnoteStory);
-	dok.crossReferenceSources.everyItem().update();
-		
-	if (px.showGui) {
-		var newPages = dok.pages.length - oldPages ;
-		if (dok.pages.length != oldPages ) {
-			log.warnAlert (localize (px.ui.newPagesAdded, newPages));
-		}
-		pBar.close();
-	}
-}
 
 
-function saveSettings(dok) {
-	// Save Style and Heading in current document 
-	dok.insertLabel(px.pStyleEndnoteLabel, px.pStyleEndnoteName);
-	dok.insertLabel(px.pStyleEndnoteFollowLabel, px.pStyleEndnoteFollowName);
-	dok.insertLabel(px.pStyleEndnoteHeadingLabel, px.pStyleEndnoteHeadingName);
-	dok.insertLabel(px.pStyleEndnoteSplitHeadingLabel, px.pStyleEndnoteSplitHeadingName);
-	dok.insertLabel(px.pStyleEndnoteSplitHeadingPrecedingLabel, px.pStyleEndnoteSplitHeadingPrecedingName);
-	dok.insertLabel(px.pStyleEndnoteSplitHeadingFollowingLabel, px.pStyleEndnoteSplitHeadingFollowingName);	
-	dok.insertLabel(px.pStyleEndnoteSplitHeadingPrecedingRepeatLabel, px.pStyleEndnoteSplitHeadingPrecedingRepeatName);
-	dok.insertLabel(px.pStyleEndnoteSplitHeadingFollowingRepeatLabel, px.pStyleEndnoteSplitHeadingFollowingRepeatName);	
-	dok.insertLabel(px.pStyleEndnoteSplitHeadingPrecedingCopyLabel, px.pStyleEndnoteSplitHeadingPrecedingCopy + "");
-	dok.insertLabel(px.pStyleEndnoteSplitHeadingFollowingCopyLabel, px.pStyleEndnoteSplitHeadingFollowingCopy + "");
-	dok.insertLabel(px.cStyleEndnoteMarkerLabel, px.cStyleEndnoteMarkerName);
-	dok.insertLabel(px.endnoteHeadingStringLabel, px.endnoteHeadingString);
-	dok.insertLabel(px.pStylePrefixMarkerLabel, px.pStylePrefix);
-	dok.insertLabel(px.numberBySectionLabel, px.numberBySection +"");
-	dok.insertLabel(px.footnoteIgnoreLabel, px.footnoteIgnore +"");		
-	dok.insertLabel(px.pStyleFootnoteIgnoreLabel, px.pStyleFootnoteIgnoreName);
 
-	dok.insertLabel(px.scriptVersionLabel, px.scriptMajorVersion);
-}
-function getSections (story) {
-	// die performanteste Lösung ist vermutlich nach allen AF zu suchen die mit dem Präfix anfangen und dann den SectionArray zu bauen.
-	var sectionIndexArray = [[0,story.characters[0].index, ""]];
-	for (var ps = 0; ps < px.dokParagraphStylePrefixStyles[px.pStylePrefix].length; ps++) {
-		var pStyle = px.dokParagraphStylePrefixStyles[px.pStylePrefix][ps];
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.appliedParagraphStyle = pStyle;
-		if (app.findChangeGrepOptions.hasOwnProperty ("searchBackwards")) {
-			app.findChangeGrepOptions.searchBackwards = false;
-		}		
-		var results = story.findGrep();		
-		var lastPar = null;
-		for (var i = 0; i < results.length; i++) {
-			var result = results[i].paragraphs[0];
-			if ( lastPar && lastPar.index == result.index) {
-				continue;
-			}
-		
-			var sectionPar = result.paragraphs[0];
-			var sectionParContents = fixInDesignString(sectionPar.contents);
-			if (sectionParContents.replace(/\s/g, '') == "") {
-				continue;
-			} 
-		
-			var prevPar = null;
-			var prevParContents = "";
-			if (px.pStyleEndnoteSplitHeadingPrecedingCopy) {
-				prevPar = story.characters[sectionPar.index -1].paragraphs[0];
-				if (prevPar.isValid && prevPar != null && prevPar.appliedParagraphStyle.id ==  px.pStyleEndnoteSplitHeadingPreceding.id) {
-					prevParContents = fixInDesignString(prevPar.contents);
-				}
-			}		
-			var followPar = null;
-			var followParContents = "";
-			if (px.pStyleEndnoteSplitHeadingFollowingCopy) {
-				followPar = idsTools.nextParagraph (sectionPar);
-				if (followPar != null && followPar.appliedParagraphStyle.id ==  px.pStyleEndnoteSplitHeadingFollowing.id) {
-					followParContents = fixInDesignString(followPar.contents);
-				}
-			}
-		
-			sectionIndexArray.push([sectionIndexArray.length,result.index+1, sectionParContents, prevParContents, followParContents]);
-			lastPar = result;
-		}
-	}
-
-	app.findGrepPreferences = NothingEnum.NOTHING;
-	app.changeGrepPreferences = NothingEnum.NOTHING;
-	
-	sectionIndexArray.push([sectionIndexArray.length, story.characters[-1].index, "", "\r", "\r"]);			
-	sectionIndexArray.sort(sortSecondEntry);
-
-	if (px.debug) {
-		for (var s = 0; s < sectionIndexArray.length; s++) {
-			log.debug(sectionIndexArray[s].join(",").replace(/\r/g, ''));
-		}
-	}
-
-	return sectionIndexArray;
 }
 
 /* find the textrange with endnotes */
@@ -2105,20 +1765,25 @@ function getEndnotenStartEndPositions(dok, endnoteStory) {
 	return endnotenStartEndPositions;
 }
 
+
+
 function getCurrentEndnotes (dok, endnoteStory) {
 	// Die aktuellen Endnoten einsammeln
-	var hLink;	
+	var hLink, j, destination, sourceText, destPar;
 	var hLinksPerStory = [];
 	hLinksPerStory[0] = ["first", -1, -1,  "Dummy Endnote Postion Start"];
 	
-	for (var j = 0; j < dok.hyperlinks.length; j++) {
+	for (j = 0; j < dok.hyperlinks.length; j++) {
 		hLink = dok.hyperlinks[j];
 		if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+			destination = hLink.destination;
+			sourceText = hLink.source.sourceText;
 			try {
-				if(hLink.destination != null) {
-					if (hLink.source.sourceText.parentStory.id == endnoteStory.id) {
-						log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + hLink.source.sourceText.index + "sourceText: " + hLink.source.sourceText.contents + " destination: " +  hLink.destination.destinationText.paragraphs[0].contents);
-						hLinksPerStory.push([hLink.id, hLink.source.sourceText.index,  hLink.destination.destinationText.paragraphs[0].index, hLink.destination.destinationText.paragraphs[0].contents]);
+				if(destination != null) {
+					if (sourceText.parentStory.id == endnoteStory.id) {
+						destPar = destPar;
+//~ 						log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + sourceText.index + "sourceText: " + sourceText.contents + " destination: " +  destPar.contents);
+						hLinksPerStory.push([hLink.id, sourceText.index,  destPar.index, destPar.contents]);
 					}
 				}
 				else {
@@ -2143,7 +1808,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 		}
 		else {
 			log.warnAlert(localize (px.ui.wrongEndnoteOrder, hLinksPerStory[m][3].replace(/\r/g, ' ').substring(0,40) ))
-			return null;
+//~ 			return null;
 		}
 	}
 	
@@ -2160,10 +1825,16 @@ function fixHyperlinks(dok) {
 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
 				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
 			}
+			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
+			}
 			continue;
 		}
 		if (hLink.source == null) {
 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
+			}
+			if (hLink.extractLabel(px.hyperlinkLabel) == "backlink") {
 				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
 			}
 			continue;
@@ -2171,57 +1842,12 @@ function fixHyperlinks(dok) {
 		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
 			hLink.insertLabel(px.hyperlinkLabel, "true");
 		}
+		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "backlink") {
+			hLink.insertLabel(px.hyperlinkLabel, "backlink");
+		}
 	}
 }
 
-function getPosition(index, endNoteArray) {
-	for (var m =1; m < endNoteArray.length; m++) {
-		if (index <= endNoteArray[m][1] && index > endNoteArray[m-1][1]) {
-			return endNoteArray[m][0]; 
-		} 
-	}
-	log.warnAlert(localize (px.ui.positionFail));
-	return null; 
-}
-
-function pushHLink ( endNoteArray, hyperLinkID, hLink) {
-	for (var m =1; m < endNoteArray.length; m++) {
-		if (endNoteArray[m][0] == hyperLinkID) {
-			endNoteArray.splice(m,0, [hLink.id, hLink.source.sourceText.index]);
-			return;
-		} 
-	}
-	log.warnAlert(localize (px.ui.positionFail));
-	return null; 
-}
-
-function deleteNotemarkers (endnoteStory) {
-//~ 	// Es gibt Abstürze bei wenn der Footnote Marker am Ende des Textabschnitts steht Suche Ersetze Kombinationen in CS6
-	endnoteStory.insertionPoints[-1].contents = " ";
-	app.findGrepPreferences = NothingEnum.NOTHING;
-	app.changeGrepPreferences = NothingEnum.NOTHING;
-	app.findChangeGrepOptions.includeFootnotes = true;
-	app.findGrepPreferences.findWhat = "~F";
-	endnoteStory.changeGrep();
-	endnoteStory.characters[-1].contents = "";
-}
-
-function trimFootnoteSpace (footNote) {
-	app.findGrepPreferences = NothingEnum.NOTHING;
-	app.changeGrepPreferences = NothingEnum.NOTHING;
-	app.findChangeGrepOptions.includeFootnotes = true;
-	app.findGrepPreferences.findWhat = "(~F\\t)( |\\t)+";
-	app.changeGrepPreferences.changeTo = "$1";
-	if (footNote.texts[0].characters.length > 0) footNote.texts[0].changeGrep();
-	app.findGrepPreferences.findWhat = "^( |\\t)+";
-	app.changeGrepPreferences.changeTo = "";
-	if (footNote.texts[0].characters.length > 0) footNote.texts[0].changeGrep();
-	app.findGrepPreferences.findWhat = "( |\\t)+(?=\\r)";
-	if (footNote.texts[0].characters.length > 0) footNote.texts[0].changeGrep();
-	app.findGrepPreferences.findWhat = "( |\\t)+\\z";
-	if (footNote.texts[0].characters.length > 0) footNote.texts[0].changeGrep();
-	footNote.insertionPoints[-1].contents = "\r";
-}
 
 
 // Read Existing Style mapping from document
@@ -2366,309 +1992,6 @@ function checkStyles(dok) {
 	}
 }
 
-/* GUI for configuration */
-function getConfig() {
-	var win = new Window("dialog", localize(px.ui.menuTitle, px.version));  
-	with (win) {
-		// Art der Verarbeitung 
-		win.pMethod = add( "panel", undefined, localize(px.ui.methodPanel) );
-		win.pMethod.preferredSize.width = 600;
-		win.pMethod.alignChildren = ['left', 'top'];
-		win.pMethod.spacing = 10;
-		with (win.pMethod) {
-			win.pMethod.gMethod = add( "group");
-			win.pMethod.gMethod.margins = [0,10,0,10];
-			win.pMethod.gMethod.spacing = 10;
-			win.pMethod.gMethod.alignChildren = ['left', 'top'];
-			win.pMethod.gMethod.orientation = 'column';
-			with (win.pMethod.gMethod) {
-				win.pMethod.gMethod.radioSplit = add( "radiobutton", undefined, localize(px.ui.splitByHeading) );
-				win.pMethod.gMethod.radioSplit.value = px.numberBySection;
-				win.pMethod.gMethod.radioCont = add( "radiobutton", undefined, localize(px.ui.continuousNumbering) );
-				win.pMethod.gMethod.radioCont.value = !px.numberBySection;				
-			}					
-			win.pMethod.spacing = 0;
-						
-			win.pMethod.gMethod.gInfo = add("group");
-			win.pMethod.gMethod.gInfo.margins = [0,5,0,0];
-			
-			with (win.pMethod.gMethod.gInfo) {
-				win.pMethod.gMethod.gInfo.footnoteIgnoreCBox = add( "checkbox", undefined, localize(px.ui.ignoreFootnotesByStyle) );
-				win.pMethod.gMethod.gInfo.footnoteIgnoreCBox.value = px.footnoteIgnore;
-				win.pMethod.gMethod.gInfo.footnoteIgnoreCBox.preferredSize.height = 16;
-				win.pMethod.gMethod.gInfo.ddList =  add( "dropdownlist", undefined, px.dokParagraphStyleNames);
-				win.pMethod.gMethod.gInfo.ddList.selection = px.pStyleFootnoteIgnoreIndex;
-				win.pMethod.gMethod.gInfo.ddList.preferredSize.width = 175;
-				win.pMethod.gMethod.gInfo.ddList.enabled = win.pMethod.gMethod.gInfo.footnoteIgnoreCBox.value;
-			}			
-		}
-
-		// Auswahl des Splitformats 
-		win.pSplit = add( "panel", undefined, localize(px.ui.splitFormatPanel) );
-		win.pSplit.preferredSize.width = 600;
-		win.pSplit.orientation = 'column';
-		win.pSplit.alignChildren = ['left', 'top'];
-		win.pSplit.spacing = 10;
-		with (win.pSplit) {
-			win.pSplit.gInfo = add("group");
-			win.pSplit.gInfo.orientation = 'column';
-			win.pSplit.gInfo.alignChildren = ['left', 'top'];
-			win.pSplit.gInfo.margins = [0,10,0,0];
-			win.pSplit.gInfo.spacing = 5;
-			with(win.pSplit.gInfo) {
-				win.pSplit.gInfo.gEndnoteStyle = add("group");
-				with(win.pSplit.gInfo.gEndnoteStyle){
-					win.pSplit.gInfo.gEndnoteStyle.sText = add( "statictext", undefined, localize(px.ui.splitByHeadingStyle) );
-					win.pSplit.gInfo.gEndnoteStyle.ddList =  add( "dropdownlist", undefined, px.dokParagraphStylePrefixes);
-					win.pSplit.gInfo.gEndnoteStyle.ddList.selection = px.pStylePrefixIndex;
-					win.pSplit.gInfo.gEndnoteStyle.ddList.preferredSize.width = 175;
-				}
-			}
-			win.pSplit.gFormat = add("group");
-			win.pSplit.gFormat.orientation = 'column';
-			win.pSplit.gFormat.alignChildren = ['left', 'top'];
-			win.pSplit.gFormat.margins = [0,0,0,0];
-			win.pSplit.gFormat.spacing = 5;
-			with(win.pSplit.gFormat){
-				win.pSplit.gFormat.gEndnoteStyle = add("group");
-				with(win.pSplit.gFormat.gEndnoteStyle){
-					win.pSplit.gFormat.gEndnoteStyle.sText = add( "statictext", undefined, localize(px.ui.endNoteSplitHeadingParagraphStyle) );
-					win.pSplit.gFormat.gEndnoteStyle.ddList =  add( "dropdownlist", undefined, px.dokParagraphStyleNames);
-					win.pSplit.gFormat.gEndnoteStyle.ddList.selection = px.pStyleEndnoteSplitHeadingIndex;
-					win.pSplit.gFormat.gEndnoteStyle.ddList.preferredSize.width = 175;
-				}
-			}
-		
-	
-			win.pSplit.gCopy = add("group");
-			win.pSplit.gCopy.orientation = 'column';
-			win.pSplit.gCopy.alignChildren = ['left', 'top'];
-			win.pSplit.gCopy.margins = [0,10,0,0];
-			win.pSplit.gCopy.spacing = 5;
-						
-			with(win.pSplit.gCopy) {	
-				win.pSplit.gCopy.gInfo = add("group");
-				win.pSplit.gCopy.gInfo.orientation = 'column';
-				win.pSplit.gCopy.gInfo.alignChildren = ['left', 'top'];
-				win.pSplit.gCopy.gInfo.margins = [0,0,0,10];
-				win.pSplit.gCopy.gInfo.spacing = 5;		
-				with(win.pSplit.gCopy.gInfo) {
-					win.pSplit.gCopy.gInfo.gPreceding = add("group");
-					with(win.pSplit.gCopy.gInfo.gPreceding) {
-						win.pSplit.gCopy.gInfo.gPreceding.cBox = add( "checkbox", undefined, localize(px.ui.endNoteSplitHeadingParagraphStylePreceding) );
-						win.pSplit.gCopy.gInfo.gPreceding.cBox.value = px.pStyleEndnoteSplitHeadingPrecedingCopy;
-						win.pSplit.gCopy.gInfo.gPreceding.cBox.preferredSize.height = 16;
-						win.pSplit.gCopy.gInfo.gPreceding.ddList =  add( "dropdownlist", undefined, px.dokParagraphStyleNames);
-						win.pSplit.gCopy.gInfo.gPreceding.ddList.enabled = win.pSplit.gCopy.gInfo.gPreceding.cBox.value
-						win.pSplit.gCopy.gInfo.gPreceding.ddList.selection = px.pStyleEndnoteSplitHeadingPrecedingIndex;
-						win.pSplit.gCopy.gInfo.gPreceding.ddList.preferredSize.width = 175;
-					}
-					win.pSplit.gCopy.gInfo.gPrecedingRepeat = add("group");
-					with(win.pSplit.gCopy.gInfo.gPrecedingRepeat) {
-						win.pSplit.gCopy.gInfo.gPrecedingRepeat.stext = add( "statictext", undefined, localize(px.ui.endNoteSplitHeadingParagraphStylePrecedingFollowingRepeat) );
-						win.pSplit.gCopy.gInfo.gPrecedingRepeat.ddList =  add( "dropdownlist", undefined, px.dokParagraphStyleNames);
-						win.pSplit.gCopy.gInfo.gPrecedingRepeat.ddList.enabled = win.pSplit.gCopy.gInfo.gPreceding.cBox.value
-						win.pSplit.gCopy.gInfo.gPrecedingRepeat.ddList.selection = px.pStyleEndnoteSplitHeadingPrecedingRepeatIndex;
-						win.pSplit.gCopy.gInfo.gPrecedingRepeat.ddList.preferredSize.width = 175;
-					}
-				
-					win.pSplit.gCopy.gInfo.gFollowing = add("group");
-					win.pSplit.gCopy.gInfo.gFollowing.margins = [0,10,0,0];
-					with(win.pSplit.gCopy.gInfo.gFollowing) {
-						win.pSplit.gCopy.gInfo.gFollowing.cBox = add( "checkbox", undefined, localize(px.ui.endNoteSplitHeadingParagraphStyleFollowing) );
-						win.pSplit.gCopy.gInfo.gFollowing.cBox.value = px.pStyleEndnoteSplitHeadingFollowingCopy;
-						win.pSplit.gCopy.gInfo.gFollowing.cBox.preferredSize.height = 16;
-						win.pSplit.gCopy.gInfo.gFollowing.ddList =  add( "dropdownlist", undefined, px.dokParagraphStyleNames);
-						win.pSplit.gCopy.gInfo.gFollowing.ddList.enabled = win.pSplit.gCopy.gInfo.gFollowing.cBox.value;
-						win.pSplit.gCopy.gInfo.gFollowing.ddList.selection = px.pStyleEndnoteSplitHeadingFollowingIndex;
-						win.pSplit.gCopy.gInfo.gFollowing.ddList.preferredSize.width = 175;
-					}
-					win.pSplit.gCopy.gInfo.gFollowingRepeat = add("group");
-					with(win.pSplit.gCopy.gInfo.gFollowingRepeat) {
-						win.pSplit.gCopy.gInfo.gFollowingRepeat.stext = add( "statictext", undefined, localize(px.ui.endNoteSplitHeadingParagraphStylePrecedingFollowingRepeat) );
-						win.pSplit.gCopy.gInfo.gFollowingRepeat.ddList =  add( "dropdownlist", undefined, px.dokParagraphStyleNames);
-						win.pSplit.gCopy.gInfo.gFollowingRepeat.ddList.enabled = win.pSplit.gCopy.gInfo.gFollowing.cBox.value;
-						win.pSplit.gCopy.gInfo.gFollowingRepeat.ddList.selection = px.pStyleEndnoteSplitHeadingFollowingRepeatIndex;
-						win.pSplit.gCopy.gInfo.gFollowingRepeat.ddList.preferredSize.width = 175;
-					}
-				}			
-			}
-		
-			win.pSplit.gFormat.xsText = add( "statictext", undefined, localize(px.ui.formatWarnung) , {multiline:true});
-			win.pSplit.gFormat.xsText.preferredSize.width = 515;
-			win.pSplit.gFormat.xsText.preferredSize.height = 35;
-		}
-		win.pSplit.enabled = px.numberBySection;
-		// Formatierung der Endnote
-		win.pInfo = add( "panel", undefined, localize(px.ui.formatPanel) );
-		win.pInfo.preferredSize.width = 600;
-		win.pInfo.orientation = 'row';
-		win.pInfo.spacing = 10;
-		with (win.pInfo) {
-			win.pInfo.gInfo = add("group");
-			win.pInfo.gInfo.orientation = 'column';
-			win.pInfo.gInfo.alignChildren = ['left', 'top'];
-			win.pInfo.gInfo.margins = [0,10,0,0];
-			win.pInfo.gInfo.spacing = 5;
-			with(win.pInfo.gInfo){
-				win.pInfo.gInfo.gEndnoteStyle = add("group");
-				with(win.pInfo.gInfo.gEndnoteStyle){
-					win.pInfo.gInfo.gEndnoteStyle.sText = add( "statictext", undefined, localize(px.ui.endnoteParagraphStyle) );
-					win.pInfo.gInfo.gEndnoteStyle.ddList =  add( "dropdownlist", undefined, px.dokParagraphStyleNames);
-					win.pInfo.gInfo.gEndnoteStyle.ddList.selection = px.pStyleEndnoteIndex;
-					win.pInfo.gInfo.gEndnoteStyle.ddList.preferredSize.width = 175;
-				}
-				win.pInfo.gInfo.gEndnoteStyleFF = add("group");
-				with(win.pInfo.gInfo.gEndnoteStyleFF){
-					win.pInfo.gInfo.gEndnoteStyleFF.sText = add( "statictext", undefined, localize(px.ui.endnoteFollowParagraphStyle) );
-					win.pInfo.gInfo.gEndnoteStyleFF.ddList =  add( "dropdownlist", undefined, px.dokParagraphStyleNames);
-					win.pInfo.gInfo.gEndnoteStyleFF.ddList.selection = px.pStyleEndnoteFollowIndex;
-					win.pInfo.gInfo.gEndnoteStyleFF.ddList.preferredSize.width = 175;
-				}
-				win.pInfo.gInfo.gEndnoteCStyle = add("group");
-				with(win.pInfo.gInfo.gEndnoteCStyle ){
-					win.pInfo.gInfo.gEndnoteCStyle.sText = add( "statictext", undefined, localize(px.ui.endnoteMarkerCharacterStyle) );
-					win.pInfo.gInfo.gEndnoteCStyle.ddList =  add( "dropdownlist", undefined, px.dokCharacterStyleNames);
-					win.pInfo.gInfo.gEndnoteCStyle.ddList.selection = px.cStyleEndnoteMarkerIndex;
-					win.pInfo.gInfo.gEndnoteCStyle.ddList.preferredSize.width = 175;
-				}			
-			}
-		}
-		// Formatierung des Endnotentitels
-		win.pTitle = add( "panel", undefined, localize(px.ui.endNoteHeadingPanel) );
-		win.pTitle.preferredSize.width = 600;
-		win.pTitle.orientation = 'column';
-		win.pTitle.alignChildren = ['left', 'top'];
-		win.pTitle.spacing = 10;
-		with (win.pTitle) {
-			win.pTitle.gInfo = add("group");
-			win.pTitle.gInfo.orientation = 'row';
-			win.pTitle.gInfo.alignChildren = ['left', 'fill'];
-			win.pTitle.gInfo.margins = [0,10,0,0];
-			win.pTitle.gInfo.spacing = 5;
-			with (win.pTitle.gInfo) {
-				win.pTitle.gInfo.sText = add( "statictext", undefined, localize(px.ui.endNoteHeading)  );
-				win.pTitle.gInfo.sText.preferredSize.width = 60;
-				win.pTitle.gInfo.eTextendNoteHeading = add( "edittext", undefined, px.endnoteHeadingString );
-				win.pTitle.gInfo.eTextendNoteHeading.preferredSize.width = 350;
-			}
-			win.pTitle.gFormat = add("group");
-			win.pTitle.gFormat.orientation = 'column';
-			win.pTitle.gFormat.alignChildren = ['left', 'top'];
-			win.pTitle.gFormat.margins = [0,0,0,0];
-			win.pTitle.gFormat.spacing = 5;
-			with(win.pTitle.gFormat) {
-				win.pTitle.gFormat.gEndnoteStyle = add("group");
-				with(win.pTitle.gFormat.gEndnoteStyle){
-					win.pTitle.gFormat.gEndnoteStyle.sText = add( "statictext", undefined, localize(px.ui.endNoteHeadingParagraphStyle) );
-					win.pTitle.gFormat.gEndnoteStyle.ddList =  add( "dropdownlist", undefined, px.dokParagraphStyleNames);
-					win.pTitle.gFormat.gEndnoteStyle.ddList.selection = px.pStyleEndnoteHeadingIndex;
-					win.pTitle.gFormat.gEndnoteStyle.ddList.preferredSize.width = 175;
-				}
-			}
-		}
-	
-
-		// Steuerung Ok/Cancel
-		win.groupStart = add("group");
-		win.groupStart.preferredSize.width = 600;
-		win.groupStart.alignChildren = ['right', 'center'];
-		win.groupStart.margins = 0;
-		with (win.groupStart) {
-			win.groupStart.buttonSave = add( "button", undefined, localize(px.ui.saveButton) );
-			win.groupStart.butOk = add( "button", undefined, localize(px.ui.okButton) );
-			win.groupStart.butOk.enabled = true;
-			win.groupStart.butCancel = add( "button", undefined, localize(px.ui.cancelButton) );
-		}
-	}
-
-	win.pMethod.gMethod.radioCont.onClick = function () {
-		win.pSplit.enabled = win.pMethod.gMethod.radioSplit.value;
-	}
-	win.pMethod.gMethod.radioSplit.onClick = function () {
-		win.pSplit.enabled = win.pMethod.gMethod.radioSplit.value;
-	}
-	win.pSplit.gCopy.gInfo.gFollowing.cBox.onClick = function () {
-		win.pSplit.gCopy.gInfo.gFollowing.ddList.enabled = win.pSplit.gCopy.gInfo.gFollowing.cBox.value;
-		win.pSplit.gCopy.gInfo.gFollowingRepeat.ddList.enabled =win.pSplit.gCopy.gInfo.gFollowing.cBox.value;		
-	}
-	win.pSplit.gCopy.gInfo.gPreceding.cBox.onClick = function () {
-		win.pSplit.gCopy.gInfo.gPreceding.ddList.enabled = win.pSplit.gCopy.gInfo.gPreceding.cBox.value;
-		win.pSplit.gCopy.gInfo.gPrecedingRepeat.ddList.enabled = win.pSplit.gCopy.gInfo.gPreceding.cBox.value;
-	}
-	win.pMethod.gMethod.gInfo.footnoteIgnoreCBox.onClick = function () {
-		win.pMethod.gMethod.gInfo.ddList.enabled = win.pMethod.gMethod.gInfo.footnoteIgnoreCBox.value;
-	}
-
-	// Ok / Set Values 
-	win.groupStart.butOk.onClick = function() {
-		if (!setValues()) {
-			return;
-		}
-		win.close(1);
-	}
-	win.groupStart.butCancel.onClick = function() {
-		win.close (2);
-	}
-	win.groupStart.buttonSave.onClick = function() {
-		setValues();
-		win.close (3);
-	}
-
-	// -
-	win.center();
-	return win.show();
-
-	function setValues() {		
-		px.numberBySection = win.pMethod.gMethod.radioSplit.value;
-		px.footnoteIgnore = win.pMethod.gMethod.gInfo.footnoteIgnoreCBox.value;
-		px.pStyleFootnoteIgnoreName = px.dokParagraphStyleNames[win.pMethod.gMethod.gInfo.ddList.selection.index];
-		px.pStyleFootnoteIgnore = px.dokParagraphStyles[win.pMethod.gMethod.gInfo.ddList.selection.index];
-		
-		px.pStylePrefix = px.dokParagraphStylePrefixes[win.pSplit.gInfo.gEndnoteStyle.ddList.selection.index];		
-		
-		px.pStyleEndnoteName = px.dokParagraphStyleNames[win.pInfo.gInfo.gEndnoteStyle.ddList.selection.index];
-		px.pStyleEndnote = px.dokParagraphStyles[win.pInfo.gInfo.gEndnoteStyle.ddList.selection.index];
-		px.pStyleEndnoteFollowName = px.dokParagraphStyleNames[win.pInfo.gInfo.gEndnoteStyleFF.ddList.selection.index];
-		px.pStyleEndnoteFollow = px.dokParagraphStyles[win.pInfo.gInfo.gEndnoteStyleFF.ddList.selection.index];
-		px.pStyleEndnoteHeadingName = px.dokParagraphStyleNames[win.pTitle.gFormat.gEndnoteStyle.ddList.selection.index];
-		px.pStyleEndnoteHeading = px.dokParagraphStyles[win.pTitle.gFormat.gEndnoteStyle.ddList.selection.index];
-		
-		px.pStyleEndnoteSplitHeadingName = px.dokParagraphStyleNames[win.pSplit.gFormat.gEndnoteStyle.ddList.selection.index];		
-		px.pStyleEndnoteSplitHeading = px.dokParagraphStyles[win.pSplit.gFormat.gEndnoteStyle.ddList.selection.index];
-		
-		px.pStyleEndnoteSplitHeadingPrecedingCopy = win.pSplit.gCopy.gInfo.gPreceding.cBox.value;		
-		px.pStyleEndnoteSplitHeadingFollowingCopy = win.pSplit.gCopy.gInfo.gFollowing.cBox.value;
-
-		px.pStyleEndnoteSplitHeadingPrecedingName = px.dokParagraphStyleNames[win.pSplit.gCopy.gInfo.gPreceding.ddList.selection.index];
-		px.pStyleEndnoteSplitHeadingPreceding = px.dokParagraphStyles[win.pSplit.gCopy.gInfo.gPreceding.ddList.selection.index];
-		px.pStyleEndnoteSplitHeadingFollowingName = px.dokParagraphStyleNames[win.pSplit.gCopy.gInfo.gFollowing.ddList.selection.index];
-		px.pStyleEndnoteSplitHeadingFollowing = px.dokParagraphStyles[win.pSplit.gCopy.gInfo.gFollowing.ddList.selection.index];
-
-		px.pStyleEndnoteSplitHeadingPrecedingRepeatName = px.dokParagraphStyleNames[win.pSplit.gCopy.gInfo.gPrecedingRepeat.ddList.selection.index];
-		px.pStyleEndnoteSplitHeadingPrecedingRepeat = px.dokParagraphStyles[win.pSplit.gCopy.gInfo.gPrecedingRepeat.ddList.selection.index];
-		px.pStyleEndnoteSplitHeadingFollowingRepeatName = px.dokParagraphStyleNames[win.pSplit.gCopy.gInfo.gFollowingRepeat.ddList.selection.index];
-		px.pStyleEndnoteSplitHeadingFollowingRepeat = px.dokParagraphStyles[win.pSplit.gCopy.gInfo.gFollowingRepeat.ddList.selection.index];
-
-
-		px.endnoteHeadingString = win.pTitle.gInfo.eTextendNoteHeading.text.replace (/\r|\n/g,'');
-		if (px.endnoteHeadingString == "") {
-			alert (localize (px.ui.headingFail));
-			return false;
-		}
-		px.cStyleEndnoteMarkerName = px.dokCharacterStyleNames[win.pInfo.gInfo.gEndnoteCStyle.ddList.selection.index];
-		px.cStyleEndnoteMarker = px.dokCharacterStyles[win.pInfo.gInfo.gEndnoteCStyle.ddList.selection.index];
-		if (!(px.pStyleEndnoteName && px.pStyleEndnote && px.pStyleEndnoteFollowName && px.pStyleEndnoteFollow && px.pStyleEndnoteHeadingName && px.pStyleEndnoteHeading && px.endnoteHeadingString && px.cStyleEndnoteMarkerName && px.cStyleEndnoteMarker)) {
-			alert (localize (px.ui.styleSelectionFail));
-			return false;
-		}
-		if (px.numberBySection && !(px.pStylePrefix && px.pStyleEndnoteSplitHeading) ) {
-			alert (localize (px.ui.styleSelectionFailSection));
-			return false;
-		}
-		return true;
-	}
-}
 /* String */ function fixInDesignString (string) {
 	string = string.replace(/[\u0003\u0004\u0007\u0016]/g, ''); // <control> Character können raus
 	string = string.replace(/\uFEFF/g, ''); // InDesign Spezialzeichen entfernen 
