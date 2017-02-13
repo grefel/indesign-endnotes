@@ -1713,12 +1713,18 @@ function foot2end (dok, endnoteStory) {
 	fixHyperlinks(dok); // Fix broken Links before processing
 
 	checkStyles(dok);
-										
+
 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 	if (!hLinksPerStory) {
 		return;
 	}
-	
+
+	app.findGrepPreferences = NothingEnum.NOTHING;
+	app.changeGrepPreferences = NothingEnum.NOTHING;
+	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
+	app.findGrepPreferences.findWhat = "\\s\\Z";
+	endnoteStory.changeGrep();
+
 	// Fußnoten zu Endnoten konvertieren 
 	var firstHlink, firstHlinkIndex, headingParagraph, footnote, endnote, endnote_link, cue, hlink, nextHlink,  hyperLinkID;	
 	var oldPages = dok.pages.length;
@@ -2135,7 +2141,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 			try {
 				if(destination != null) {
 					if (sourceText.parentStory.id == endnoteStory.id) {
-						destPar = destPar;
+						destPar = destination.destinationText.paragraphs[0];
 //~ 						log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + sourceText.index + "sourceText: " + sourceText.contents + " destination: " +  destPar.contents);
 						hLinksPerStory.push([hLink.id, sourceText.index,  destPar.index, destPar.contents]);
 					}

@@ -1794,7 +1794,7 @@ function getCurrentEndnotes (dok, endnoteStory) {
 			try {
 				if(destination != null) {
 					if (sourceText.parentStory.id == endnoteStory.id) {
-						destPar = destPar;
+						destPar = destination.destinationText.paragraphs[0];
 //~ 						log.debug("Ausgelesener hLink.id : " + hLink.id + " -> " + sourceText.index + "sourceText: " + sourceText.contents + " destination: " +  destPar.contents);
 						hLinksPerStory.push([hLink.id, sourceText.index,  destPar.index, destPar.contents]);
 					}
