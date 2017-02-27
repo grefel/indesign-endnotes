@@ -314,27 +314,30 @@ function fixHyperlinks(dok) {
 		hLink = dok.hyperlinks[i];
 		if (hLink.destination == null) {
 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
+				log.warn(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents, idsTools.getPageNameByObject(hLink.source.sourceText)));
 			}
 			continue;
 		}
-		if (hLink.source == null) {
-			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
-			}
-			continue;
-		}	
+//~ 	Dieser Fall kann überhaupt nicht auftreten, weil dann der Hyperlink gelöscht wäre. 2016.02.27 --- beim entfernen auch px.ui.hyperlinkProblemSource löschen
+//~ 		if (hLink.source == null) {
+//~ 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+//~ 				log.warn(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents, idsTools.getPageNameByObject(hLink.destination.destinationText)));
+//~ 			}
+//~ 			continue;
+//~ 		}	
 		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
 			hLink.insertLabel(px.hyperlinkLabel, "true");
 			parDestArray[hLink.destination.id] = true;
 		}
 	}
 
-	for (var i = 0; i  < dok.paragraphDestinations.length; i++) {
+	for (var i = 0; i < dok.paragraphDestinations.length; i++) {
 		parDest = dok.paragraphDestinations[i];
 		if (parDest.extractLabel(px.hyperlinkLabel, "true") ) {
 			if (parDestArray[parDest.id] == undefined ) {
-				log.warnAlert(localize (px.ui.parDestProblemDestination, parDest.name + " -> " + parDest.destinationText.paragraphs[0].contents));
+				//  Seite [%1] im Absatz [%2] steht ein Zielanker [%3]
+				var par = parDest.destinationText.paragraphs[0];
+				log.warn(localize (px.ui.parDestProblemDestination, idsTools.getPageNameByObject(par), par.contents.substring(0,35), parDest.name));
 			}
 		}
 	}

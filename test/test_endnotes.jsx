@@ -1,5 +1,4 @@
 ﻿#include "idsTest.jsx"
-#include "idsHelper.jsx"
 #include "../createEndnotes.jsx"
 #include "../jumpBetweenMarkerAndNote.jsx"
 #include "../deleteEndnote.jsx" 
@@ -20,10 +19,11 @@ function runTests() {
 	log.clearLog();	
 	log.disableAlerts(true);
 
-	// Run Integration Tests 
+	// Run Tests 
 	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
 	
-	basicIntegrationTest();	
+//~ 	basicIntegrationTest();
+	specialTests();	
 
 	// Show Test results 
 	idsTesting.htmlReport();
@@ -31,7 +31,7 @@ function runTests() {
 }
 
 
-
+// Test main function 
 function basicIntegrationTest() {
 	idsTesting.insertBlock("Create Endnotes from Footnotes");
 	idsTesting.insertBlock("Test createEndnotes()");
@@ -67,14 +67,23 @@ function basicIntegrationTest() {
 	createBacklinks();
 	
 	idsTesting.assertRegExInFile("Ein Hyperlink [ID: 351] hat kein Ziel mehr",  /Ein Hyperlink \[ID: 351\] hat kein Ziel mehr/ , logFile);
-	log.showLog();
 	
 	if (closeTestDok) {
 		testDok.close(SaveOptions.NO);
 	}
 }
 
+// Test for edge cases and tickets
+function specialTests() {
+	idsTesting.insertBlock("Fußnoten in Tabellen/Rahmen #3327");
+	log.clearLog();	
 
+	var testDok = app.open(File (getScriptFolderPath() + "/publicTestFiles/num-Formate-AnmerkunginTabelle.idml"));
+		
+	if (closeTestDok) {
+		testDok.close(SaveOptions.NO);
+	}
+}
 
 
 
