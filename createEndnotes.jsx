@@ -279,7 +279,19 @@ var idsTools = idsTools || function () {
 						case Footnote :; // drop through
 						case Cell : _object = _object.insertionPoints[0].parentTextFrames[0]; break;
 						case Note : _object = _object.storyOffset.parentTextFrames[0]; break;
-						case XMLElement : if (_object.insertionPoints[0] != null) { _object = _object.insertionPoints[0].parentTextFrames[0]; break; }
+						case XMLElement : 
+							if (_object.pageItems.length > 0) {									
+								_object = _object.pageItems[0];
+							}
+							else if (_object.insertionPoints[0] != null) {
+								if (_object.insertionPoints[0].parentTextFrames.length > 0) {
+									_object = _object.insertionPoints[0].parentTextFrames[0]; 
+								} 
+								else {
+									return null;
+								}
+							}
+							break; 
 						case Application : return null;
 						default: _object = _object.parent;
 					}
@@ -311,7 +323,19 @@ var idsTools = idsTools || function () {
 						case Footnote :; // drop through
 						case Cell : _object = _object.insertionPoints[0].parentTextFrames[0]; break;
 						case Note : _object = _object.storyOffset.parentTextFrames[0]; break;
-						case XMLElement : if (_object.insertionPoints[0] != null) { _object = _object.insertionPoints[0].parentTextFrames[0]; break; }
+						case XMLElement : 
+							if (_object.pageItems.length > 0) {									
+								_object = _object.pageItems[0];
+							}
+							else if (_object.insertionPoints[0] != null) {
+								if (_object.insertionPoints[0].parentTextFrames.length > 0) {
+									_object = _object.insertionPoints[0].parentTextFrames[0]; 
+								} 
+								else {
+									return null;
+								}
+							}
+							break; 
 						case Application : return null;
 						default: _object = _object.parent;
 					}
@@ -322,6 +346,24 @@ var idsTools = idsTools || function () {
 			else {
 				return null;
 			}
+		},
+
+
+		/**
+		* Returns the <b>Page name or Spread Index</b> which contains the Object
+		* @param {Object} _object PageItem, Text or Object
+		* @return the <b>Page name or Spread Index</b> which contains the Object as String
+		*/
+		getPageNameByObject : function (_object) {
+			var page = this.getPageByObject(_object);
+			if (page) {
+				return page.name;
+			}
+			var spread = this.getSpreadByObject(_object);
+			if (spread) {
+				return localize({en:"Spread", de:"Montagefläche"}) + " " +  (spread.index+1);
+			}			
+			return localize({en:"Overset Text", de:"Text im Übersatz"});
 		},
 
 		/**
@@ -449,7 +491,7 @@ var idsTools = idsTools || function () {
 				} 
 				else {
 					frame.fit(FitOptions.FRAME_TO_CONTENT);
-				}			
+				}
 			}
 		},
 		/** Scales a frame to a given height 
@@ -461,7 +503,7 @@ var idsTools = idsTools || function () {
 		scaleToHeight : function (frame, height, maxImageSize) {
 			if (maxImageSize == undefined) maxImageSize == false;			
 			var gb = frame.geometricBounds;
-			frame.geometricBounds = [gb[0], gb[1], gb[0] + width, gb[1] + width];
+			frame.geometricBounds = [gb[0], gb[1], gb[0] + height, gb[1] + height];
 			frame.fit(FitOptions.FILL_PROPORTIONALLY);
 			if (frame.graphics != undefined) {
 				var graphic = frame.graphics[0];
@@ -544,15 +586,17 @@ var idsTools = idsTools || function () {
 			}
 			var last_ip = null, next_ip = null, next_paragraph = null;
 			last_ip = (par.constructor.name == 'Paragraph') ? par.insertionPoints[-1] : par.paragraphs[-1].insertionPoints[-1];
+			if (last_ip == last_ip.parentStory.insertionPoints[-1]) {
+				return null;
+			}
 			next_ip = par.parent.insertionPoints.item(last_ip.index);
 			if (next_ip.isValid) {
 				return next_ip.paragraphs[0];
 			}
 			else {
-				return null;			
+				return null;	
 			}
 		},
-
 		/**
 		* Resolves the next Character object. Use this function instead of <code>nextItem()</code> 
 		* from the collection Characters as this method is much quicker with long Text objects.
@@ -581,7 +625,7 @@ var idsTools = idsTools || function () {
 			_checkChar.alignToBaseline = false;
 			_tf.textFramePreferences.firstBaselineOffset = FirstBaseline.CAP_HEIGHT; 
 			var _versalHoehe = _checkChar.baseline;
-		//~ 	$.writeln("Versahlhöhe ist: " + _versalHoehe);
+		//~ 	$.writeln("Versahlhˆhe ist: " + _versalHoehe);
 			_tf.remove();
 			return _versalHoehe;
 		},
@@ -614,31 +658,46 @@ var idsTools = idsTools || function () {
 
 
 		/**
-		* Fits an two or more column TextFrame.
-		* @param {Story} _tf The TextFrame
-		* @param {Number} [_step] The step size in current MeasurementUnits, defaults to 1
-		* @return {Bool} <b>true</b> everything worked fine, <b>false</b> cannot fit the TextFrame - too big?
-		*/
-		fitTextFrame : function (_tf, _step) {
-			try {
-				if (_step == undefined) _step = 1
-				while (_tf.overflows) {
-					var _bounds = _tf.geometricBounds;
-					_tf.geometricBounds = [_bounds[0],_bounds[1],_bounds[2] + _step,_bounds[3]];
-				}
-			} catch (e) {
-				return false;		
-			}
-			return true;
-		},
+		* Fits a textframe height to its content - use this function if tf.fit(FitOptions.FRAME_TO_CONTENT); does not work
+		* Based on Marc Autrets algorithm http://www.indiscripts.com/post/2011/03/indesign-scripting-forum-25-sticky-posts#hd2sb2
+		* @param {TextFrame} tf The TextFrame to fit
+		* @param {Number} [precision] The precision, defaults to 0.1
+		* @param {String} [xRef] Reference point  'left'(default) | 'right' | 'center'*/
+		fitTextFrame : function (/*TextFrame*/ tf, /*Number*/ precision, /*String*/xRef) {
+			precision = (precision || .1);
+			xRef = AnchorPoint['TOP_' + (xRef||'left').toUpperCase() + '_ANCHOR'];
 
-		
+			// Default width multiplier. This value is only used if tf overflows in its initial state. 1.5 is fine, usually.
+			var Y_FACTOR = 1.5;
+
+			var ovf = tf.overflows, dx;
+		  
+			// If tf originally overflows, we need to add height
+			while ( tf.overflows ) {
+				tf.resize(CoordinateSpaces.INNER_COORDINATES,xRef, ResizeMethods.MULTIPLYING_CURRENT_DIMENSIONS_BY ,[1,Y_FACTOR]);
+			}
+
+			// Now, let's compute the maximal height variation (dx)
+			dx = tf.resolve(AnchorPoint.BOTTOM_LEFT_ANCHOR, CoordinateSpaces.INNER_COORDINATES)[0][1] - tf.resolve(AnchorPoint.TOP_LEFT_ANCHOR, CoordinateSpaces.INNER_COORDINATES)[0][1];
+			if ( ovf ) dx *= (1-1/Y_FACTOR);
+		 
+			// Dichotomy on dx
+			while( dx > precision ) {
+				dx*=.5;
+				tf.resize(CoordinateSpaces.INNER_COORDINATES,xRef, ResizeMethods.ADDING_CURRENT_DIMENSIONS_TO, [0, dx*(tf.overflows?1:-1)]);
+			}
+		 
+			// Last step, if needed
+			if( tf.overflows ) {
+				tf.resize(CoordinateSpaces.INNER_COORDINATES,xRef, ResizeMethods.ADDING_CURRENT_DIMENSIONS_TO,[0, dx]);
+			}
+		},	 
+	
 		/**
-		* Removes all TextFrame but first from a Story.
+		* Removes all TextFrame but the first from a Story.
 		* @param {Story} The Story
 		* @return {Story} The story
 		*/
-		
 		removeContainerFromStory : function (story) {
 			while (story.textContainers.length > 1) {
 				story.textContainers[story.textContainers.length -1].remove();
@@ -657,10 +716,10 @@ var idsTools = idsTools || function () {
 			// Replace german umlauts
 			function removeUmlaut (a) {
 				a = a.toLowerCase();
-				a = a.replace(/ä/g,"a");
-				a = a.replace(/ö/g,"o");
-				a = a.replace(/ü/g,"u");
-				a = a.replace(/ß/g,"s");	
+				a = a.replace(/‰/g,"a");
+				a = a.replace(/ˆ/g,"o");
+				a = a.replace(/¸/g,"u");
+				a = a.replace(/ﬂ/g,"s");	
 				return a;
 			}	
 		},
@@ -737,15 +796,11 @@ var idsTools = idsTools || function () {
 				}
 			}
 			if (!file.exists &&  verbose) { 
-				var file =  File.openDialog ("Bitte wählen Sie die Datei [" + name  + "] aus");
+				var file =  File.openDialog ("Bitte w‰hlen Sie die Datei [" + name  + "] aus");
 				if (!file || !file.exists) {
 					return null;
 				}
-			}
-			else {
-				return null;
-			}
-		
+			}		
 			return file;
 		},
 		/**
@@ -789,23 +844,28 @@ var idsTools = idsTools || function () {
 			}
 		},
 		/**
-		* Writes a String to a UTF-8 encoded File
+		* Writes a String to a File defaults to UTF-8 encoding
 		* @param {File} _file The File
-		* @param {String} _string The String to write
+		* @param {String} string The String to write
 		* @return {Bool} <b>true</b> everything worked fine, {Error} something went wrong
 		*/
-		writeTextFile : function (_file, _string) {
-			if (_file.constructor.name == "String") {
-				_file = new File(_file);
+		writeTextFile : function (file, string, encoding) {
+			if (encoding == undefined) {
+				encoding = "UTF-8";
 			}
-			if (_file.constructor.name == "File") {
+			if (file.constructor.name == "String") {
+				file = new File(file);
+			}
+			if (file.constructor.name == "File") {
 				try {
-					_file.encoding = "UTF-8";
-					_file.open( "w" );
-					_file.write (_string);
-					_file.close ();
+					file.encoding = encoding;
+					file.open( "w" );
+					file.write (string);
+					file.close ();
 					return true;
-				} catch (e) {return e}
+				} catch (e) {
+					return e;
+				}
 			} 
 			else {
 				return Error ("This is not a File");
@@ -945,7 +1005,7 @@ var idsTools = idsTools || function () {
 					}
 				}
 			}
-			// Gruppe Berüchsichtigen
+			// Gruppe Ber¸chsichtigen
 			else {
 				if (styleType == "Paragraph" && dok.paragraphStyleGroups.itemByName(groupName).isValid ) {
 					var styleGroup = dok.paragraphStyleGroups.itemByName(groupName);
@@ -1001,6 +1061,27 @@ var idsTools = idsTools || function () {
 					return cleanName;
 				}
 			}
+		},
+		/**
+		* Calculate the leading, considers auto leading
+		* @param {Text} Text Object
+		* @return {Numer} leading in Point 
+		*/
+		getLeading : function (text) {
+			var lineheight = 0;
+			var lead = 0;
+
+			if (text.leading == Leading.AUTO) {
+				if (text.autoLeading !== 0) {
+					lead = text.autoLeading / 100.0;
+					lineheight = (text.pointSize * lead);
+				}
+			} 
+			else if (text.leading !== 0) {
+				lineheight = text.leading;
+			}
+
+			return lineheight;
 		},
 
 		/**
@@ -1108,8 +1189,6 @@ var idsTools = idsTools || function () {
 	}
 }();
 
-
-
 /**
 * Hashmap for JavaScript
 * @class <b>idsMap</b> implements a straightforward HashMap based on <a href="http://www.mojavelinux.com/articles/javascript_hashes.html">http://www.mojavelinux.com/articles/javascript_hashes.html</a> by Dan Allen.<br/><br/><code>#include "idsHelper.jsx"<br/>[...]<br/>var _map = idsMap();<br/>_map.pushItem ("key1", "value1");<br/>_map.getItem ("key1");</code>
@@ -1184,10 +1263,12 @@ var idsMap = function () {
 	}
 }
 
+
+
 /****************
 * Logging Class 
-* @Version: 0.91
-* @Date: 2016-03-30
+* @Version: 0.96
+* @Date: 2017-02-24
 * @Author: Gregor Fellenz, http://www.publishingx.de
 * Acknowledgments: Library design pattern from Marc Aturet https://forums.adobe.com/thread/1111415
 
@@ -1204,8 +1285,9 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 	* PRIVATE
 	*/
 	var INNER = {};
-	INNER.version = "2016-03-30--0.91"
+	INNER.version = "2017-02-24-0.96"
 	INNER.disableAlerts = false;
+	INNER.logLevel = 0;
 	INNER.SEVERITY = [];
 	INNER.SEVERITY["OFF"] = 4;
 	INNER.SEVERITY["ERROR"] = 3;
@@ -1214,27 +1296,83 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 	INNER.SEVERITY["DEBUG"] = 0;
 
 	INNER.writeLog = function(msg, severity, file) { 
+		if (msg == undefined) {
+			msg = ""; // return ?
+		}
+		if (( msg instanceof Error) ) {
+			msg =  msg + " -> " + msg.line
+		}
+		if (msg.constructor.name != String) {
+			msg.toString();
+		}	
+		var date = new Date();
+		var month = date.getMonth() + 1;
+		var day = date.getDate();
+		var hour = date.getHours();
+		var minute = date.getMinutes();
+		var second = date.getSeconds();		
+		var dateString = (date.getYear() + 1900) + "-" + ((month < 10)  ? "0" : "") + month + "-" + ((day < 10)  ? "0" : "") + day + " " +  ((hour < 10)  ? "0" : "") + hour+ ":" +  ((minute < 10)  ? "0" : "") + minute+ ":" + ((second < 10)  ? "0" : "") + second;
+		var padString = (severity.length == 4) ? " " : ""
+		msg = msg.replace(/\r|\n/g, '<br/>');
 		file.encoding = "UTF-8";
 		file.open("a");
-		var stack = $.stack.split("\n");
-		stack = stack[stack.length - 4];		
-		file.writeln(Date() + " [" + severity + "] " + ((severity.length == 4) ? " [" : "[") + msg + "] Function: " + stack);		
+		if (INNER.logLevel == 0) {
+			var stack = $.stack.split("\n");
+			stack = stack[stack.length - 4];		
+			file.writeln(dateString + " [" + severity + "] " +  padString + "[" + msg + "] Function: " + stack.substr (0, 100));		
+		} else {
+			file.writeln(dateString + " [" + severity + "] " + padString + "[" + msg + "]");					
+		}
 		file.close();
 	};
-	INNER.showAlert = function(msg){
+	INNER.showAlert = function(title, msg){
 		if (!INNER.disableAlerts) {
-			alert(msg) 
+			if (msg.length < 300) {
+				alert(msg, title) 
+			}
+			else {
+				INNER.showMessages(title, [msg]);
+			}
 		}
 	};
 	INNER.showMessages = function(title, msgArray) { 
-		if (!INNER.disableAlerts) {						
-			msg = msgArray.join("\n");			
-			var w = new Window ("dialog", title);
-			var list = w.add ("edittext", undefined, msg, {multiline: true, scrolling: true});
-			list.maximumSize.height = 300;
-			list.minimumSize.width = 400;
-			w.add ("button", undefined, "Ok", {name: "ok"});
-			w.show ();
+		if (!INNER.disableAlerts) {
+			var callingScriptVersion = "    ";
+			if ($.global.hasOwnProperty ("px") && $.global.px.hasOwnProperty ("projectName")  ){
+				callingScriptVersion += px.projectName;
+			} 
+			if ($.global.hasOwnProperty ("px") && $.global.px.hasOwnProperty ("version")  ){
+				callingScriptVersion += " v" + px.version;
+			} 
+			var msg = msgArray.join("\n\n");
+			var dialogWin = new Window ("dialog", title + callingScriptVersion);
+			dialogWin.etMsg = dialogWin.add ("edittext", undefined, msg, {multiline: true, scrolling: true});
+			dialogWin.etMsg.maximumSize.height = 300;
+			dialogWin.etMsg.minimumSize.width = 400;
+						
+			dialogWin.gControl = dialogWin.add("group");
+			dialogWin.gControl.preferredSize.width = 400;
+			dialogWin.gControl.alignChildren = ['right', 'center'];
+			dialogWin.gControl.margins = 0;								
+			dialogWin.gControl.btSave = null;
+			dialogWin.gControl.btSave = dialogWin.gControl.add ("button", undefined, localize({en:"Save",de:"Speichern"}));
+			dialogWin.gControl.btSave.onClick = function () {
+				var texFile = File.openDialog();
+				if (texFile) {
+					if (! texFile.name.match (/\.txt$/)) {
+						texFile = File(texFile.fullName + ".txt");
+					}
+					texFile.encoding = "UTF-8";
+					texFile.open("e");
+					texFile.writeln(msg);					
+					texFile.close();
+					dialogWin.close();
+				}
+			}
+			dialogWin.gControl.add ("button", undefined, "Ok", {name: "ok"});
+			
+			dialogWin.show ();			
+			
 		}
 	};
 
@@ -1258,20 +1396,16 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 		if (! (logFile instanceof File)) {
 			throw Error("Cannot instantiate Log. Please provide a File");
 		}
-
-
 		if (logLevel == undefined) {
 			logLevel = "INFO";			
 		}
-		logLevel = (logLevel == undefined) ? 0 : INNER.SEVERITY[logLevel];
-
 		if (disableAlerts == undefined) {
-			INNER.disableAlerts = false;
-		}
-		else {
-			INNER.disableAlerts = disableAlerts;
+			disableAlerts = false;
 		}
 
+		INNER.logLevel = INNER.SEVERITY[logLevel];
+		INNER.disableAlerts = disableAlerts;
+	
 		var counter = {
 			debug:0,
 			info:0,
@@ -1289,8 +1423,21 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* Writes a debug log message
 			* @message {String} message Message to log.
 			*/
+			writeln : function (message) {
+				if (px && px.hasOwnProperty ("debug") && px.debug) {
+					$.writeln(message);
+				}
+				if (INNER.logLevel == 0) {
+					INNER.writeLog(message, "DEBUG", logFile);
+					counter.debug++;
+				}
+			},			
+			/**
+			* Writes a debug log message
+			* @message {String} message Message to log.
+			*/
 			debug : function (message) {
-				if (logLevel <= 0) {
+				if (INNER.logLevel == 0) {
 					INNER.writeLog(message, "DEBUG", logFile);
 					counter.debug++;
 				}
@@ -1300,7 +1447,7 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			info : function (message) {
-				if (logLevel <= 1) {
+				if (INNER.logLevel <= 1) {
 					INNER.writeLog(message, "INFO", logFile); 
 					counter.info++;
 					messages.info.push(message);
@@ -1311,11 +1458,11 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			infoAlert : function (message) {
-				if (logLevel <= 2) {
+				if (INNER.logLevel <= 2) {
 					INNER.writeLog(message, "INFO", logFile); 
 					counter.info++;
 					messages.info.push(message);
-					INNER.showAlert ("[INFO]\n" + message);
+					INNER.showAlert ("[INFO]", message);
 				}
 			},
 			/**
@@ -1323,7 +1470,7 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			warn : function (message) {
-				if (logLevel <= 2) {
+				if (INNER.logLevel <= 2) {
 					INNER.writeLog(message, "WARN", logFile);
 					counter.warn++;
 					messages.warn.push(message);
@@ -1334,11 +1481,11 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			warnAlert : function (message) {
-				if (logLevel <= 2) {
+				if (INNER.logLevel <= 2) {
 					INNER.writeLog(message, "WARN", logFile); 
 					counter.warn++;
 					messages.warn.push(message);
-					INNER.showAlert ("[WARN]\n" + message + "\n\nPrüfen Sie auch das Logfile:\n" + logFile);
+					INNER.showAlert ("[WARN]", message + "\n\nPrüfen Sie auch das Logfile:\n" + logFile);
 				}
 			},
 			/**
@@ -1346,7 +1493,7 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			error : function (message) {
-				if (logLevel <= 3) {
+				if (INNER.logLevel <= 3) {
 					INNER.writeLog(message, "ERROR", logFile); 
 					counter.error++;
 					messages.error.push(message);
@@ -1430,9 +1577,7 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 		} 
 	};
 }) ( $.global, { toString : function() {return 'idsLog';} } );
-
 }
-
 
 
 if ( ! $.global.hasOwnProperty('idsTesting') ) {
@@ -2185,35 +2330,36 @@ function fixHyperlinks(dok) {
 		hLink = dok.hyperlinks[i];
 		if (hLink.destination == null) {
 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents));
+				log.warnAlert(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents, idsTools.getPageNameByObject(hLink.source.sourceText)));
 			}
 			continue;
 		}
-		if (hLink.source == null) {
-			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
-				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents));
-			}
-			continue;
-		}	
+//~ 	Dieser Fall kann überhaupt nicht auftreten, weil dann der Hyperlink gelöscht wäre. 2016.02.27 --- beim entfernen auch px.ui.hyperlinkProblemSource löschen
+//~ 		if (hLink.source == null) {
+//~ 			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+//~ 				log.warnAlert(localize (px.ui.hyperlinkProblemSource, hLink.name, hLink.destination.destinationText.contents, idsTools.getPageNameByObject(hLink.destination.destinationText)));
+//~ 			}
+//~ 			continue;
+//~ 		}	
 		if (hLink.destination && hLink.destination.extractLabel(px.hyperlinkLabel) == "true") {
 			hLink.insertLabel(px.hyperlinkLabel, "true");
 			parDestArray[hLink.destination.id] = true;
 		}
 	}
 
-	for (var i = 0; i  < dok.paragraphDestinations.length; i++) {
+	for (var i = 0; i < dok.paragraphDestinations.length; i++) {
 		parDest = dok.paragraphDestinations[i];
 		if (parDest.extractLabel(px.hyperlinkLabel, "true") ) {
 			if (parDestArray[parDest.id] == undefined ) {
 				//  Seite [%1] im Absatz [%2] steht ein Zielanker [%3]
 				var par = parDest.destinationText.paragraphs[0];
-				var page = idsTools.getPageByObject(par);
-				page = (page) ? page.name : "not on a page";
-				log.warnAlert(localize (px.ui.parDestProblemDestination, page, par.contents.substring(0,35), parDest.name));
+				log.warnAlert(localize (px.ui.parDestProblemDestination, idsTools.getPageNameByObject(par), par.contents.substring(0,35), parDest.name));
 			}
 		}
 	}
+
 }
+
 
 function getPosition(index, endNoteArray) {
 	for (var m =1; m < endNoteArray.length; m++) {
