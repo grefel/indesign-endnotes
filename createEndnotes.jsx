@@ -21,8 +21,8 @@
 ## Acknowledgements
 I derived the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
-@Version: 3.1
-@Date: 2017-03-13
+@Version: 3.2
+@Date: 2017-02-27
 @Author Gregor Fellenz http://www.publishingx.de/
 */
 
@@ -107,7 +107,7 @@ var px = {
 		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
 		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
 		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
-		parDestProblemDestination:{en:"There is a paragraph destination [%1] without hyperlink", de:"Es gibt den Zielanker [%1] ohne Hyperlink"},	
+		parDestProblemDestination:{en:"On page [%1] in paragraph [%2] is a Textanchor [%3] without Hyperlink.\nEndnote marker was accidentally deleted?", de:"Auf Seite [%1] im Absatz [%2] steht ein Zielanker [%3], auf den kein Hyperlink zeigt.\nVielleicht wurde der Endnotemarker versehentlich gelöscht?"},	
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
@@ -242,7 +242,7 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"3.1-2017-02-13"
+	version:"3.2-2017-02-27"
 }
 
 // Debug Einstellungen publishingX 
@@ -1436,11 +1436,11 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 
 
 if ( ! $.global.hasOwnProperty('idsTesting') ) {
-	startProcessing();
+	createEndnotes();
 }
 
 // Environment checking and startup
-function startProcessing() {
+function createEndnotes() {
 	if (app.documents.length == 0) {
 		return;
 	}
@@ -2205,12 +2205,16 @@ function fixHyperlinks(dok) {
 		parDest = dok.paragraphDestinations[i];
 		if (parDest.extractLabel(px.hyperlinkLabel, "true") ) {
 			if (parDestArray[parDest.id] == undefined ) {
-				log.warnAlert(localize (px.ui.parDestProblemDestination, parDest.name + " -> " + parDest.destinationText.paragraphs[0].contents));
+				//  Seite [%1] im Absatz [%2] steht ein Zielanker [%3]
+				var par = parDest.destinationText.paragraphs[0];
+				var page = idsTools.getPageByObject(par);
+				page = (page) ? page.name : "not on a page";
+				log.warnAlert(localize (px.ui.parDestProblemDestination, page, par.contents.substring(0,35), parDest.name));
 			}
 		}
 	}
-
 }
+
 function getPosition(index, endNoteArray) {
 	for (var m =1; m < endNoteArray.length; m++) {
 		if (index <= endNoteArray[m][1] && index > endNoteArray[m-1][1]) {

@@ -48,8 +48,8 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 
 /*
 Shared configuration settings 
-@Version: 3
-@Date: 2016-08-29
+@Version: 3.2
+@Date: 2017-02-27
 @Author Gregor Fellenz http://www.publishingx.de/
 Typos and GUI Texts by Maren Pufe 
 */
@@ -107,7 +107,7 @@ var px = {
 		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
 		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
 		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
-		parDestProblemDestination:{en:"There is a paragraph destination [%1] without hyperlink", de:"Es gibt den Zielanker [%1] ohne Hyperlink"},	
+		parDestProblemDestination:{en:"On page [%1] in paragraph [%2] is a Textanchor [%3] without Hyperlink.\nEndnote marker was accidentally deleted?", de:"Auf Seite [%1] im Absatz [%2] steht ein Zielanker [%3], auf den kein Hyperlink zeigt.\nVielleicht wurde der Endnotemarker versehentlich gelöscht?"},	
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
@@ -242,7 +242,8 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"3.1-2017-02-13"
+	version:"3.2-2017-02-27",	
+	projectName:"InDesign Endnotes"		
 }
 
 // Debug Einstellungen publishingX 
@@ -1184,10 +1185,12 @@ var idsMap = function () {
 	}
 }
 
+
+
 /****************
 * Logging Class 
-* @Version: 0.91
-* @Date: 2016-03-30
+* @Version: 0.96
+* @Date: 2017-02-24
 * @Author: Gregor Fellenz, http://www.publishingx.de
 * Acknowledgments: Library design pattern from Marc Aturet https://forums.adobe.com/thread/1111415
 
@@ -1204,8 +1207,9 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 	* PRIVATE
 	*/
 	var INNER = {};
-	INNER.version = "2016-03-30--0.91"
+	INNER.version = "2017-02-24-0.96"
 	INNER.disableAlerts = false;
+	INNER.logLevel = 0;
 	INNER.SEVERITY = [];
 	INNER.SEVERITY["OFF"] = 4;
 	INNER.SEVERITY["ERROR"] = 3;
@@ -1214,27 +1218,83 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 	INNER.SEVERITY["DEBUG"] = 0;
 
 	INNER.writeLog = function(msg, severity, file) { 
+		if (msg == undefined) {
+			msg = ""; // return ?
+		}
+		if (( msg instanceof Error) ) {
+			msg =  msg + " -> " + msg.line
+		}
+		if (msg.constructor.name != String) {
+			msg.toString();
+		}	
+		var date = new Date();
+		var month = date.getMonth() + 1;
+		var day = date.getDate();
+		var hour = date.getHours();
+		var minute = date.getMinutes();
+		var second = date.getSeconds();		
+		var dateString = (date.getYear() + 1900) + "-" + ((month < 10)  ? "0" : "") + month + "-" + ((day < 10)  ? "0" : "") + day + " " +  ((hour < 10)  ? "0" : "") + hour+ ":" +  ((minute < 10)  ? "0" : "") + minute+ ":" + ((second < 10)  ? "0" : "") + second;
+		var padString = (severity.length == 4) ? " " : ""
+		msg = msg.replace(/\r|\n/g, '<br/>');
 		file.encoding = "UTF-8";
 		file.open("a");
-		var stack = $.stack.split("\n");
-		stack = stack[stack.length - 4];		
-		file.writeln(Date() + " [" + severity + "] " + ((severity.length == 4) ? " [" : "[") + msg + "] Function: " + stack);		
+		if (INNER.logLevel == 0) {
+			var stack = $.stack.split("\n");
+			stack = stack[stack.length - 4];		
+			file.writeln(dateString + " [" + severity + "] " +  padString + "[" + msg + "] Function: " + stack.substr (0, 100));		
+		} else {
+			file.writeln(dateString + " [" + severity + "] " + padString + "[" + msg + "]");					
+		}
 		file.close();
 	};
-	INNER.showAlert = function(msg){
+	INNER.showAlert = function(title, msg){
 		if (!INNER.disableAlerts) {
-			alert(msg) 
+			if (msg.length < 300) {
+				alert(msg, title) 
+			}
+			else {
+				INNER.showMessages(title, [msg]);
+			}
 		}
 	};
 	INNER.showMessages = function(title, msgArray) { 
-		if (!INNER.disableAlerts) {						
-			msg = msgArray.join("\n");			
-			var w = new Window ("dialog", title);
-			var list = w.add ("edittext", undefined, msg, {multiline: true, scrolling: true});
-			list.maximumSize.height = 300;
-			list.minimumSize.width = 400;
-			w.add ("button", undefined, "Ok", {name: "ok"});
-			w.show ();
+		if (!INNER.disableAlerts) {
+			var callingScriptVersion = "    ";
+			if ($.global.hasOwnProperty ("px") && $.global.px.hasOwnProperty ("projectName")  ){
+				callingScriptVersion += px.projectName;
+			} 
+			if ($.global.hasOwnProperty ("px") && $.global.px.hasOwnProperty ("version")  ){
+				callingScriptVersion += " v" + px.version;
+			} 
+			var msg = msgArray.join("\n");
+			var dialogWin = new Window ("dialog", title + callingScriptVersion);
+			dialogWin.etMsg = dialogWin.add ("edittext", undefined, msg, {multiline: true, scrolling: true});
+			dialogWin.etMsg.maximumSize.height = 300;
+			dialogWin.etMsg.minimumSize.width = 400;
+						
+			dialogWin.gControl = dialogWin.add("group");
+			dialogWin.gControl.preferredSize.width = 400;
+			dialogWin.gControl.alignChildren = ['right', 'center'];
+			dialogWin.gControl.margins = 0;								
+			dialogWin.gControl.btSave = null;
+			dialogWin.gControl.btSave = dialogWin.gControl.add ("button", undefined, localize({en:"Save",de:"Speichern"}));
+			dialogWin.gControl.btSave.onClick = function () {
+				var texFile = File.openDialog();
+				if (texFile) {
+					if (! texFile.name.match (/\.txt$/)) {
+						texFile = File(texFile.fullName + ".txt");
+					}
+					texFile.encoding = "UTF-8";
+					texFile.open("e");
+					texFile.writeln(msg);					
+					texFile.close();
+					dialogWin.close();
+				}
+			}
+			dialogWin.gControl.add ("button", undefined, "Ok", {name: "ok"});
+			
+			dialogWin.show ();			
+			
 		}
 	};
 
@@ -1258,20 +1318,16 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 		if (! (logFile instanceof File)) {
 			throw Error("Cannot instantiate Log. Please provide a File");
 		}
-
-
 		if (logLevel == undefined) {
 			logLevel = "INFO";			
 		}
-		logLevel = (logLevel == undefined) ? 0 : INNER.SEVERITY[logLevel];
-
 		if (disableAlerts == undefined) {
-			INNER.disableAlerts = false;
-		}
-		else {
-			INNER.disableAlerts = disableAlerts;
+			disableAlerts = false;
 		}
 
+		INNER.logLevel = INNER.SEVERITY[logLevel];
+		INNER.disableAlerts = disableAlerts;
+	
 		var counter = {
 			debug:0,
 			info:0,
@@ -1289,8 +1345,21 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* Writes a debug log message
 			* @message {String} message Message to log.
 			*/
+			writeln : function (message) {
+				if (px && px.hasOwnProperty ("debug") && px.debug) {
+					$.writeln(message);
+				}
+				if (INNER.logLevel == 0) {
+					INNER.writeLog(message, "DEBUG", logFile);
+					counter.debug++;
+				}
+			},			
+			/**
+			* Writes a debug log message
+			* @message {String} message Message to log.
+			*/
 			debug : function (message) {
-				if (logLevel <= 0) {
+				if (INNER.logLevel == 0) {
 					INNER.writeLog(message, "DEBUG", logFile);
 					counter.debug++;
 				}
@@ -1300,7 +1369,7 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			info : function (message) {
-				if (logLevel <= 1) {
+				if (INNER.logLevel <= 1) {
 					INNER.writeLog(message, "INFO", logFile); 
 					counter.info++;
 					messages.info.push(message);
@@ -1311,11 +1380,11 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			infoAlert : function (message) {
-				if (logLevel <= 2) {
+				if (INNER.logLevel <= 2) {
 					INNER.writeLog(message, "INFO", logFile); 
 					counter.info++;
 					messages.info.push(message);
-					INNER.showAlert ("[INFO]\n" + message);
+					INNER.showAlert ("[INFO]", message);
 				}
 			},
 			/**
@@ -1323,7 +1392,7 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			warn : function (message) {
-				if (logLevel <= 2) {
+				if (INNER.logLevel <= 2) {
 					INNER.writeLog(message, "WARN", logFile);
 					counter.warn++;
 					messages.warn.push(message);
@@ -1334,11 +1403,11 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			warnAlert : function (message) {
-				if (logLevel <= 2) {
+				if (INNER.logLevel <= 2) {
 					INNER.writeLog(message, "WARN", logFile); 
 					counter.warn++;
 					messages.warn.push(message);
-					INNER.showAlert ("[WARN]\n" + message + "\n\nPrüfen Sie auch das Logfile:\n" + logFile);
+					INNER.showAlert ("[WARN]", message + "\n\nPrüfen Sie auch das Logfile:\n" + logFile);
 				}
 			},
 			/**
@@ -1346,7 +1415,7 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 			* @message {String} message Message to log.
 			*/
 			error : function (message) {
-				if (logLevel <= 3) {
+				if (INNER.logLevel <= 3) {
 					INNER.writeLog(message, "ERROR", logFile); 
 					counter.error++;
 					messages.error.push(message);
@@ -1430,17 +1499,16 @@ $.global.hasOwnProperty('idsLog') || ( function (HOST, SELF) {
 		} 
 	};
 }) ( $.global, { toString : function() {return 'idsLog';} } );
-
 }
 
 
 
 if ( ! $.global.hasOwnProperty('idsTesting') ) {
-	startProcessing();
+	createBacklinks();
 }
 
 // Environment checking and startup
-function startProcessing() {
+function createBacklinks() {
 	if (app.documents.length == 0) {
 		return;
 	}
@@ -1456,7 +1524,7 @@ function startProcessing() {
 		return;
 	}
 
-	var endnoteStory = getEndnoteStory(dok);
+	var endnoteStory = getEndnoteStoryForBacklinkCreation(dok);
 	if (endnoteStory == null) {
 		return;
 	}
@@ -1467,8 +1535,7 @@ function startProcessing() {
 		}
 	}
 	
-	var logFile = File ( getScriptFolderPath() + "/" + px.logFileName );
-	initLog(logFile);
+	initLog();
 
 	if (dok.extractLabel(px.scriptVersionLabel) != "" || dok.extractLabel(px.pStyleEndnoteLabel) != "") {
 		var dokVersion = "1";
@@ -1554,7 +1621,7 @@ function startProcessing() {
 }
 
 /* Returns a valid endnote story for processing or null*/
-function getEndnoteStory(dok) {
+function getEndnoteStoryForBacklinkCreation(dok) {
 	// Check for valid stories
 	var endnoteStory = null;
 	var footnoteStories = [];
@@ -1858,11 +1925,14 @@ function fixHyperlinks(dok) {
 		parDest = dok.paragraphDestinations[i];
 		if (parDest.extractLabel(px.hyperlinkLabel, "true") ) {
 			if (parDestArray[parDest.id] == undefined ) {
-				log.warnAlert(localize (px.ui.parDestProblemDestination, parDest.name + " -> " + parDest.destinationText.paragraphs[0].contents));
+				//  Seite [%1] im Absatz [%2] steht ein Zielanker [%3]
+				var par = parDest.destinationText.paragraphs[0];
+				var page = idsTools.getPageByObject(par);
+				page = (page) ? page.name : "not on a page";
+				log.warnAlert(localize (px.ui.parDestProblemDestination, page, par.contents.substring(0,35), parDest.name));
 			}
 		}
 	}
-
 }
 
 
@@ -2032,24 +2102,38 @@ function checkSelection() {
 	return true;
 }
 
-/* Init Logging, sets global.log  */
-function initLog(logFile) {
-	if (px.debug) {
-		log = idsLog.getLogger (logFile, "DEBUG", true);
+/**  Init Log File and System */
+function initLog() {
+	px.scriptFolderPath = getScriptFolderPath();
+	if (px.scriptFolderPath.fullName.match(/lib$/)) {
+		px.scriptFolderPath = px.scriptFolderPath.parent;
 	}
+
+	var logFolder = Folder( px.scriptFolderPath + "/log/");
+	logFolder.create();
+	var logFile = File ( logFolder + "/" + px.logFileName );
+
+	if (px.debug) {
+		log = idsLog.getLogger(logFile, "DEBUG", true);
+		log.clearLog();
+	} 
 	else {
-		log = idsLog.getLogger (logFile, "WARN", false);
-	} 	
+		log = idsLog.getLogger(logFile, "INFO", false);
+	}
+	log.info("Starte " + px.projectName + " v" + px.version + " Debug: " + px.debug);
+	return logFile;
 }
 
-/* Get Filepath from current script  */
-/*Folder*/ function getScriptFolderPath() {
-     try {
-          skriptPath  = app.activeScript.parent;
-     }
-     catch (e) {
-          /* We're running from the ESTK*/
-          skriptPath = File(e.fileName).parent;
-     }
-     return skriptPath;
+/** Get Filepath from current script  */
+function getScriptFolderPath() {
+	var skriptPath;
+	
+	try {
+		skriptPath  = app.activeScript.parent;
+	} 
+	catch (e) { 
+		/* We're running from the ESTK*/
+		skriptPath = File(e.fileName).parent;
+	}
+	return skriptPath;
 }
