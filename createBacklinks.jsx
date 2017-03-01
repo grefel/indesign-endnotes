@@ -1734,11 +1734,11 @@ function getEndnoteStoryForBacklinkCreation(dok) {
 
 	// Die einfachen Fälle 
 	if (endnoteStoryMap.length > 1) {
-		alert(localize(px.ui.multipleEndnoteLinks)); 
+		log.warnAlert(localize(px.ui.multipleEndnoteLinks)); 
 		return null;
 	}
 	if (endnoteStoryMap.length != 1) {
-		alert(localize(px.ui.unknownSelectionError)); 
+		log.warnAlert(localize(px.ui.unknownSelectionError)); 
 		return null;
 	}
 	return endnoteStory;

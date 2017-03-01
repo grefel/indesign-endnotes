@@ -1739,11 +1739,11 @@ function getEndnoteStory(dok) {
 
 	// Die einfachen Fälle 
 	if (footnoteStories.length == 0) {
-		alert(localize(px.ui.noFootnoteInDoc)); 
+		log.warnAlert(localize(px.ui.noFootnoteInDoc)); 
 		return null;
 	}
 	if (endnoteStoryMap.length > 1) {
-		alert(localize(px.ui.multipleEndnoteLinks)); 
+		log.warnAlert(localize(px.ui.multipleEndnoteLinks)); 
 		return null;
 	}
 	if (footnoteStories.length == 1 && endnoteStoryMap.length == 0) { // New doc
@@ -1754,7 +1754,7 @@ function getEndnoteStory(dok) {
 	}
 
 	if (footnoteStories.length == 1 && endnoteStoryMap.length == 1 && !endnoteStoryMap.hasItem(footnoteStories[0].id)) { 
-		alert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
+		log.warnAlert(localize(px.ui.endnoteAndFootnotesAreNotInTheSameStory)); 
 		return null;
 	}
 	
@@ -1786,20 +1786,17 @@ function getEndnoteStory(dok) {
 	}
 	return endnoteStory;
 } 
-function getFootnotes(dok, endnoteStory) {
+function getFootnotes(dok, endnoteStory, disabelIgnoreFootnotes) {
 	var footnotes = [];
-	if (px.footnoteIgnore) {
-		px.footNoteIgnoreCondition = dok.conditions.add();
-		px.footNoteIgnoreCondition.visible = false;
-	}	
+	
 	for (var i = 0; i < dok.stories.length; i++) {
 		var story = dok.stories[i];
 		var relevantStory = getParentStory(story);			
 		if (relevantStory.id == endnoteStory.id ) {
 			if (story.footnotes.length > 0 ) {
-				footnoteLoop : for (var f  = 0; f < story.footnotes.length; f++) {
+				footnoteLoop : for (var f  = story.footnotes.length-1; f >= 0; f--) {
 					footnote = story.footnotes[f];				
-					if (px.footnoteIgnore) {
+					if (px.footnoteIgnore && disabelIgnoreFootnotes) {
 						for (var ff = 0; ff < footnote.paragraphs.length; ff++) {
 							if (footnote.paragraphs[ff].appliedParagraphStyle.id == px.pStyleFootnoteIgnore.id ) {
 								log.info("Footnote " + getShortText(footnote)  + " ignored by PargraphStyle ");
@@ -1955,7 +1952,12 @@ function foot2end (dok, endnoteStory) {
 	}
 
 	// Fußnoten konvertieren 
-	var footn = getFootnotes(dok, endnoteStory);
+	if (px.footnoteIgnore) {
+		px.footNoteIgnoreCondition = dok.conditions.add();
+		px.footNoteIgnoreCondition.visible = false;
+		getFootnotes(dok, endnoteStory, true);	
+	}	
+	var footn = getFootnotes(dok, endnoteStory, false);
 	// Fußnoten sind jetzt rückwärts sortiert
 	try {
 		footn.sort(sortFootnotesByIndexArray);

@@ -35,7 +35,7 @@ function runTests() {
 function basicIntegrationTest() {
 	idsTesting.insertBlock("Create Endnotes from Footnotes");
 	idsTesting.insertBlock("Test createEndnotes()");
-	var testFile = File(getScriptFolderPath() + "/publicTestFiles/endnoteTest.idml");
+	var testFile = File(getScriptFolderPath() + "/publicTestFiles/01_endnoteTest.idml");
 	var testDok = app.open(testFile);
 	
 	idsTesting.insertBlock("Document Infos before run ... ");
@@ -51,8 +51,8 @@ function basicIntegrationTest() {
 	idsTesting.assertEquals("11 Hyperlinks im Dokument", 11, testDok.hyperlinks.length );
 	idsTesting.assertEquals("11 paragraphDestinations im Dokument", 11, testDok.paragraphDestinations.length );
 	idsTesting.assertEquals("11 crossReferenceSources im Dokument", 11, testDok.crossReferenceSources.length );
-	idsTesting.assertEquals("0 hyperlinkTextDestinations im Dokument", 0, testDok.hyperlinkTextDestinations.length );
-	idsTesting.assertEquals("0 hyperlinkTextSources im Dokument", 0, testDok.hyperlinkTextSources.length );
+	idsTesting.assertEquals("Keine hyperlinkTextDestinations im Dokument", 0, testDok.hyperlinkTextDestinations.length );
+	idsTesting.assertEquals("Keine hyperlinkTextSources im Dokument", 0, testDok.hyperlinkTextSources.length );
 	if (closeTestDok) {
 		testDok.close(SaveOptions.NO);
 	}
@@ -61,12 +61,13 @@ function basicIntegrationTest() {
 	idsTesting.insertBlock("Test createBacklinks()");
 	log.clearLog();	
 
-	var testDok = app.open(File (getScriptFolderPath() + "/publicTestFiles/num-Formate-kaputteBacklinks.idml"));
+	var testDok = app.open(File (getScriptFolderPath() + "/publicTestFiles/01_brokenBacklink.idml"));
+
 	testDok.save(File (getScriptFolderPath() + "/publicTestFiles/num-Formate-kaputteBacklinks.indd"));
 
 	createBacklinks();
 	
-	idsTesting.assertRegExInFile("Ein Hyperlink [ID: 351] hat kein Ziel mehr",  /Ein Hyperlink \[ID: 351\] hat kein Ziel mehr/ , logFile);
+	idsTesting.assertRegExInFile("Das Ziel des Hyperlinks [Querverweis 5] mit dem Quelltext [1] wurde gelöscht.",  /Das Ziel des Hyperlinks \[Querverweis 5\] mit dem Quelltext \[1\] wurde gelöscht./ , logFile);
 	
 	if (closeTestDok) {
 		testDok.close(SaveOptions.NO);
@@ -78,11 +79,39 @@ function specialTests() {
 	idsTesting.insertBlock("Fußnoten in Tabellen/Rahmen #3327");
 	log.clearLog();	
 
-	var testDok = app.open(File (getScriptFolderPath() + "/publicTestFiles/num-Formate-AnmerkunginTabelle.idml"));
+	var testDok = app.open(File (getScriptFolderPath() + "/publicTestFiles/02_endnoteInAnchoredFrameAndTable.idml"));
+	
+	idsTesting.insertBlock("Document Infos before run ... ");
+	idsTesting.assertEquals("5 Hyperlinks im Dokument", 5, testDok.hyperlinks.length );
+	idsTesting.assertEquals("4 paragraphDestinations im Dokument", 4, testDok.paragraphDestinations.length );
+	idsTesting.assertEquals("4 crossReferenceSources im Dokument", 4, testDok.crossReferenceSources.length );
+	idsTesting.assertEquals("Keine hyperlinkTextDestinations im Dokument", 0, testDok.hyperlinkTextDestinations.length );
+	idsTesting.assertEquals("1 hyperlinkTextSources im Dokument", 1, testDok.hyperlinkTextSources.length );
+	
+	createEndnotes();
+	
+	idsTesting.insertBlock("Document infos after run ...");
+	idsTesting.assertEquals("8 Hyperlinks im Dokument", 8, testDok.hyperlinks.length );
+	idsTesting.assertEquals("7 paragraphDestinations im Dokument", 7, testDok.paragraphDestinations.length );
+	idsTesting.assertEquals("7 crossReferenceSources im Dokument", 7, testDok.crossReferenceSources.length );
+	idsTesting.assertEquals("Keine hyperlinkTextDestinations im Dokument", 0, testDok.hyperlinkTextDestinations.length );
+	idsTesting.assertEquals("1 hyperlinkTextSources im Dokument", 1, testDok.hyperlinkTextSources.length );	
 		
 	if (closeTestDok) {
 		testDok.close(SaveOptions.NO);
 	}
+
+	idsTesting.insertBlock("Verschiedene Stories gehen nicht #3327");
+	var testDok = app.open(File (getScriptFolderPath() + "/publicTestFiles/02_endnotesInDifferentStories.idml"));
+	createEndnotes();
+	idsTesting.assertRegExInFile("Endnoten in verschiedenen Stories.",  /In mehr ale einem Textabschnitt befinden sich Endnoten/ , logFile);
+
+
+	if (closeTestDok) {
+		testDok.close(SaveOptions.NO);
+	}
+
+
 }
 
 
