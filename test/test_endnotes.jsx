@@ -22,7 +22,7 @@ function runTests() {
 	// Run Tests 
 	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
 	
-//~ 	basicIntegrationTest();
+	basicIntegrationTest();
 	specialTests();	
 
 	// Show Test results 

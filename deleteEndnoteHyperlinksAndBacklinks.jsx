@@ -88,7 +88,7 @@ var px = {
 		versionWarning:{en:"To run this script InDesign CS5 is required", de:"Für dieses Skript wird mindestens InDesign CS5 benötigt"},
 		scriptVersionWarning:{en:"The document has been created with Version (v%1). Compatibility can not be guaranteed.\nPlease check carefully.", de:"Das Dokument wurde mit Version (v%1) erstellt. Die Kompatibilität kann nicht garantiert werden.\nBitte prüfen Sie genau."},
 		emptyEndnotePar:{en:"%1 empty Pargraph(s) with endnote format [%2]. Please delete or assign another format.\nSee log file for more information.", de:"%1 Absätze ohne Inhalt sind mit dem Format [%2] ausgezeichnet. Bitte weisen Sie ein anderes Format zu oder löschen Sie die Absätze.\nIn der Log-Datei finden sie weitere Informationen."},	
-		emptyEndnoteParContent:{en:"Preceeding Paragraph", de:"vorhergehender Absatz"},	
+		emptyEndnoteParContent:{en:"Preceeding Paragraph: ", de:"Absatz vor leerem Anmerkungsabsatz zur Fehlersuche: "},	
 		// createEndnotes.jsx		
 		menuTitle:{en:"Convert footnotes to endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
 		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
@@ -107,7 +107,10 @@ var px = {
 		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},
 		hyperlinkProblemDestination:{en:"Destinaton of Hyperlink [%1] with source text [%2] was deleted.", de:"Das Ziel des Hyperlinks [%1] mit dem Quelltext [%2] wurde gelöscht."},	
 		hyperlinkProblemSource:{en:"Source of Hyperlink [%1] with destination text [%2] was deleted.", de:"Die Quelle des Hyperlinks [%1] mit dem Zieltext [%2] wurde gelöscht."},	
-		parDestProblemDestination:{en:"There is a paragraph destination [%1] without hyperlink", de:"Es gibt den Zielanker [%1] ohne Hyperlink"},	
+		parDestProblemDestination:{en:"On page [%1] in paragraph [%2] is a Textanchor [%3] without Hyperlink.\nEndnote marker was accidentally deleted?", de:"Auf Seite [%1] im Absatz [%2] steht ein Zielanker [%3], auf den kein Hyperlink zeigt.\nVielleicht wurde der Endnotemarker versehentlich gelöscht?"},	
+		missingHyperlinkDestination:{en:"Hyperlink [%1] has no destination. Endnote is probably deleted!", de:"Ein Hyperlink [ID: %1] hat kein Ziel (Endnote) mehr. Die Endnote wurde vermutlich gelöscht!"},
+		NumberOfHLinksNotParDest:{en:"Number of Hyperlinks (Endnote marker)  [%1] does not equal Number of destinations (endnotes) [%2]", de:"Die Anzahl der Hyperlinks (Endnoten marker) [%1] entspricht nicht der Anzahl Destinations (Endnoten) [%2]"},
+		hyperlinkInWrongStory:{en:"Hyperlink with ID [%1] isn't located in the endnote story, instead in story with ID [%2]", de:"Der Hyperlink mit der ID [%1] ist nicht in der Endnoten-Story, sondern in der Story mit der ID  [%2]"},
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
@@ -143,7 +146,9 @@ var px = {
 		headingStyleFailBlockMoreThanOne:{en:"The chosen heading [%1] in format [%1] is on more than one location in the document. \n\Please check the result!", de:"Die von Ihnen gewünschte Überschrift [%1] mit dem Format [%2] ist an mehreren Stellen im Dokument gefunden worden.\n\nBitte prüfen Sie das Ergebnis!"},
 		statusFail:{en:"Undocumented Error! - Please send the document to the support!", de:"Unklarer Status! - Bitte senden Sie das Dokument an den Support!"},
 		numberingFail:{en:"Followup paragraph not found! Numbering may be faulty!", de:"Folgeabsatz nicht gefunden! Nummerierung ggf. fehlerhaft!"},
-		endnoteLinkInCell:{en:"Endnote marker must not reside in a cell", de:"Der Endnotenmaker darf nicht in einer Zelle platziert sein!"},		
+		endnoteLinkInCell:{en:"Endnote marker must not reside in a cell wihtin another Table or anchored Frame", de:"Der Endnotenmaker darf nicht in einer Tabellenzelle, die zu einer anderen Tabelle oder einem verankerten Rahmen gehört, platziert sein!"},		
+		endnoteLinkInAnchoredFrame:{en:"Endnote marker must not reside in a anchored Frame wihtin another anchored Frame or Table", de:"Der Endnotenmaker darf nicht in einem verankerten Rahmen, der zu einem verankerten Rahmen  oder einer anderen Tabelle gehört, platziert sein!"},
+		
 		sectionIsEmpty:{en:"Section is empty! Numbering may be faulty!", de:"Abschnitt ist leer! Nummerierung ggf. fehlerhaft!"},
 		newPagesAdded:{en:"There were %1 pages added. Please check the document", de:"Es wurden %1 Seiten hinzugefügt. Bitte prüfen Sie den Umfang"},
 		positionFail:{en:"There was an error in the endnote position analysis!\Please contact support!", de:"Es ist ein Fehler bei der Endnotenpositionsanalyse aufgetreten!\nBitte kontaktieren Sie den Support!"},		
@@ -242,7 +247,9 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"3.1-2017-02-13"
+	version:"3.2-2017-02-27",	
+	projectName:"InDesign Endnotes"		
+	
 }
 
 // Debug Einstellungen publishingX
@@ -253,10 +260,10 @@ if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
 
 
 if ( ! $.global.hasOwnProperty('idsTesting') ) {
-	startProcessing();
+	deleteEndnoteHyperlinksAndBacklinks();
 }
 
-function startProcessing() {
+function deleteEndnoteHyperlinksAndBacklinks() {
 	if (parseInt(app.version) < 6) {
 		alert( localize(px.ui.versionWarning) );
 		return;
