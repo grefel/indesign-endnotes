@@ -26,3 +26,5 @@ link-endnotes-letext-integrate.jsx
 test/.DS_Store
 
 .DS_Store
+
+*.indd
