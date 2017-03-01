@@ -1,9 +1,5 @@
 ﻿#include "idsTest.jsx"
-#include "../createEndnotes.jsx"
-#include "../jumpBetweenMarkerAndNote.jsx"
-#include "../deleteEndnote.jsx" 
-#include "../createBacklinks.jsx" 
-
+#include "../Scripts Panel/lib/idEndnotes.jsx"
 
 runTests()
 
@@ -45,7 +41,7 @@ function basicIntegrationTest() {
 	idsTesting.assertEquals("Keine hyperlinkTextDestinations im Dokument", 0, testDok.hyperlinkTextDestinations.length );
 	idsTesting.assertEquals("Keine hyperlinkTextSources im Dokument", 0, testDok.hyperlinkTextSources.length );
 	
-	createEndnotes();
+	createEndnotes(testDok);
 	
 	idsTesting.insertBlock("Document infos after run ...");
 	idsTesting.assertEquals("11 Hyperlinks im Dokument", 11, testDok.hyperlinks.length );
@@ -65,7 +61,7 @@ function basicIntegrationTest() {
 
 	testDok.save(File (getScriptFolderPath() + "/publicTestFiles/num-Formate-kaputteBacklinks.indd"));
 
-	createBacklinks();
+	addBacklinks(testDok);
 	
 	idsTesting.assertRegExInFile("Das Ziel des Hyperlinks [Querverweis 5] mit dem Quelltext [1] wurde gelöscht.",  /Das Ziel des Hyperlinks \[Querverweis 5\] mit dem Quelltext \[1\] wurde gelöscht./ , logFile);
 	
@@ -88,7 +84,7 @@ function specialTests() {
 	idsTesting.assertEquals("Keine hyperlinkTextDestinations im Dokument", 0, testDok.hyperlinkTextDestinations.length );
 	idsTesting.assertEquals("1 hyperlinkTextSources im Dokument", 1, testDok.hyperlinkTextSources.length );
 	
-	createEndnotes();
+	createEndnotes(testDok);
 	
 	idsTesting.insertBlock("Document infos after run ...");
 	idsTesting.assertEquals("8 Hyperlinks im Dokument", 8, testDok.hyperlinks.length );
@@ -103,7 +99,7 @@ function specialTests() {
 
 	idsTesting.insertBlock("Verschiedene Stories gehen nicht #3327");
 	var testDok = app.open(File (getScriptFolderPath() + "/publicTestFiles/02_endnotesInDifferentStories.idml"));
-	createEndnotes();
+	createEndnotes(testDok);
 	idsTesting.assertRegExInFile("Endnoten in verschiedenen Stories.",  /In mehr ale einem Textabschnitt befinden sich Endnoten/ , logFile);
 
 
