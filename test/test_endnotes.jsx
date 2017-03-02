@@ -64,7 +64,7 @@ function basicIntegrationTest() {
 	addBacklinks(testDok);
 	
 	idsTesting.assertRegExInFile("Das Ziel des Hyperlinks [Querverweis 5] mit dem Quelltext [1] wurde gelöscht.",  /Das Ziel des Hyperlinks \[Querverweis 5\] mit dem Quelltext \[1\] wurde gelöscht./ , logFile);
-	
+
 	if (closeTestDok) {
 		testDok.close(SaveOptions.NO);
 	}
