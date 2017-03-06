@@ -718,28 +718,28 @@ function foot2end (dok, endnoteStory) {
 			if (style.name == px.pStyleEndnoteName)  {
 				px.pStyleEndnote = style;			
 			}
-			else if (style.name == px.pStyleEndnoteFollowName)  {
+			if (style.name == px.pStyleEndnoteFollowName)  {
 				px.pStyleEndnoteFollow = style;
 			}
-			else if (style.name == px.pStyleEndnoteSplitHeadingName) {
+			if (style.name == px.pStyleEndnoteSplitHeadingName) {
 				px.pStyleEndnoteSplitHeading = style;			
 			}				
-			else if (style.name == px.pStyleEndnoteSplitHeadingPrecedingName) {
+			if (style.name == px.pStyleEndnoteSplitHeadingPrecedingName) {
 				px.pStyleEndnoteSplitHeadingPreceding = style;			
 			}				
-			else if (style.name == px.pStyleEndnoteSplitHeadingFollowingName) {
+			if (style.name == px.pStyleEndnoteSplitHeadingFollowingName) {
 				px.pStyleEndnoteSplitHeadingFollowing = style;			
 			}	
-			else if (style.name == px.pStyleFootnoteIgnoreName) {
+			if (style.name == px.pStyleFootnoteIgnoreName) {
 				px.pStyleFootnoteIgnore = style;			
 			}
-			else if (style.name == px.pStyleEndnoteSplitHeadingPrecedingRepeatName) {
+			if (style.name == px.pStyleEndnoteSplitHeadingPrecedingRepeatName) {
 				px.pStyleEndnoteSplitHeadingPrecedingRepeat = style;			
 			}				
-			else if (style.name == px.pStyleEndnoteSplitHeadingFollowingRepeatName) {
+			if (style.name == px.pStyleEndnoteSplitHeadingFollowingRepeatName) {
 				px.pStyleEndnoteSplitHeadingFollowingRepeat = style;
 			}	
-			else if (style.name == px.pStyleEndnoteHeadingName) {
+			if (style.name == px.pStyleEndnoteHeadingName) {
 				px.pStyleEndnoteHeading = style;			
 			}
 		}
@@ -798,8 +798,8 @@ function foot2end (dok, endnoteStory) {
 
 	// EndnotenTitel einfügen  					
 	hyperLinkID =  hLinksPerStory[1].hLinkID;
-	
-	if (hyperLinkID == "last") { // --> There is no Endnote Hyperlink in the story.
+	px.newEndnoteBlock = hyperLinkID == "last";
+	if (px.newEndnoteBlock) { // --> There is no Endnote Hyperlink in the story.
 		log.info("Create new endnote block");
 		endnoteStory.insertionPoints[-1].contents = "\r" + px.endnoteHeadingString;
 		endnoteStory.insertionPoints[-1].paragraphs[0].appliedParagraphStyle = px.pStyleEndnoteHeading;
@@ -848,7 +848,7 @@ function foot2end (dok, endnoteStory) {
 	}
 
 	endnoteStory.insertionPoints[-1].contents = "\r";
-	einfuegeIndex = endnoteStory.insertionPoints[-1].index;
+//~ 	einfuegeIndex = endnoteStory.insertionPoints[-1].index;
 	idsTools.checkOverflow(endnoteStory);
 
 	footnoteLoop : for (var i = footn.length-1; i >= 0; i--) {
@@ -896,7 +896,7 @@ function foot2end (dok, endnoteStory) {
 		endnote_link = dok.paragraphDestinations.add (endnote.insertionPoints[0]);
 		endnote_link.insertLabel(px.hyperlinkLabel, "true");
 		cue = dok.crossReferenceSources.add (footn[i].storyOffset, px.crossRefStyleEndnote);
-		einfuegeIndex++;
+//~ 		einfuegeIndex++;
 		cue.insertLabel(px.hyperlinkLabel, "true");
 		hlink = dok.hyperlinks.add (cue, endnote_link, {visible: false});
 		hlink.insertLabel(px.hyperlinkLabel, "true");
@@ -936,8 +936,14 @@ function foot2end (dok, endnoteStory) {
 			endnoteBlock.changeGrep();
 		}
 		
-		var sectionIndexArray = getSections(endnoteStory);		
-		var endnotenStartEndPositions = hLinksPerStory//getCurrentEndnotes(dok, endnoteStory);
+		var sectionIndexArray = getSections(endnoteStory);	
+		if (px.newEndnoteBlock) {
+			var endnotenStartEndPositions = hLinksPerStory;
+		}
+		else {
+			// Im Update Modus müssen die Endnoten neu eingelesen werden, weil die IndexWerte in hLinksPerStory verschoben sind. Im Idealfall (Performance) würde man nur die Indexwerte in hLinksPerStory updaten
+			var endnotenStartEndPositions = getCurrentEndnotes(dok, endnoteStory);
+		}
 		
 		// In length -1 steckt nur der leere String für den letzten Insertion Point der Story
 		sectionCounter = sectionIndexArray.length-2;
