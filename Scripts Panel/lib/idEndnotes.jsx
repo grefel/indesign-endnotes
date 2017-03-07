@@ -31,7 +31,7 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 #include idsLog.jsx
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
 	px.debug = true;
 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
@@ -160,6 +160,9 @@ function createEndnotes(dok) {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 
+	if (result == 2) {
+		return; // Abbruch durch Benutzer 
+	} 
 	var resultInfo = localize(px.ui.resultInfo, px.foot2EndCounter);
 	if (px.showGui && result != 2) {
 		log.showWarnings();
@@ -303,7 +306,7 @@ function jumpBetweenMarkerAndNote(dok) {
 				hLink.showDestination();				
 				return true;
 			}
-			if (hLink.destination.destinationText.paragraphs[0].index == parIndex) {
+			if (hLink.destination && hLink.destination.destinationText.paragraphs[0].index == parIndex) {
 				hLink.showSource();
 				return true;
 			} 
@@ -364,16 +367,18 @@ function deleteEndnote(dok) {
 		}
 	}
 
+	
+	if (!removeEndnote()) {
+		alert(localize(px.ui.noEndnoteOrMarker));
+	}	
+
     // Ebenen zurücksetzen
 	for (var i = 0; i < dok.layers.length; i++) {
 		dok.layers[i].visible = layerState[i][0];
 		dok.layers[i].locked = layerState[i][1];
 	}
 
-	
-	if (!removeEndnote()) {
-		alert(localize(px.ui.noEndnoteOrMarker));
-	}	
+
 }
 
 
@@ -406,10 +411,17 @@ function removeEndnote() {
 	for (var i = 0; i  < dok.hyperlinks.length; i++) {
 		if (dok.hyperlinks[i].extractLabel(px.hyperlinkLabel) == "true") {
 			var hLink = dok.hyperlinks[i];
+			
 			if (hLink.source.sourceText.index == index) {
 				removeHL(hLink);
 				return true;
 			}
+		
+			if (hLink.destination == null) {
+				log.warn(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents, idsTools.getPageNameByObject(hLink.source.sourceText)));
+				continue;
+			}				
+
 			if (hLink.destination.destinationText.paragraphs[0].index == parIndex) {
 				removeHL(hLink);
 				return true;
@@ -576,6 +588,7 @@ function getEndnoteStory(dok, checkForFootnotes) {
 	var footnoteStories = [];
 	var footnoteStoryCounter = 0;
 	var endnoteStoryMap = idsMap();
+	var endnoteRealStoryMap = idsMap();
 	var hlinkStoryMap = idsMap();
 	for (var k = 0; k < dok.hyperlinks.length; k++) {
 		var hlink = dok.hyperlinks[k];
@@ -587,6 +600,11 @@ function getEndnoteStory(dok, checkForFootnotes) {
 			var destinationStory = getParentStory(hlink.destination.destinationText);
 			hlinkStoryMap.pushItem(destinationStory.id, "true");
 			// sourceText ist immer valid, weil sonst der Hyperlink gelöscht wäre.
+			var sourceText = hlink.source.sourceText;
+			endnoteRealStoryMap.pushItem(sourceText.parentStory.id, "true");
+			if (sourceText.parent instanceof Cell) {
+				endnoteRealStoryMap.pushItem("t" + sourceText.parent.parent.id, "true");
+			}
 			var sourceStory =  getParentStory(hlink.source.sourceText); 
 			hlinkStoryMap.pushItem(sourceStory.id, "true");
 		}
@@ -667,7 +685,7 @@ function getEndnoteStory(dok, checkForFootnotes) {
 		return null;
 	}
 	
-	px.multipleStories =  (footnoteStoryCounter > 1 || endnoteStoryMap.length > 1);
+	px.multipleStories =  (footnoteStoryCounter > 1 || endnoteRealStoryMap.length > 1);
 		
 	return endnoteStory;
 } 
@@ -768,7 +786,8 @@ function foot2end (dok, endnoteStory) {
 			log.warn(localize(px.ui.emptyEndnoteParContent) + emptyEndnotes[e].parentStory.insertionPoints[emptyEndnotes[e].index-1].paragraphs[0].contents  );
 		}
 		idsTools.showIt(emptyEndnotes[0]);
-		return;
+		log.showWarnings();
+		return 2;
 	}
 
 	// Sicherheitskopie anlegen? 
@@ -788,7 +807,14 @@ function foot2end (dok, endnoteStory) {
 
 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 	if (!hLinksPerStory) {
-		return;
+		log.showWarnings();
+		return 2;
+	}
+
+	var continueAnyway = log.confirmWarnings();
+	if (continueAnyway == 2) {
+		dok.revert();
+		return 2;
 	}
 
 	app.findGrepPreferences = NothingEnum.NOTHING;
@@ -1070,7 +1096,6 @@ function foot2end (dok, endnoteStory) {
 	dok.footnoteOptions.restartNumbering = FootnoteRestarting.SPREAD_RESTART;
 	dok.footnoteOptions.restartNumbering = oldRestartNumbering;
 	
-	
 	// Seiten auflösen 
 	idsTools.checkOverflow(endnoteStory);
 	for (var c = 0; c < dok.crossReferenceSources.length; c++) {
@@ -1080,7 +1105,6 @@ function foot2end (dok, endnoteStory) {
 		}
 	}
 
-		
 	if (px.showGui) {
 		var newPages = dok.pages.length - oldPages ;
 		if (dok.pages.length != oldPages ) {
@@ -1088,6 +1112,8 @@ function foot2end (dok, endnoteStory) {
 		}
 		pBar.close();
 	}
+
+	return 0;
 }
 
 
@@ -1221,11 +1247,11 @@ function getCurrentEndnotes(dok, endnoteStory) {
 	// Die aktuellen Endnoten einsammeln
 	var hLink, j, sourceText, destinationText;
 	var hLinksPerStory = [{
-						hLink:null,
+//~ 						hLink:null,
 						hLinkID:"first",
 						sourceIndexArray:[-1],
 						destinationIndexArray:[-1],
-						destinationContents:"Dummy Endnote Postion Start"
+//~ 						destinationContents:"Dummy Endnote Postion Start"
 					}];	
 
 	for (j = 0; j < dok.hyperlinks.length; j++) {
@@ -1237,7 +1263,7 @@ function getCurrentEndnotes(dok, endnoteStory) {
 					continue;
 				}
 				if (hLink.destination == null) {
-					log.info( localize(px.ui.missingHyperlinkDestination, hLink.id) );
+					log.warn ( localize(px.ui.missingHyperlinkDestination, hLink.id) );
 					continue;
 				}
 			
@@ -1265,11 +1291,11 @@ function getCurrentEndnotes(dok, endnoteStory) {
 	hLinksPerStory.sort(sortSourceIndexArray);
 
 	hLinksPerStory.push({
-						hLink:null,
+//~ 						hLink:null,
 						hLinkID:"last",
 						sourceIndexArray:[endnoteStory.insertionPoints[-1].index],
 						destinationIndexArray:[endnoteStory.insertionPoints[-1].index],
-						destinationContents:"Dummy Endnote Postion End"
+//~ 						destinationContents:"Dummy Endnote Postion End"
 					});
 
 	// Prüfen ob die Reihenfolge in den Stories noch stimmt - Copy & Paste Bugs könnten so auffalen. 
@@ -1286,7 +1312,8 @@ function getCurrentEndnotes(dok, endnoteStory) {
 			lastPositionIndexArray = hLinksPerStory[m].destinationIndexArray;
 		}
 		else {
-			log.warn(localize (px.ui.wrongEndnoteOrder, hLinksPerStory[m].destinationContents));			
+			var destinationTextContents = getShortText(dok.hyperlinks.itemByID(hLinksPerStory[m].hLinkID).destination.destinationText);
+			log.warn(localize (px.ui.wrongEndnoteOrder, destinationTextContents));			
 			idsTools.showIt(dok.hyperlinks.itemByID(hLinksPerStory[m].hLinkID).destination.destinationText);
 			return null;
 		}
