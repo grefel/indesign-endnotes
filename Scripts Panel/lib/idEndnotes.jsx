@@ -31,7 +31,7 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 #include idsLog.jsx
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
 	px.debug = true;
 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
@@ -801,7 +801,7 @@ function foot2end (dok, endnoteStory) {
 	var firstHlink, firstHlinkIndex, headingParagraph, footnote, endnote, endnote_link, cue, hlink, nextHlink,  hyperLinkID;	
 	var oldPages = dok.pages.length;
 
-	// EndnotenTitel einfügen  					
+	// EndnotenTitel einfügen  // Das könnte man auch ganz am Ende machen, Wäre vielleicht sinnvoller. Dann müsste man sich "nur" mit dem Endnotenblock herumschlagen und man könnt sich das erneute Einlesen der Endnoten nach dem Konvertieren sparen.	
 	hyperLinkID =  hLinksPerStory[1].hLinkID;
 	px.newEndnoteBlock = hyperLinkID == "last";
 	if (px.newEndnoteBlock) { // --> There is no Endnote Hyperlink in the story.
@@ -832,8 +832,21 @@ function foot2end (dok, endnoteStory) {
 		}
 		if (headingParagraph.contents != px.endnoteHeadingString + "\r") {
 			log.warn (localize (px.ui.headingStyleFail , px.endnoteHeadingString, headingParagraph.contents.replace(/\r/g,'') ));
+			
+			app.findGrepPreferences = NothingEnum.NOTHING;
+			app.changeGrepPreferences = NothingEnum.NOTHING;
+			app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteHeading;
+			var result = endnoteStory.changeGrep();
+			if (result.length > 0) {
+				log.warn(localize (px.ui.headingStyleFailInfo, result.length));
+			}
+			var headingIndex = headingParagraph.index;
 			headingParagraph.insertionPoints[0].contents = px.endnoteHeadingString + "\r";
+			headingParagraph = endnoteStory.characters[headingIndex].paragraphs[0];				
+			firstEndnote = headingParagraph.insertionPoints[-1].paragraphs[0];
+			hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 		}
+	
 		headingParagraph.appliedParagraphStyle = px.pStyleEndnoteHeading;
 		firstEndnote.appliedParagraphStyle = px.pStyleEndnote;
 	}
@@ -912,6 +925,9 @@ function foot2end (dok, endnoteStory) {
 	} // footnoteLoop : for
 
 	hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
+	if (!hLinksPerStory) {
+		return;
+	}
 	var endnoteBlock = getEndnoteBlock(endnoteStory, dok, hLinksPerStory);
 	// Endnoten Nummerierung  zurücksetzen... 
 	app.findGrepPreferences = NothingEnum.NOTHING;
@@ -1270,8 +1286,8 @@ function getCurrentEndnotes(dok, endnoteStory) {
 			lastPositionIndexArray = hLinksPerStory[m].destinationIndexArray;
 		}
 		else {
-			log.warn(localize (px.ui.wrongEndnoteOrder, hLinksPerStory[m].destinationContents));
-			idsTools.showIt(hLinksPerStory[m].hLink.destination.destinationText);
+			log.warn(localize (px.ui.wrongEndnoteOrder, hLinksPerStory[m].destinationContents));			
+			idsTools.showIt(dok.hyperlinks.itemByID(hLinksPerStory[m].hLinkID).destination.destinationText);
 			return null;
 		}
 	}
