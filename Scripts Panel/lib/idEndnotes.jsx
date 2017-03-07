@@ -249,8 +249,13 @@ function addBacklinks(dok) {
 		dok.layers[i].locked = layerState[i][1];
 	}
 
-	var newFileName = File (dok.fullName.parent + "/" + dok.name.replace(/\.indd/, "") + "_MANUELL_NUMMERIERT.indd");
-	dok.save (newFileName);
+	var newFile = File (dok.fullName.parent + "/" + dok.name.replace(/\.indd/, "") + "_MANUELL_NUMMERIERT.indd");
+	try {
+		dok.save (newFile);
+	}
+	catch (e) {
+		log.warn(e);
+	}
 	    
 	app.scriptPreferences.userInteractionLevel = userLevel; 
 	app.scriptPreferences.enableRedraw = redraw;
