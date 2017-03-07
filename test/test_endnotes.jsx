@@ -59,7 +59,7 @@ function basicIntegrationTest() {
 
 	var testDok = app.open(File (getScriptFolderPath() + "/publicTestFiles/01_brokenBacklink.idml"));
 
-	testDok.save(File (getScriptFolderPath() + "/publicTestFiles/num-Formate-kaputteBacklinks.indd"));
+	testDok.save(File (getScriptFolderPath() + "/publicTestFiles/num-Formate-kaputteBacklinks" + new Date().getTime() +  ".indd"));
 
 	addBacklinks(testDok);
 	
@@ -68,6 +68,19 @@ function basicIntegrationTest() {
 	if (closeTestDok) {
 		testDok.close(SaveOptions.NO);
 	}
+
+	idsTesting.insertBlock("Update existing Endnote Block");
+	var testDok = app.open(File (getScriptFolderPath() + "/publicTestFiles/01_update.idml"));
+	
+	
+	createEndnotes(testDok);
+	idsTesting.assertStringNotInFile("Keine Fehlermeldung für leeren Absatz", "empty Pargraph(s) with endnote format", logFile);
+	idsTesting.assertGREPInDoc("Endnote wurde in der korrekten Position eingfügt", "wird\\n\\rDie Birne\\rnachträglich hinzugefügte Fußnote\\rDer Brom", testDok);
+
+	if (closeTestDok) {
+		testDok.close(SaveOptions.NO);
+	}
+
 }
 
 // Test for edge cases and tickets
@@ -106,8 +119,6 @@ function specialTests() {
 	if (closeTestDok) {
 		testDok.close(SaveOptions.NO);
 	}
-
-
 }
 
 
