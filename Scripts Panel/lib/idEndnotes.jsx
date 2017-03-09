@@ -31,7 +31,7 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 #include idsLog.jsx
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
 	px.debug = true;
 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
@@ -302,6 +302,11 @@ function jumpBetweenMarkerAndNote(dok) {
 		if (dok.hyperlinks[i].extractLabel(px.hyperlinkLabel) == "true") {
 			var hLink = dok.hyperlinks[i];
 //~ 			$.writeln(hLink.source.sourceText.index + " - " +  hLink.destination.destinationText.index);
+			if (hLink.source.sourceText.index == index && hLink.destination == null) {
+				log.warnAlert(localize(px.ui.missingHyperlinkDestination, hLink.id));
+				return false;
+			}
+
 			if (hLink.source.sourceText.index == index) {
 				hLink.showDestination();				
 				return true;
@@ -369,7 +374,8 @@ function deleteEndnote(dok) {
 
 	
 	if (!removeEndnote()) {
-		alert(localize(px.ui.noEndnoteOrMarker));
+		log.warn(localize(px.ui.noEndnoteOrMarker));
+		log.showWarnings();
 	}	
 
     // Ebenen zurücksetzen
@@ -412,16 +418,16 @@ function removeEndnote() {
 		if (dok.hyperlinks[i].extractLabel(px.hyperlinkLabel) == "true") {
 			var hLink = dok.hyperlinks[i];
 			
+			if (hLink.destination == null) {
+				log.warn(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents, idsTools.getPageNameByObject(hLink.source.sourceText)));
+				continue;
+			}				
+			
 			if (hLink.source.sourceText.index == index) {
 				removeHL(hLink);
 				return true;
 			}
 		
-			if (hLink.destination == null) {
-				log.warn(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents, idsTools.getPageNameByObject(hLink.source.sourceText)));
-				continue;
-			}				
-
 			if (hLink.destination.destinationText.paragraphs[0].index == parIndex) {
 				removeHL(hLink);
 				return true;

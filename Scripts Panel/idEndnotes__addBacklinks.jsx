@@ -28,7 +28,7 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 
 #include lib/idEndnotes.jsx
 
-#targetengine "indesign_endnotes" 
+//~ #targetengine "indesign_endnotes" 
 
 if ($.global.hasOwnProperty ("initLog") && $.global.hasOwnProperty ("addBacklinks") ) {
 	initLog();
