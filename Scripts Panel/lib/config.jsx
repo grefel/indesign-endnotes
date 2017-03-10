@@ -66,6 +66,9 @@ var px = {
 		resultInfoConvert:{en:"[%1] backlinks created.\nDo not update the crossreferences!", de:"Es wurden [%1] Backlinks erstellt.\nDie Querverweise dürfen jetzt nicht mehr aktualisiert werden."},
 		couldNotCreateBacklink:{en:"Could not create backlink for [%1]", de:"Konnte Backlink für [%1] nicht erstellen"},
 		
+		addBacklinkWarning:{en:"After conversion, the endnotes can no longer be extended / changed by script!\nContinue?", de:"Nach der Konvertierung können die Endnoten nicht mehr per Skript erweitert/verändert werden!\nFortfahren?"},
+		deleteAllWarning:{en:"Do you really want to delete ALL endnote structures (cross-references and text anchors)?", de:"Sollen wirklich ALLE Endnotenstrukturen (Querverweise und Textanker) gelöscht werden?"},
+		
 		noTextInDoc:{en:"No text in document", de:"Es ist kein Text im Dokument enthalten"},
 		noFootnoteInDoc:{en:"No footnote in document", de:"Es gibt keine Fußnote im Dokument"},
 		multipleEndnoteLinks:{en:"More than one story with endnotes, cannot process this document.", de:"In mehr ale einem Textabschnitt befinden sich Endnoten, dieses Dokument kann nicht verarbeitet werden."},

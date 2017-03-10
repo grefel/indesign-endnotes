@@ -31,11 +31,11 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 #include idsLog.jsx
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
 	px.debug = true;
 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
-		checkAndStart(["createEndnotes"]);
+//~ 		checkAndStart(["createEndnotes"]);
 //~ 		checkAndStart(["addBacklinks"]);
 //~ 		checkAndStart(["jumpBetweenMarkerAndNote"]);
 //~ 		checkAndStart(["deleteEndnote"]);
@@ -181,7 +181,7 @@ function addBacklinks(dok) {
 	}
 
 	if (px.showGui) {
-		if ( !confirm ("Nach der Konvertierung können die Endnoten nicht mehr per Skript erweitert/verändert werden!\nFortfahren?") ) {
+		if ( !confirm (localize(px.ui.addBacklinkWarning)) ) {
 			return;
 		}
 	}	
@@ -319,9 +319,43 @@ function jumpBetweenMarkerAndNote(dok) {
 	}
 	alert(localize (px.ui.noEndnoteOrMarker));
 }
-// TODO an deleteEndnote() angleichen und vor allem hier auch Speichern erzwingen 
+
 function deleteEndnoteHyperlinksAndBacklinks(dok) {
+	if (px.showGui) {
+		if ( !confirm (localize(px.ui.deleteAllWarning)) ) {
+			return;
+		}
+	}	
+	// Dokument gespeichert? 
+	if ((!dok.saved || dok.modified) && !px.debug) {
+		var userLevel = app.scriptPreferences.userInteractionLevel;
+		app.scriptPreferences.userInteractionLevel = UserInteractionLevels.INTERACT_WITH_ALL; 
+
+		if ( confirm ( localize(px.ui.saveDocInfo) , undefined, localize(px.ui.saveDoc))) {
+			try {
+				dok = dok.save();
+			} catch (e) { 
+				if (e.number != 2) { //Vorgang vom Benutzer abgebrocehn
+					log.warnAlert (localize(px.ui.saveDocFail) + e);
+				}
+				return;
+			}		
+			app.scriptPreferences.userInteractionLevel = userLevel;
+		}
+		else { // User does not want to save -> exit;
+			app.scriptPreferences.userInteractionLevel = userLevel;
+			return; 
+		}
+	}		
 	
+	var layerState = [];
+	for (var i = 0; i < dok.layers.length; i++) {
+		layerState[i] = [dok.layers[i].visible, dok.layers[i].locked];
+		dok.layers[i].visible = true;
+		dok.layers[i].locked = false;
+	}
+
+
 	for (var i = dok.hyperlinks.length-1; i >= 0; i--) {
 		deleteMe(dok.hyperlinks[i]);
 	} 
@@ -329,7 +363,6 @@ function deleteEndnoteHyperlinksAndBacklinks(dok) {
 	for (var i = dok.paragraphDestinations.length-1; i >= 0; i--) {
 		deleteMe(dok.paragraphDestinations[i]);
 	} 
-
 
 	for (var i = dok.crossReferenceSources.length-1; i >= 0; i--) {
 		deleteMe(dok.crossReferenceSources[i]);
@@ -383,8 +416,6 @@ function deleteEndnote(dok) {
 		dok.layers[i].visible = layerState[i][0];
 		dok.layers[i].locked = layerState[i][1];
 	}
-
-
 }
 
 
@@ -1075,21 +1106,11 @@ function foot2end (dok, endnoteStory) {
 	}
 
 
-	deleteNotemarkers (endnoteStory);
+	deleteNotemarkers (dok, endnoteStory);
 	endnoteStory.characters[-1].contents = "";
 	
-	if (px.footnoteIgnore) {
-		app.findGrepPreferences = NothingEnum.NOTHING;
-		app.changeGrepPreferences = NothingEnum.NOTHING;
-		app.findGrepPreferences.appliedParagraphStyle = px.pStyleFootnoteIgnore;
-		app.findGrepPreferences.findWhat = "\\r+\\Z"; // Das funktioniert in CC 2017 nicht.
-		endnoteStory.changeGrep();
-		app.findGrepPreferences.findWhat = "\\r+(?!=.)";  
-		endnoteStory.changeGrep();				
-		
-		px.footNoteIgnoreCondition.remove();
-	}
-
+	recreateIgnoredFootnotes(dok, endnoteStory);
+	
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
@@ -1104,10 +1125,10 @@ function foot2end (dok, endnoteStory) {
 	
 	// Seiten auflösen 
 	idsTools.checkOverflow(endnoteStory);
-	for (var c = 0; c < dok.crossReferenceSources.length; c++) {
-		var crs = dok.crossReferenceSources[c];
-		if (crs.extractLabel(px.hyperlinkLabel)  == "true" ) {
-			crs.update();
+	for (var c = 0; c < dok.hyperlinks.length; c++) {
+		var hlink = dok.hyperlinks[c];
+		if (hlink.extractLabel(px.hyperlinkLabel)  == "true" && hlink.source ) {
+			hlink.source.update();
 		}
 	}
 
@@ -1455,16 +1476,44 @@ function pushHLink ( hLinksPerStory, hyperLinkID, hLink) {
 	return null; 
 }
 
-function deleteNotemarkers (endnoteStory) {
-//~ 	// Es gibt Abstürze bei wenn der Footnote Marker am Ende des Textabschnitts steht Suche Ersetze Kombinationen in CS6
-	endnoteStory.insertionPoints[-1].contents = " ";
+function deleteNotemarkers (dok, endnoteStory) {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 	app.findChangeGrepOptions.includeFootnotes = true;
-	app.findGrepPreferences.findWhat = "~F";
-	endnoteStory.changeGrep();
-	endnoteStory.characters[-1].contents = "";
+	for (var i = 0; i < dok.stories.length; i++) {
+		var story = dok.stories[i];
+		var relevantStory = getParentStory(story);			
+		if (relevantStory.id == endnoteStory.id ) {
+			//~ 	// Es gibt Abstürze bei wenn der Footnote Marker am Ende des Textabschnitts steht Suche Ersetze Kombinationen in CS6
+			story.insertionPoints[-1].contents = " ";
+			app.findGrepPreferences.findWhat = "~F";
+			story.changeGrep();
+			story.characters[-1].contents = "";
+		}
+	}
 }
+
+function recreateIgnoredFootnotes(dok, endnoteStory) {
+	if (!px.footnoteIgnore) {
+		return;
+	}
+	app.findGrepPreferences = NothingEnum.NOTHING;
+	app.changeGrepPreferences = NothingEnum.NOTHING;
+
+	for (var i = 0; i < dok.stories.length; i++) {
+		var story = dok.stories[i];
+		var relevantStory = getParentStory(story);			
+		if (relevantStory.id == endnoteStory.id ) {
+			app.findGrepPreferences.appliedParagraphStyle = px.pStyleFootnoteIgnore;
+			app.findGrepPreferences.findWhat = "\\r+\\Z"; // Das funktioniert in CC 2017 nicht.
+			story.changeGrep();
+			app.findGrepPreferences.findWhat = "\\r+(?!=.)";  
+			story.changeGrep();				
+		}
+	}
+	px.footNoteIgnoreCondition.remove();
+}
+
 
 function trimFootnoteSpace (footNote) {
 	app.findGrepPreferences = NothingEnum.NOTHING;

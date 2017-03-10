@@ -53,6 +53,29 @@ function basicIntegrationTest() {
 		testDok.close(SaveOptions.NO);
 	}
 
+	idsTesting.insertBlock("Test createEndnotes() with anchored frame");
+	var testFile = File(getScriptFolderPath() + "/publicTestFiles/01_endnoteTestAnchoredFrame.idml");
+	var testDok = app.open(testFile);
+	
+	idsTesting.insertBlock("Document Infos before run ... ");
+	idsTesting.assertEquals("Keine Hyperlinks im Dokument", 0, testDok.hyperlinks.length );
+	idsTesting.assertEquals("Keine paragraphDestinations im Dokument", 0, testDok.paragraphDestinations.length );
+	idsTesting.assertEquals("Keine crossReferenceSources im Dokument", 0, testDok.crossReferenceSources.length );
+	idsTesting.assertEquals("Keine hyperlinkTextDestinations im Dokument", 0, testDok.hyperlinkTextDestinations.length );
+	idsTesting.assertEquals("Keine hyperlinkTextSources im Dokument", 0, testDok.hyperlinkTextSources.length );
+	
+	createEndnotes(testDok);
+	
+	idsTesting.insertBlock("Document infos after run ...");
+	idsTesting.assertEquals("11 Hyperlinks im Dokument", 12, testDok.hyperlinks.length );
+	idsTesting.assertEquals("11 paragraphDestinations im Dokument", 12, testDok.paragraphDestinations.length );
+	idsTesting.assertEquals("11 crossReferenceSources im Dokument", 12, testDok.crossReferenceSources.length );
+	idsTesting.assertEquals("Keine hyperlinkTextDestinations im Dokument", 0, testDok.hyperlinkTextDestinations.length );
+	idsTesting.assertEquals("Keine hyperlinkTextSources im Dokument", 0, testDok.hyperlinkTextSources.length );
+	if (closeTestDok) {
+		testDok.close(SaveOptions.NO);
+	}
+
 
 	idsTesting.insertBlock("Test createBacklinks()");
 	log.clearLog();	
