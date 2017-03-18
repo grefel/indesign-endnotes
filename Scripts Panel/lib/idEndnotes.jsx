@@ -31,9 +31,9 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 #include idsLog.jsx
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
-	px.debug = true;
-	px.showGui = false;
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
+//~ 	px.debug = true;
+//~ 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
 		checkAndStart(["createEndnotes"]);
 //~ 		checkAndStart(["addBacklinks"]);
@@ -1990,15 +1990,15 @@ function getConfig() {
 			return false;
 		}
 		if (px.pStyleEndnoteHeadingName == px.pStyleEndnoteSplitHeadingName) {
-			alert (localize (px.ui.headingStyleFail));
+			alert (localize (px.ui.headingStyleSelectionFail));
 			return false;
 		}	
 		if (px.pStyleEndnoteHeadingName == px.pStyleEndnoteSplitHeadingPrecedingRepeatName) {
-			alert (localize (px.ui.headingStyleFail));
+			alert (localize (px.ui.headingStyleSelectionFail));
 			return false;
 		}	
 		if (px.pStyleEndnoteHeadingName == px.pStyleEndnoteSplitHeadingFollowingRepeatName) {
-			alert (localize (px.ui.headingStyleFail));
+			alert (localize (px.ui.headingStyleSelectionFail));
 			return false;
 		}	
 	

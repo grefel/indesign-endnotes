@@ -132,7 +132,7 @@ var px = {
 		crossrefFormatFail:{en:"The cross-reference format [%1] already exists.\nThe selected different character style [%2] was set!", de:"Das Querverweisformat [%1] ist bereits vorhanden.\nDas ausgewählte aber abweichende Zeichenformat [%2] wurde eingestellt!"},
 		endnoteStyleNumberingDeactivate:{en:"In Paragraph Style [%1] the option \n[Bullets and Numbering] -> [List Type : Numbes ] was deactivated.", de:"Im Absatzformat [%1] wurde die Option \n[Aufzählungszeichen und Nummerierung] -> [Listentyp: Nummerierung] deaktiviert."},
 		headingFail:{en:"For the title at least one character must be entered.",de:"Für den Titel muss mindestens ein Zeichen eingegeben werden."},
-		headingStyleFail:{en:"Endnote title paragraph style cannot be the same style as repeated section headings.",de:"Absatzformat des Endnotentitels kann nicht der von einer wiederholten Abscnittsüberschrift sein!"},
+		headingStyleSelectionFail:{en:"Endnote title paragraph style cannot be the same style as repeated section headings.",de:"Absatzformat des Endnotentitels kann nicht der von einer wiederholten Abscnittsüberschrift sein!"},
 		styleSelectionFail:{en:"Error in the format selection", de:"Fehler bei der Formatauswahl"},
 		styleSelectionFailSection:{en:"Error in the format selection of the section creation.", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
 		endnoteStoryMoved:{en:"Text and endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
