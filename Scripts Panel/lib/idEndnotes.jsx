@@ -31,12 +31,12 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 #include idsLog.jsx
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
 	px.debug = true;
 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
-//~ 		checkAndStart(["createEndnotes"]);
-		checkAndStart(["addBacklinks"]);
+		checkAndStart(["createEndnotes"]);
+//~ 		checkAndStart(["addBacklinks"]);
 //~ 		checkAndStart(["jumpBetweenMarkerAndNote"]);
 //~ 		checkAndStart(["deleteEndnote"]);
 //~ 		checkAndStart(["deleteEndnoteHyperlinksAndBacklinks"]);
@@ -946,7 +946,7 @@ function foot2end (dok, endnoteStory) {
 	endnoteStory.insertionPoints[-1].contents = "\r";
 //~ 	einfuegeIndex = endnoteStory.insertionPoints[-1].index;
 	idsTools.checkOverflow(endnoteStory);
-
+	
 	footnoteLoop : for (var i = footn.length-1; i >= 0; i--) {
 		if (px.showGui) {
 			pBar.hit();
@@ -1002,6 +1002,11 @@ function foot2end (dok, endnoteStory) {
 		px.foot2EndCounter++;
 	} // footnoteLoop : for
 
+	
+	
+
+	idsTools.checkOverflow(endnoteStory);
+
 	hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 	if (!hLinksPerStory) {
 		return;
@@ -1034,7 +1039,7 @@ function foot2end (dok, endnoteStory) {
 			app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteSplitHeadingFollowingRepeat;
 			endnoteBlock.changeGrep();
 		}
-		
+			
 		var sectionIndexArray = getSections(endnoteStory);	
 		if (px.newEndnoteBlock) {
 			var endnotenStartEndPositions = hLinksPerStory;
@@ -1546,6 +1551,8 @@ function trimFootnoteSpace (footNote) {
 	if (footNote.texts[0].characters.length > 0) footNote.texts[0].changeGrep();
 	app.findGrepPreferences.findWhat = "( |\\t)+\\z";
 	if (footNote.texts[0].characters.length > 0) footNote.texts[0].changeGrep();
+	app.findGrepPreferences.findWhat = "\\r";
+	if (footNote.texts[0].characters.length > 1) footNote.texts[0].characters[1].changeGrep();
 	footNote.insertionPoints[-1].contents = "\r";
 }
 
@@ -1982,6 +1989,19 @@ function getConfig() {
 			alert (localize (px.ui.headingFail));
 			return false;
 		}
+		if (px.pStyleEndnoteHeadingName == px.pStyleEndnoteSplitHeadingName) {
+			alert (localize (px.ui.headingStyleFail));
+			return false;
+		}	
+		if (px.pStyleEndnoteHeadingName == px.pStyleEndnoteSplitHeadingPrecedingRepeatName) {
+			alert (localize (px.ui.headingStyleFail));
+			return false;
+		}	
+		if (px.pStyleEndnoteHeadingName == px.pStyleEndnoteSplitHeadingFollowingRepeatName) {
+			alert (localize (px.ui.headingStyleFail));
+			return false;
+		}	
+	
 		px.cStyleEndnoteMarkerName = px.dokCharacterStyleNames[win.pInfo.gInfo.gEndnoteCStyle.ddList.selection.index];
 		px.cStyleEndnoteMarker = px.dokCharacterStyles[win.pInfo.gInfo.gEndnoteCStyle.ddList.selection.index];
 		if (!(px.pStyleEndnoteName && px.pStyleEndnote && px.pStyleEndnoteFollowName && px.pStyleEndnoteFollow && px.pStyleEndnoteHeadingName && px.pStyleEndnoteHeading && px.endnoteHeadingString && px.cStyleEndnoteMarkerName && px.cStyleEndnoteMarker)) {
