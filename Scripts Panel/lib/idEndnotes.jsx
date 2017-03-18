@@ -36,7 +36,7 @@ if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
 //~ 		checkAndStart(["createEndnotes"]);
-//~ 		checkAndStart(["addBacklinks"]);
+		checkAndStart(["addBacklinks"]);
 //~ 		checkAndStart(["jumpBetweenMarkerAndNote"]);
 //~ 		checkAndStart(["deleteEndnote"]);
 //~ 		checkAndStart(["deleteEndnoteHyperlinksAndBacklinks"]);
@@ -541,19 +541,19 @@ function foot2manual (dok, endnoteStory) {
 		return;
 	}
 
-
-	fixHyperlinks(dok); // Fix broken Links before processing
-
-	checkStyles(dok);
-
 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 	if (!hLinksPerStory) {
 		return;
 	}
 
+
+	fixHyperlinks(dok); // Fix broken Links before processing
+
+	checkStyles(dok);
+
 	var endnoteBlock = getEndnoteBlock(endnoteStory, dok, hLinksPerStory);
 	endnoteBlock.convertBulletsAndNumberingToText ();
-
+	
 	// Backlinks löschen 
 	for (var i = dok.hyperlinks.length -1; i >= 0; i--) {
 		hlink = dok.hyperlinks[i];
@@ -579,35 +579,50 @@ function foot2manual (dok, endnoteStory) {
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
 	app.findGrepPreferences.findWhat = "^.+?\\t";
 
-	var createList = []
+//~ 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 
-	for (var i = dok.hyperlinks.length - 1; i >= 0; i--) {
-		var hlink = dok.hyperlinks[i];
-		if (hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.destination && hlink.destination.destinationText) {
-			if (! hlink.destination instanceof ParagraphDestination ) {
-				log.warn(localize (px.ui.couldNotCreateBacklink, hlink.name) ); 
-				continue;
-			}
-			var hlinkPar = hlink.destination.destinationText.paragraphs[0];
-			var numberingText = hlinkPar.findGrep()[0];
-			if (numberingText) {
-				numberingText = numberingText.characters.itemByRange(1,numberingText.characters.length-1);
-				
-				var endnote_backlink = dok.hyperlinkTextDestinations.add (hlink.source.sourceText.insertionPoints[0]);
-				endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");			
-				
-				hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);			
-				hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
-				createList.push([hyperlinkTextSource, endnote_backlink]);
-			}
-			else  {
-				log.warn(localize (px.ui.couldNotCreateBacklink, hlink.name) ); 
-			}
+	var createList = [];
+	for (var i = 1; i < hLinksPerStory.length - 1; i++) {
+		var hlink =  dok.hyperlinks.itemByID(hLinksPerStory[i].hLinkID);
+		if (! hlink.destination instanceof ParagraphDestination ) {
+			log.warn(localize (px.ui.couldNotCreateBacklink, hlink.name) ); 
+			continue;
+		}
+		var hlinkPar = hlink.destination.destinationText.paragraphs[0].getElements()[0];
+		var numberingText = hlinkPar.findGrep()[0];
+		if (numberingText) {
+			var sourceText = hlink.source.sourceText;
+			var startPos = 1;
+			var endPos = 1;
+			if (sourceText.parentStory.id != hlink.destination.destinationText.parentStory.id || sourceText.parent instanceof Cell) {
+				// Weil der hinzugefügte Anker in der gleichen Story noch einen Index weiterschiebt. In Tabelle aber verankerten Textrahmen nicht.
+				startPos = 0;
+				endPos = 2;
+			} 
+			numberingText = numberingText.characters.itemByRange(startPos,numberingText.characters.length-endPos);
+			
+			var endnote_backlink = dok.hyperlinkTextDestinations.add (sourceText.insertionPoints[0]);
+			endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");			
+			
+//~ 			$.writeln(numberingText.contents);
+//~ 			$.bp(numberingText.contents = ".	")
+			
+			hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);			
+			hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
+			var sourceIndex =  getIndexInStory(sourceText);
+			createList.push({
+				hyperlinkTextSource:hyperlinkTextSource, 
+				endnoteBacklink:endnote_backlink,
+				sourceIndexArray:sourceIndex
+				});
+		}
+		else  {
+			log.warn(localize (px.ui.couldNotCreateBacklink, hlink.name) ); 
 		}
 	}
 	
 	for (var x = 0; x < createList.length; x++) {
-		var hlink = dok.hyperlinks.add (createList[x][0], createList[x][1], {visible: false});
+		var hlink = dok.hyperlinks.add (createList[x].hyperlinkTextSource, createList[x].endnoteBacklink, {visible: false});
 		hlink.name = "EndnoteBacklink_" + (((1+Math.random())*0x10000)|0).toString(16).substring(1) + new Date().getTime();
 		hlink.insertLabel(px.hyperlinkLabel, "backlink");
 		px.foot2EndCounter++;
@@ -1241,7 +1256,9 @@ function getEndnoteBlock (endnoteStory, dok, endnotenStartEndPositions) {
 		while (endBlockPar.insertionPoints[-1].isValid && 
 				endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0].isValid &&
 				endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0].contents.length > 1 &&
-				endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0].appliedParagraphStyle.id == px.pStyleEndnoteFollow.id) {
+				endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0].appliedParagraphStyle.id == px.pStyleEndnoteFollow.id &&
+				endnoteStory.insertionPoints[-1].index > endBlockPar.insertionPoints[-1].index
+				) {
 			endBlockPar = endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0];
 		}
 		endOfTextRange = endBlockPar.characters[-1].index;
