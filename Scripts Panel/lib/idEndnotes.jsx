@@ -1193,6 +1193,7 @@ function getSections (story) {
 		app.findGrepPreferences = NothingEnum.NOTHING;
 		app.changeGrepPreferences = NothingEnum.NOTHING;
 		app.findGrepPreferences.appliedParagraphStyle = pStyle;
+		app.findGrepPreferences.findWhat = ".+";
 		if (app.findChangeGrepOptions.hasOwnProperty ("searchBackwards")) {
 			app.findChangeGrepOptions.searchBackwards = false;
 		}		
