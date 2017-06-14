@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>Satzkonventionen</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<style>
+body { font:80% Verdana,Tahoma,Arial,sans-serif; }
+h1, h2, h3, h4 {  font-family: "Trebuchet MS",Georgia,"Times New Roman",serif; }
+ul.toc { padding: 4px; margin-left: 0; }
+ul.toc li { list-style-type:none; }
+ul.toc li.heading2 { margin-left: 1em; }
+ul.toc li.heading3 { margin-left: 2em; }
+a.wiki-anchor { display: none; margin-left: 6px; text-decoration: none; }
+a.wiki-anchor:hover { color: #aaa !important; text-decoration: none; }
+h1:hover a.wiki-anchor, h2:hover a.wiki-anchor, h3:hover a.wiki-anchor { display: inline; color: #ddd; }
+</style>
+</head>
+<body>
+
+<h3 >Endnotenskript (Version 3)<a href="#Endnotenskript-Version-3" class="wiki-anchor">&para;</a></h3>
+
+	<ul>
+	<li>Kompatibilität: InDesign CS5</li>
+		<li>Die Dokumentation bezieht sich auf die deutsche Version des Skriptes. In der englischen Sprachversionen von InDesign heißen die Optionen entsprechend anders.</li>
+	</ul>
+
+<h5 >Vorab</h5>
+
+
+	<ul>
+	<li>Das Skript wandelt InDesign-Fußnoten in einen Endnotenapparat um, der auf Querverweisen basiert. Die Endnoten sind eine dynamische Liste in InDesign.<br />Dies funktioniert nur, wenn es nicht mehrere unverknüpfte Textrahmen mit Fußnoten gibt. Damit der Endnotenapparat möglichst dynamisch anpassbar bleibt, ändern Sie so wenig wie möglich händisch daran. Die Anker und Querverweise sind relativ empfindlich, arbeiten Sie also auch mit regelmäßigen Sicherungskopien. Diese werden auch vom Skript parallel zur Datei erzeugt. Sie haben den Suffix »_endnoteBackup« und werden vor jedem Skritdurchlauf gespeichert. Heben Sie sie auf.</li>
+		<li>Wollen Sie später noch Endnoten hinzufügen, müssen die Formate auch noch entsprechend heißen um gefunden zu werden. Formatabwandlungen, z.B. durch Tilden können dann bei Anmerkungen oder Überschriften dazu führen, nicht mehr gefunden zu werden.</li>
+		<li>Manuell hinzugefügte Absätze im Endnotenapparat werden versucht vom Skript zu belassen. Falls die Struktur zu stark abweicht kann es aber zu Fehlern kommen. Wenn Sie manuelle Anpassungen im Endnotenapparat vornehmen, sollten Sie nach einem Skriptdurchlauf genau prüfen. </li>
+		<li>Manuelle Anpassungen in Endnotenüberschriften (z.B. Zeilenschaltungen) werden bei Neugenerierung des Endnotenapparates überschrieben.</li>
+	</ul>
+
+
+	<p>Das Erstellen und Bearbeiten erfolgt mithilfe von vier Skripten:</p>
+	<ul>
+	<li>createEndnotes.jsx: 
+	<ul>
+	<li>Erstellt den Endnotenapparat aus Fußnoten. Dabei werden die Fußnotenziffern zu Querverweisen hin zur Endnote, welche ein unverlinkter Listenpunkt ist. Eine Rückverlinkung existiert nicht. Die Nummerierungsart wird im Absatzformat eingestellt.</li>
+		<li>Fügt nachträglich eingefügte Fußnoten hinzu.</li>
+	</ul>
+	</li>
+		<li>deleteEndnote.jsx:
+	<ul>
+	<li>Löscht einzelne Endnoten.</li>
+	</ul>
+	</li>
+		<li>jumpBetweenMarkerAndNote.jsx:
+	<ul>
+	<li>Springt von der Endnote zum Marker oder zurück.</li>
+	</ul>
+	</li>
+		<li>createBacklinks.jsx:
+	<ul>
+	<li>Dieses Skript erstellt eine Rückverlinkung. Dazu wandelt es die Nummerierung der dynamischen Liste in harte Ziffern um und verlinkt diese zurück zu den Endnotenziffern. <strong>Achtung:</strong> Nach Anwendung dieses Skriptes können keine Endnoten mehr nachträglich gelöscht oder eingefügt werden. Dieses Skript sollte nur verwendet werden, bevor das E-PDF erstellt wird. Machen Sie sich vorher eine Sicherungskopie, auf der Sie später weiterarbeiten!</li>
+	</ul></li>
+	</ul>
+
+
+<h4 >createEndnotes.jsx</h4>
+
+
+<p><strong>Voraussetzung:</strong></p> 
+	<ul>
+	<li>Dokument muss gespeichert sein und über Fußnoten in zusammenhängenden Textrahmen verfügen.</li>
+		<li>Prüfen Sie im Absatzformat für die Anmerkungen die Einstellungen für <code>Aufzählungszeichen und Nummerierung</code>. Die Einstellungen, die dort bei <code>Listentyp:</code> »Nummerierung« im Feld <code>Zahl:</code> hinterlegt sind, werden auch auf die Endnoten angewendet.</li>
+	</ul>
+
+
+	<p><img src="endnotenskript-version3.png" alt="" /></p>
+
+
+<h5 >Verarbeitungsmodus</h5>
+
+
+<p>Wählen Sie einen der beiden Verarbeitungsmodi aus:</p>
+	<ul>
+	<li><code>Anhand von Absatzformaten trennen:</code> Endnoten werden an bestimmten Absätzen wie Überschriften immer neu nummeriert. Die Überschriften werden im Endnotenapparat wiederholt.</li>
+		<li><code>Fortlaufend nummerieren:</code> Alle Endnoten des Titels werden durchgängig nummeriert.</li>
+	</ul>
+
+
+	<p>Die Art der Nummerierung der Endnoten wird aus den Listeneigenschaften im Absatzformat ausgelesen. So sollte es für eine Nummerierung ohne Punkt und folgendem Tabulator und einer rechtsbündigen Ausrichtung der Ziffer aussehen. Nach dem die Einstellungen im Format vorgenommen wurden, kann der Listentyp wieder auf »Ohne« gesetzt werden, der Listentyp wird aber auch bei einem Skriptdurchlauf deaktiviert.</p>
+
+
+	<p><img src="listeneigenschaften.png" alt="" /></p>
+
+
+<h6 >Ignoriere Fußnote mit dem Absatzformat</h6>
+
+
+	<p>Sollten in einem Dokument Fuß- und Endnoten vorkommen, kann die Option mit einem Haken versehen werden. Im nebenstehenden Feld kann das Format für die Fußnoten angegeben werden, die nicht zu Endnoten konvertiert werden sollen. Dafür sollten jene Fußnoten auch ein anderes Format haben.</p>
+
+
+<h5 >Formatpräfix an dem die Endnote geteilt werden</h5>
+
+
+	<p>Falls Sie beim Verabeitungsmodus <code>Anhand von Absatzformat trennen</code> ausgewählt haben, müssen Sie hier die entsprechenden Einstellungen vornehmen.</p>
+
+
+	<ul>
+	<li><code>Format zur Aufteilung in Abschnitte:</code> Wählen Sie hier das Absatzformat, an welchem die Endnoten jeweils neu nummeriert werden. Z.B. Kapitel- oder Teilüberschriften</li>
+		<li><code>Absatzformat wiederholte Überschriften:</code> Wählen Sie hier das Absatzformat aus, mit welcher die Abschnittsüberschrift in den Endnotenapparat kopiert wird. Achtung: Das hier ausgewählte Format darf nicht auch für normale Inhalte vergeben sein, dass Absätze mit diesem Format bei der Generierung des Endnotenapparates gelöscht werden. Arbeiten Sie gegebenfalls mit Tildenvarianten.</li>
+	</ul>
+
+
+<h6 >Vorherigen Absatz kopieren</h6>
+
+
+	<ul>
+	<li>Hat die Abschnittsüberschrift einen voranstehenden Teil (z.B. Kapitel 1), kann dieser ebenfalls in den Endnotenapparat übertragen werden. Aktivieren Sie dafür die Option.</li>
+		<li>Wählen Sie das Format für den zu kopierenden Absatz aus. </li>
+		<li>Vergeben Sie ein Format für den wiederholten Absatz im Endnotenapparat. Absätze mit diesem Format werden bei einer Neugenerierung des Endnotenapparates gelöscht.</li>
+	</ul>
+
+
+<h6 >Folgenden Absatz kopieren</h6>
+
+
+	<p>Analog zur vorherigen Option. Denkbar für Untertitel oder Autoren.</p>
+
+
+<h5 >Formate der Endnoten</h5>
+
+
+	<ul>
+	<li><code>Absatzformat Endnote:</code> In diesem Format werden die Endnoten Formatiert. Beachten Sie die Listennummerierungseinstellungen in dem Format.</li>
+		<li><code>Absatzformat Folgeabsatz:</code> Bestehen die Fuß/Endnoten aus mehren Absätzen, wählen Sie hier das Format für die Folgeabätze ohne Nummerierung.</li>
+		<li><code>Zeichenformat Endnotenmarker:</code> Wenn Sie hier ein Zeichenformat auswählen, wird das Endnotenzeichen im Haupttextfluss mit diesem Format ausgezeichnet.</li>
+	</ul>
+
+
+<h5 >Endnotentitel</h5>
+
+
+	<ul>
+	<li><code>Titelzeile:</code> Geben Sie hier den Text für die Überschrift Ihres Endnotenapparates ein</li>
+		<li><code>Absatzformat Endnotentitel:</code> Wählen Sie das Format für die Endnotenüberschrift aus. Das Format darf nicht für andere Überschriften vewrwendet werden, weil anhand des Formatnamens der Endnotenapparat lokalisiert wird. Das ist für das spätere Hinzufügen von Endnote wichtig.</li>
+	</ul>
+
+
+<h4 >deleteEndnote.jsx</h4>
+
+
+	<p>Das Skript funktioniert im Haupttext oder im Endnotenapparat, die bezeichnete Endnote wird gelöscht. Die folgenden Endnoten innerhalb des Textrahmens werden neu nummeriert.</p>
+
+
+	<p>Folgende Möglichkeiten gibt es:</p>
+
+
+	<ol>
+	<li><strong>Haupttext:</strong> Man markiert im Text die Endnotenziffer und startet das Skript. </li>
+		<li><strong>Endnotenapparat:</strong> Der Cursor steht im entsprechenden Anmerkungstext und das Skript wird gestartet.</li>
+	</ol>
+
+
+<h4 >jumpBetweenMarkerAndNote.jsx</h4>
+
+
+	<p>Mit dem Start des Skriptes springt der Cursor zur entsprechenden Endnote im Endnotenapparat bzw. nach zum Endnotenmarker in den Haupttext. Das Skript prüft zusätzlich noch alle Endnoten auf Integrität, also gelöschte Maker oder Endnoten, deswegen dauert die Benutzung des Skriptes länger, als wenn Sie die Hyperlink-Palette nutzen.</p>
+
+
+<h4 >createBacklinks.jsx</h4>
+
+
+	<table style="width:60%;border-collapse:collapse;">
+		<tr>
+			<td style="vertical-align:middle;background-color:#F0B6B9;"><strong>Achtung:</strong>  </td>
+		</tr>
+		<tr>
+			<td> <strong>Nach Anwendung dieses Skriptes können keine Endnoten mehr nachträglich gelöscht oder eingefügt werden!</strong> Dieses Skript sollte nur verwendet werden, bevor das E-PDF erstellt wird. Machen Sie sich vorher eine Sicherungskopie, auf der Sie später weiterarbeiten!</td>
+		</tr>
+	</table>
+
+
+
+
+	<p>Dieses Skript wandelt den dynamischen Endnotenapparat in eine harte Liste um und verlinkt die Ziffer der Liste mit der Endnotenziffer im Text. Mithilfe dieses Backlinks können PDFs generiert werden, in denen eine beidseitige Verlinkung funktioniert. Hier können Sie nichts einstellen. Es wird auch automatisch eine eigene Version des Dokumentes erstellt.</p>
+
+</body>
+</html>

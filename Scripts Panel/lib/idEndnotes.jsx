@@ -1050,7 +1050,7 @@ function foot2end (dok, endnoteStory) {
 		}
 		
 		// In length -1 steckt nur der leere String für den letzten Insertion Point der Story
-		sectionCounter = sectionIndexArray.length-2;
+		var sectionCounter = sectionIndexArray.length-2;
 		
 		var currentSection, nextSection, endnotenIndex, endnotenTextIndex;
 		
@@ -1073,6 +1073,10 @@ function foot2end (dok, endnoteStory) {
 			}
 			
 			// Abschnitte 
+			if (sectionCounter < 0) {
+				// Endnote außerhalb einer Section ??
+				sectionCounter = 0;
+			}
 			currentSection = sectionIndexArray[sectionCounter];
 			currentSectionStartIndex = currentSection[1];
 			nextSection = sectionIndexArray[sectionCounter+1];
@@ -1187,7 +1191,7 @@ function saveSettings(dok) {
 }
 function getSections (story) {
 	// die performanteste Lösung ist vermutlich nach allen AF zu suchen die mit dem Präfix anfangen und dann den SectionArray zu bauen.
-	var sectionIndexArray = [[0,story.characters[0].index, ""]];
+	var sectionIndexArray = [[0,story.characters[0].index, "", "\r", "\r"]];
 	for (var ps = 0; ps < px.dokParagraphStylePrefixStyles[px.pStylePrefix].length; ps++) {
 		var pStyle = px.dokParagraphStylePrefixStyles[px.pStylePrefix][ps];
 		app.findGrepPreferences = NothingEnum.NOTHING;
