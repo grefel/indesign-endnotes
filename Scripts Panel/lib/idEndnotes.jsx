@@ -1053,6 +1053,7 @@ function foot2end (dok, endnoteStory) {
 		var sectionCounter = sectionIndexArray.length-2;
 		
 		var currentSection, nextSection, endnotenIndex, endnotenTextIndex;
+
 		
 		for (var i =  endnotenStartEndPositions.length-2; i >= 0; i--) {
 			// Endnoten
@@ -1074,9 +1075,12 @@ function foot2end (dok, endnoteStory) {
 			
 			// Abschnitte 
 			if (sectionCounter < 0) {
-				// Endnote außerhalb einer Section ??
+				// Problems with Sections 
+				log.warn(localize(px.ui.sectionBroken));
 				sectionCounter = 0;
+//~ 				$.bp();
 			}
+
 			currentSection = sectionIndexArray[sectionCounter];
 			currentSectionStartIndex = currentSection[1];
 			nextSection = sectionIndexArray[sectionCounter+1];
