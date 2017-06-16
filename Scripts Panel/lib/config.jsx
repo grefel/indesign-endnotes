@@ -85,7 +85,7 @@ var px = {
 		missingHyperlinkDestination:{en:"Hyperlink [%1] has no destination. Endnote is probably deleted!", de:"Ein Hyperlink [ID: %1] hat kein Ziel (Endnote) mehr. Die Endnote wurde vermutlich gelöscht!"},
 		NumberOfHLinksNotParDest:{en:"Number of Hyperlinks (Endnote marker)  [%1] does not equal Number of destinations (endnotes) [%2]", de:"Die Anzahl der Hyperlinks (Endnoten marker) [%1] entspricht nicht der Anzahl Destinations (Endnoten) [%2]"},
 		hyperlinkInWrongStory:{en:"Hyperlink with ID [%1] isn't located in the endnote story, instead in story with ID [%2]", de:"Der Hyperlink mit der ID [%1] ist nicht in der Endnoten-Story, sondern in der Story mit der ID  [%2]"},
-		sectionBroken:{en:"Section Counter invalid, endnotes are put in the first section.Empty Section Heading Paragraph?", de:"Anzahl der Abschnitte ungülitg, Endnoten werden vor dem erstem Abschnitt abgelegt. Endnoten vor dem ersten Abschnitt oder ein leerer Absatz im Format der Abschnittsüberschrift?"},
+		sectionBroken:{en:"More sections than headings, endnote were inserted before the first section", de:"Mehr Abschnitte als Abschnittsüberschriften. Die Endnoten werden vor dem ersten Abschnitt eingefügt."},
 		
 		methodPanel:{en:"Mode",de:"Verarbeitungsmodus"},
 		splitByHeading:{en:"Split by paragraph style",de:"Anhand von Absatzformat trennen (Bildet Abschnitte für Kapitel)"},
