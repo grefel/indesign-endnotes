@@ -53,7 +53,7 @@ function checkAndStart(args) {
 		return;
 	}
 
-	var dok = app.documents[0];
+	var dok = app.documents[0].getElements()[0];
 	if (dok.stories.length == 0) {
 		alert(localize(px.ui.noTextInDoc)); 
 		return;
