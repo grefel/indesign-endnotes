@@ -2,7 +2,7 @@
 InDesign endnotes with the help of scripting and cross references. 
 
 ## How to install
-Copy all **.jsx** files in your InDesign Script Panel folder. Further details can be found here [[DE] Skripte in InDesign installieren](http://www.publishingx.de/skripte-installieren/) or here [[EN] How to Install a Typical InDesign Script](http://www.danrodney.com/scripts/directions-installingscripts.html).
+Copy all **.jsx** files and the whole **lib directory** into your InDesign Script Panel folder. Further details can be found here [[DE] Skripte in InDesign installieren](http://www.publishingx.de/skripte-installieren/) or here [[EN] How to Install a Typical InDesign Script](http://www.danrodney.com/scripts/directions-installingscripts.html).
 
 ## How does it work?
 This script converts InDesign footnotes into linked endnotes using InDesign cross references. So you need *footnotes* first. Endnotes are only possible within stories (single or linked textframes), you'll find your endnotes at the end of the story. 
