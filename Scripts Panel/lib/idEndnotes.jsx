@@ -147,13 +147,7 @@ function createEndnotes(dok) {
 			log.warn(localize (px.ui.errorInfo) +  e + "\nLine: " + e.line); 
 		}
 	}
-		
-    // Ebenen zurücksetzen
-	for (var i = 0; i < dok.layers.length; i++) {
-		dok.layers[i].visible = layerState[i][0];
-		dok.layers[i].locked = layerState[i][1];
-	}
-	    
+		    
 	app.scriptPreferences.userInteractionLevel = userLevel; 
 	app.scriptPreferences.enableRedraw = redraw;
 	
@@ -163,6 +157,13 @@ function createEndnotes(dok) {
 	if (result == 2) {
 		return; // Abbruch durch Benutzer 
 	} 
+
+    // Ebenen zurücksetzen
+	for (var i = 0; i < dok.layers.length; i++) {
+		dok.layers[i].visible = layerState[i][0];
+		dok.layers[i].locked = layerState[i][1];
+	}
+
 	var resultInfo = localize(px.ui.resultInfo, px.foot2EndCounter);
 	if (px.showGui && result != 2) {
 		log.showWarnings();
