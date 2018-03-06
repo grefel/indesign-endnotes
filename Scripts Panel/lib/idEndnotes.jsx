@@ -175,7 +175,7 @@ function createEndnotes(dok) {
 	}
 }
 // Environment checking and startup
-function addBacklinks(dok) {	
+function addBacklinks(dok) {
 	var endnoteStory = getEndnoteStory(dok, false);
 	if (endnoteStory == null) {
 		return;
@@ -495,28 +495,28 @@ function foot2manual (dok, endnoteStory) {
 		if (style.name == px.pStyleEndnoteName)  {
 			px.pStyleEndnote = style;			
 		}
-		else if (style.name == px.pStyleEndnoteFollowName)  {
+		if (style.name == px.pStyleEndnoteFollowName)  {
 			px.pStyleEndnoteFollow = style;
 		}
-		else if (style.name == px.pStyleEndnoteSplitHeadingName) {
+		if (style.name == px.pStyleEndnoteSplitHeadingName) {
 			px.pStyleEndnoteSplitHeading = style;			
 		}				
-		else if (style.name == px.pStyleEndnoteSplitHeadingPrecedingName) {
+		if (style.name == px.pStyleEndnoteSplitHeadingPrecedingName) {
 			px.pStyleEndnoteSplitHeadingPreceding = style;			
 		}				
-		else if (style.name == px.pStyleEndnoteSplitHeadingFollowingName) {
+		if (style.name == px.pStyleEndnoteSplitHeadingFollowingName) {
 			px.pStyleEndnoteSplitHeadingFollowing = style;			
 		}	
-		else if (style.name == px.pStyleFootnoteIgnoreName) {
+		if (style.name == px.pStyleFootnoteIgnoreName) {
 			px.pStyleFootnoteIgnore = style;			
 		}
-		else if (style.name == px.pStyleEndnoteSplitHeadingPrecedingRepeatName) {
+		if (style.name == px.pStyleEndnoteSplitHeadingPrecedingRepeatName) {
 			px.pStyleEndnoteSplitHeadingPrecedingRepeat = style;			
 		}				
-		else if (style.name == px.pStyleEndnoteSplitHeadingFollowingRepeatName) {
+		if (style.name == px.pStyleEndnoteSplitHeadingFollowingRepeatName) {
 			px.pStyleEndnoteSplitHeadingFollowingRepeat = style;
 		}	
-		else if (style.name == px.pStyleEndnoteHeadingName) {
+		if (style.name == px.pStyleEndnoteHeadingName) {
 			px.pStyleEndnoteHeading = style;			
 		}
 	}
@@ -1282,7 +1282,7 @@ function getEndnoteBlock (endnoteStory, dok, endnotenStartEndPositions) {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.findWhat = px.endnoteHeadingString;
-	app.findGrepPreferences.appliedParagraphStyle =px.pStyleEndnoteHeading	
+	app.findGrepPreferences.appliedParagraphStyle =px.pStyleEndnoteHeading;
 	if (app.findChangeGrepOptions.hasOwnProperty ("searchBackwards")) {
 		app.findChangeGrepOptions.searchBackwards = false;
 	}	
