@@ -578,7 +578,7 @@ function foot2manual (dok, endnoteStory) {
 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
-	app.findGrepPreferences.findWhat = "^.+?\\t";
+	app.findGrepPreferences.findWhat = "^.+?(\\t| )";
 
 //~ 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 
