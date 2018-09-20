@@ -64,7 +64,7 @@ var px = {
 		menuTitle:{en:"Convert footnotes to endnotes v%1", de:"Fußnoten zu Endnoten konvertieren v%1"},		
 		resultInfo:{en:"[%1] footnotes converted to endnotes!", de:"Es wurden [%1] Fußnoten zu Endnoten konvertiert!"},
 		resultInfoConvert:{en:"[%1] backlinks created.\nDo not update the crossreferences!", de:"Es wurden [%1] Backlinks erstellt.\nDie Querverweise dürfen jetzt nicht mehr aktualisiert werden."},
-		couldNotCreateBacklink:{en:"Could not create backlink for [%1]", de:"Konnte Backlink für [%1] nicht erstellen"},
+		couldNotCreateBacklink:{en:"Could not create backlink for [%1]. Is there a tab behind the endnote number?", de:"Konnte Backlink für [%1] nicht erstellen. Vielleicht ist kein Tabulator hinter der Endnotennummer?"},
 		
 		addBacklinkWarning:{en:"After conversion, the endnotes can no longer be extended / changed by script!\nContinue?", de:"Nach der Konvertierung können die Endnoten nicht mehr per Skript erweitert/verändert werden!\nFortfahren?"},
 		deleteAllWarning:{en:"Do you really want to delete ALL endnote structures (cross-references and text anchors)?", de:"Sollen wirklich ALLE Endnotenstrukturen (Querverweise und Textanker) gelöscht werden?"},

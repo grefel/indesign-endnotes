@@ -31,7 +31,7 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 #include idsLog.jsx
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
 //~ 	px.debug = true;
 //~ 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
@@ -645,21 +645,27 @@ function getEndnoteStory(dok, checkForFootnotes) {
 	var hlinkStoryMap = idsMap();
 	for (var k = 0; k < dok.hyperlinks.length; k++) {
 		var hlink = dok.hyperlinks[k];
-		if ( hlink.destination && 
-			 (	hlink.extractLabel(px.hyperlinkLabel) == "true" || 
-				   hlink.destination.extractLabel(px.hyperlinkLabel) == "true"	) &&
-			 hlink.destination.destinationText.parentStory.isValid ) {
-				 
-			var destinationStory = getParentStory(hlink.destination.destinationText);
-			hlinkStoryMap.pushItem(destinationStory.id, "true");
-			// sourceText ist immer valid, weil sonst der Hyperlink gelöscht wäre.
-			var sourceText = hlink.source.sourceText;
-			endnoteRealStoryMap.pushItem(sourceText.parentStory.id, "true");
-			if (sourceText.parent instanceof Cell) {
-				endnoteRealStoryMap.pushItem("t" + sourceText.parent.parent.id, "true");
+		try {
+			if ( hlink.destination && 
+				 (	hlink.extractLabel(px.hyperlinkLabel) == "true" || 
+					   hlink.destination.extractLabel(px.hyperlinkLabel) == "true"	) &&
+				 hlink.destination.destinationText.parentStory.isValid ) {
+					 
+				var destinationStory = getParentStory(hlink.destination.destinationText);
+				hlinkStoryMap.pushItem(destinationStory.id, "true");
+				// sourceText ist immer valid, weil sonst der Hyperlink gelöscht wäre.
+				var sourceText = hlink.source.sourceText;
+				endnoteRealStoryMap.pushItem(sourceText.parentStory.id, "true");
+				if (sourceText.parent instanceof Cell) {
+					endnoteRealStoryMap.pushItem("t" + sourceText.parent.parent.id, "true");
+				}
+				var sourceStory =  getParentStory(hlink.source.sourceText); 
+				hlinkStoryMap.pushItem(sourceStory.id, "true");
 			}
-			var sourceStory =  getParentStory(hlink.source.sourceText); 
-			hlinkStoryMap.pushItem(sourceStory.id, "true");
+		} 
+		catch (e) {
+			log.info("Broken Hyperlink ignored!");
+			log.info(e);
 		}
 	}
 	
@@ -1426,10 +1432,16 @@ function fixHyperlinks(dok) {
 
 	for (var i = 0; i  < dok.hyperlinks.length; i++) {
 		hLink = dok.hyperlinks[i];
-		if (hLink.destination == null) {
-			if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
-				log.warn(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents, idsTools.getPageNameByObject(hLink.source.sourceText)));
+		try {
+			if (hLink.destination == null) {
+				if (hLink.extractLabel(px.hyperlinkLabel) == "true") {
+					log.warn(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents, idsTools.getPageNameByObject(hLink.source.sourceText)));
+				}
+				continue;
 			}
+		}
+		catch (e) {
+			log.warn(localize (px.ui.hyperlinkProblemDestination, hLink.name, hLink.source.sourceText.contents, idsTools.getPageNameByObject(hLink.source.sourceText)));			
 			continue;
 		}
 //~ 	Dieser Fall kann überhaupt nicht auftreten, weil dann der Hyperlink gelöscht wäre. 2016.02.27 --- beim entfernen auch px.ui.hyperlinkProblemSource löschen
