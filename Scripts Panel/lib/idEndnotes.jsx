@@ -1378,7 +1378,7 @@ function getCurrentEndnotes(dok, endnoteStory) {
 		}
 		else {
 			var destinationTextContents = getShortText(dok.hyperlinks.itemByID(hLinksPerStory[m].hLinkID).destination.destinationText);
-			log.warn(localize (px.ui.wrongEndnoteOrder, destinationTextContents));			
+			log.warn(localize (px.ui.wrongEndnoteOrder, destinationTextContents));
 			idsTools.showIt(dok.hyperlinks.itemByID(hLinksPerStory[m].hLinkID).destination.destinationText);
 			return null;
 		}
