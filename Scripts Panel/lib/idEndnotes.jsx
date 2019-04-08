@@ -1563,9 +1563,10 @@ function trimFootnoteSpace (footNote) {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 	app.findChangeGrepOptions.includeFootnotes = true;
-	app.findGrepPreferences.findWhat = "(~F\\t)( |\\t)+";
-	app.changeGrepPreferences.changeTo = "$1";
+	app.findGrepPreferences.findWhat = "~F";
+	app.changeGrepPreferences.changeTo = "";
 	if (footNote.texts[0].characters.length > 0) footNote.texts[0].changeGrep();
+
 	app.findGrepPreferences.findWhat = "^( |\\t)+";
 	app.changeGrepPreferences.changeTo = "";
 	if (footNote.texts[0].characters.length > 0) footNote.texts[0].changeGrep();
