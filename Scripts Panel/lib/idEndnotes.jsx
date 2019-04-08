@@ -964,7 +964,7 @@ function foot2end (dok, endnoteStory) {
 //~ 		$.writeln("i"  + i + " -> " + footnote.contents);
 		
 		trimFootnoteSpace(footnote);
-		if (footnote.contents.replace(//, '').replace(/\s/g, '') == "") {
+		if (footnote.contents.replace(/\s/g, '') == "") {
 			log.warn(localize(px.ui.emptyFootnote));
 			continue;
 		}
