@@ -26,12 +26,12 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include config.jsx 
-#include idsHelper.jsx
-#include idsLog.jsx
+//@include config.jsx 
+//@include idsHelper.jsx
+//@include idsLog.jsx
 
 // Debug Einstellungen publishingX 
-if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor-") {
+if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
 //~ 	px.debug = true;
 //~ 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
