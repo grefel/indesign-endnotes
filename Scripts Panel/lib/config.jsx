@@ -137,7 +137,7 @@ var px = {
 		styleSelectionFail:{en:"Error in the format selection", de:"Fehler bei der Formatauswahl"},
 		styleSelectionFailSection:{en:"Error in the format selection of the section creation.", de:"Fehler bei der Formatauswahl für die Abschnittsbildung"},
 		endnoteStoryMoved:{en:"Text and endnotes must be in the same Story\nPlease copy the endnote text to the end of the text portion", de:"Text und Endnoten müssen sich im gleichen InDesign Textabschnitt befinden!\nBitte kopieren Sie den Endnoten-Text an das Ende des Textabschnitts."},
-
+		endnoteHeadingFail:{en:"Endnote heading style [%1] does not exist (anymore). Please add the style and format the Endnoten heading accordingly", de:"Das Absatzformat [%1] existiert nicht mehr. Bitte erstellen Sie das Format und formatieren Sie die Endnotenüberschrift damit."},
 		// deleteEndnotes.jsx
 		noEndnoteOrMarker:{en:"The insertion point must be placed within an endnote or before the endnote marker.", de:"Die Einfügemarke muss innerhalb einer Endnote oder vor dem Endnotenmarker platziert sein."},
 		deleteEndnoteName:{en:"Remove endnote",de:"Endnote entfernen"},
@@ -225,7 +225,7 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"3.2-2017-06-14",	
+	version:"3.3-2019-07-19",	
 	projectName:"InDesign Endnotes"		
 	
 }

@@ -4,7 +4,7 @@
 I derived the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
 @Version: 3.3
-@Date: 2017-06-14
+@Date: 2019-07-19
 @Author: Gregor Fellenz https://www.publishingx.de/
 */
 
@@ -35,8 +35,8 @@ if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
 //~ 	px.debug = true;
 //~ 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
-		checkAndStart(["createEndnotes"]);
-//~ 		checkAndStart(["addBacklinks"]);
+//		checkAndStart(["createEndnotes"]);
+ 		checkAndStart(["addBacklinks"]);
 //~ 		checkAndStart(["jumpBetweenMarkerAndNote"]);
 //~ 		checkAndStart(["deleteEndnote"]);
 //~ 		checkAndStart(["deleteEndnoteHyperlinksAndBacklinks"]);
@@ -550,7 +550,7 @@ function foot2manual (dok, endnoteStory) {
 
 	fixHyperlinks(dok); // Fix broken Links before processing
 
-	checkStyles(dok);
+	if(!checkStyles(dok)) return;
 
 	var endnoteBlock = getEndnoteBlock(endnoteStory, dok, hLinksPerStory);
 	endnoteBlock.convertBulletsAndNumberingToText ();
@@ -1720,6 +1720,11 @@ function checkStyles(dok) {
 			log.warn(localize (px.ui.crossrefFormatFail, px.crossRefStyleEndnoteName, px.cStyleEndnoteMarkerName));
 		} 
 	}
+	if (px.pStyleEndnoteHeading == undefined) {
+		log.warn(localize (px.ui.endnoteHeadingFail, px.pStyleEndnoteHeadingName));
+		return false;
+	}
+	return true;
 }
 
 /* GUI for configuration */
