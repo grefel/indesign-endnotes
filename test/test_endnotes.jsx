@@ -1,5 +1,5 @@
-﻿#include "idsTest.jsx"
-#include "../Scripts Panel/lib/idEndnotes.jsx"
+﻿//@include "idsTest.jsx"
+//@include "../Scripts Panel/lib/idEndnotes.jsx"
 
 runTests()
 
