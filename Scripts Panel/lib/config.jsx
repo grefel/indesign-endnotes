@@ -225,7 +225,7 @@ var px = {
 	showGui:true,
 	logFileName:"endnoteLog.txt",
 	ids:undefined,
-	version:"3.3-2019-07-19",	
+	version:"3.4-2019-12-11",	
 	projectName:"InDesign Endnotes"		
 	
 }

@@ -3,8 +3,8 @@
 # Acknowledgements
 I derived the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
-@Version: 3.3
-@Date: 2019-07-19
+@Version: 3.4
+@Date: 2019-12-12
 @Author: Gregor Fellenz https://www.publishingx.de/
 */
 
@@ -35,8 +35,8 @@ if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
 //~ 	px.debug = true;
 //~ 	px.showGui = false;
 	if ( ! $.global.hasOwnProperty('idsTesting') ) {
-//		checkAndStart(["createEndnotes"]);
- 		checkAndStart(["addBacklinks"]);
+		// checkAndStart(["createEndnotes"]);
+		checkAndStart(["addBacklinks"]);
 //~ 		checkAndStart(["jumpBetweenMarkerAndNote"]);
 //~ 		checkAndStart(["deleteEndnote"]);
 //~ 		checkAndStart(["deleteEndnoteHyperlinksAndBacklinks"]);
@@ -554,7 +554,7 @@ function foot2manual (dok, endnoteStory) {
 
 	var endnoteBlock = getEndnoteBlock(endnoteStory, dok, hLinksPerStory);
 	endnoteBlock.convertBulletsAndNumberingToText ();
-	
+
 	// Backlinks löschen 
 	for (var i = dok.hyperlinks.length -1; i >= 0; i--) {
 		hlink = dok.hyperlinks[i];
@@ -579,8 +579,9 @@ function foot2manual (dok, endnoteStory) {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
 	app.findGrepPreferences.findWhat = "^.+?(\\t| )";
-
-//~ 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
+	
+	// Die wiederholte Auswertung ist wichtig, vermutlich weil oben Characters gelöscht wurden und sich der Index von hLinksPerStory verschoben hat.
+ 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 
 	var createList = [];
 	for (var i = 1; i < hLinksPerStory.length - 1; i++) {
@@ -615,10 +616,10 @@ function foot2manual (dok, endnoteStory) {
 				hyperlinkTextSource:hyperlinkTextSource, 
 				endnoteBacklink:endnote_backlink,
 				sourceIndexArray:sourceIndex
-				});
+			});
 		}
 		else  {
-			log.warn(localize (px.ui.couldNotCreateBacklink, hlink.name) ); 
+			log.warn(localize (px.ui.couldNotCreateBacklink, hlink.name) + hlinkPar.contents); 
 		}
 	}
 	
@@ -1282,13 +1283,21 @@ function getEndnoteBlock (endnoteStory, dok, endnotenStartEndPositions) {
 				) {
 			endBlockPar = endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0];
 		}
+		while (endBlockPar.insertionPoints[-1].isValid && 
+			endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0].isValid &&
+			endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0].contents.length > 1 &&
+			endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0].appliedParagraphStyle.id == px.pStyleEndnote.id &&
+			endnoteStory.insertionPoints[-1].index > endBlockPar.insertionPoints[-1].index
+			) {
+			endBlockPar = endnoteStory.insertionPoints[endBlockPar.insertionPoints[-1].index].paragraphs[0];
+		}
 		endOfTextRange = endBlockPar.characters[-1].index;
 	} 
 	
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.findWhat = px.endnoteHeadingString;
-	app.findGrepPreferences.appliedParagraphStyle =px.pStyleEndnoteHeading;
+	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnoteHeading;
 	if (app.findChangeGrepOptions.hasOwnProperty ("searchBackwards")) {
 		app.findChangeGrepOptions.searchBackwards = false;
 	}	
@@ -1302,6 +1311,22 @@ function getEndnoteBlock (endnoteStory, dok, endnotenStartEndPositions) {
 		log.warn (localize (px.ui.headingStyleFailBlockMoreThanOne, px.endnoteHeadingString, px.pStyleEndnoteHeading.name ));
 	}
 	else {
+		app.findGrepPreferences = NothingEnum.NOTHING;
+		app.changeGrepPreferences = NothingEnum.NOTHING;
+		app.findGrepPreferences.findWhat =  "^\\h*" + px.endnoteHeadingString + "\\h*$";
+		if (app.findChangeGrepOptions.hasOwnProperty ("searchBackwards")) {
+			app.findChangeGrepOptions.searchBackwards = false;
+		}	
+		var results = endnoteStory.findGrep();
+		
+		if (results.length == 1) {
+			startOfTextRange = results[0].index;
+		}
+		else if (results.length > 1) {
+			startOfTextRange = results[0].index;
+			log.warn (localize (px.ui.headingStyleFailBlockMoreThanOne, px.endnoteHeadingString, "Keine Formateinschränkung" ));
+		}
+
 		log.warn (localize (px.ui.headingStyleFailBlock, px.endnoteHeadingString, px.pStyleEndnoteHeading.name ));
 	}
 	
