@@ -35,8 +35,8 @@ if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
 	//~ 	px.debug = true;
 	//~ 	px.showGui = false;
 	if (!$.global.hasOwnProperty('idsTesting')) {
-		// checkAndStart(["createEndnotes"]);
-		checkAndStart(["addBacklinks"]);
+		checkAndStart(["createEndnotes"]);
+		// checkAndStart(["addBacklinks"]);
 		//~ 		checkAndStart(["jumpBetweenMarkerAndNote"]);
 		//~ 		checkAndStart(["deleteEndnote"]);
 		//~ 		checkAndStart(["deleteEndnoteHyperlinksAndBacklinks"]);
@@ -583,7 +583,7 @@ function foot2manual(dok, endnoteStory) {
 	// Die wiederholte Auswertung ist wichtig, vermutlich weil oben Characters gelöscht wurden und sich der Index von hLinksPerStory verschoben hat.
 	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 
-	var createList = []; 
+	var createList = [];
 	for (var i = 1; i < hLinksPerStory.length - 1; i++) {
 		var hlink = dok.hyperlinks.itemByID(hLinksPerStory[i].hLinkID);
 		if (!hlink.destination instanceof ParagraphDestination) {
@@ -758,7 +758,7 @@ function getFootnotes(dok, endnoteStory) {
 			footnoteLoop: for (var f = story.footnotes.length - 1; f >= 0; f--) {
 				var footnote = story.footnotes[f];
 				//~ 				log.writeln(footnote.contents);
-				if (px.footnoteIgnore && px.footnoteIgnore) {
+				if (px.footnoteIgnore) {
 					for (var ff = 0; ff < footnote.paragraphs.length; ff++) {
 						if (footnote.paragraphs[ff].appliedParagraphStyle.id == px.pStyleFootnoteIgnore.id) {
 							log.info("Footnote " + getShortText(footnote) + " ignored by PargraphStyle ");
@@ -767,9 +767,10 @@ function getFootnotes(dok, endnoteStory) {
 						}
 					}
 				}
+				footnote = footnote.getElements()[0];
 				var storyOffset = footnote.storyOffset;
 				footnotes.push({
-					fn: footnote.getElements()[0],
+					fn: footnote,
 					sourceIndexArray: getIndexInStory(storyOffset),
 					storyOffset: storyOffset,
 					contents: footnote.contents
@@ -944,6 +945,7 @@ function foot2end(dok, endnoteStory) {
 		px.footNoteIgnoreCondition.visible = false;
 	}
 	var footn = getFootnotes(dok, endnoteStory);
+	log.info("Found [" + footn.length + "] Footnotes");
 	// Fußnoten sind jetzt rückwärts sortiert
 	footn.sort(sortSourceIndexArray);
 
@@ -962,7 +964,6 @@ function foot2end(dok, endnoteStory) {
 		}
 
 		footnote = footn[i].fn;
-
 		//~ 		$.writeln("i"  + i + " -> " + footnote.contents);
 
 		trimFootnoteSpace(footnote);
@@ -971,7 +972,7 @@ function foot2end(dok, endnoteStory) {
 			continue;
 		}
 
-		// Formatieren 				
+		// Formatieren 
 		footnote.paragraphs[0].applyParagraphStyle(px.pStyleEndnote, false);
 		if (footnote.paragraphs.length > 1) {
 			footnote.paragraphs.itemByRange(1, footnote.paragraphs.length - 1).applyParagraphStyle(px.pStyleEndnoteFollow, false);
@@ -996,7 +997,6 @@ function foot2end(dok, endnoteStory) {
 			nextHlink = dok.hyperlinks.itemByID(hyperLinkID);
 			endnote = footnote.texts[0].move(LocationOptions.BEFORE, nextHlink.destination.destinationText.paragraphs[0].insertionPoints[0]);
 		}
-
 		// Verlinkung herstellen 
 		endnote_link = dok.paragraphDestinations.add(endnote.insertionPoints[0]);
 		endnote_link.insertLabel(px.hyperlinkLabel, "true");
@@ -1009,10 +1009,11 @@ function foot2end(dok, endnoteStory) {
 		pushHLink(hLinksPerStory, hyperLinkID, hlink);
 
 		px.foot2EndCounter++;
+		// log.info("foot2EndCounter [" + px.foot2EndCounter + "]")
 	} // footnoteLoop : for
 
 
-
+	log.info("Hyperlinks [" + px.foot2EndCounter + "] created");
 
 	idsTools.checkOverflow(endnoteStory);
 
@@ -1142,11 +1143,13 @@ function foot2end(dok, endnoteStory) {
 		}
 	}
 
+	log.info("start deleteNotemarkers")
 
 	deleteNotemarkers(dok, endnoteStory);
 	endnoteStory.characters[-1].contents = "";
 
 	recreateIgnoredFootnotes(dok, endnoteStory);
+	log.info("recreateIgnoredFootnotes finished")
 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
@@ -1162,6 +1165,7 @@ function foot2end(dok, endnoteStory) {
 
 	// Seiten auflösen 
 	idsTools.checkOverflow(endnoteStory);
+	log.info("Update Hyperlinks")
 	for (var c = 0; c < dok.hyperlinks.length; c++) {
 		var hlink = dok.hyperlinks[c];
 		if (hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.source) {
