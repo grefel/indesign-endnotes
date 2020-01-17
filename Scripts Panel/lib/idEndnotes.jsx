@@ -550,7 +550,7 @@ function foot2manual(dok, endnoteStory) {
 
 	fixHyperlinks(dok); // Fix broken Links before processing
 
-	if(!checkStyles(dok)) return;
+	if (!checkStyles(dok)) return;
 
 	var endnoteBlock = getEndnoteBlock(endnoteStory, dok, hLinksPerStory);
 	endnoteBlock.convertBulletsAndNumberingToText();
@@ -1010,6 +1010,7 @@ function foot2end(dok, endnoteStory) {
 
 		px.foot2EndCounter++;
 		// log.info("foot2EndCounter [" + px.foot2EndCounter + "]")
+		// if (px.foot2EndCounter == 100) break footnoteLoop
 	} // footnoteLoop : for
 
 
@@ -1155,7 +1156,13 @@ function foot2end(dok, endnoteStory) {
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
 	app.findGrepPreferences.findWhat = "^\\t";
-	endnoteBlock.changeGrep();
+	if (!endnoteBlock.isValid) {
+		// Ab CC 2019 ist der endnoteBlock durch deleteNotemarkers kaputt gemacht worden ?!?
+		dok.changeGrep();
+	}
+	else {
+		endnoteBlock.changeGrep();
+	}
 
 	// Force Footnote Numbering Reset (CC 2017 Problem )
 	var oldRestartNumbering = dok.footnoteOptions.restartNumbering;
@@ -1751,7 +1758,7 @@ function checkStyles(dok) {
 		}
 	}
 	if (px.pStyleEndnoteHeading == undefined) {
-		log.warn(localize (px.ui.endnoteHeadingFail, px.pStyleEndnoteHeadingName));
+		log.warn(localize(px.ui.endnoteHeadingFail, px.pStyleEndnoteHeadingName));
 		return false;
 	}
 	return true;
