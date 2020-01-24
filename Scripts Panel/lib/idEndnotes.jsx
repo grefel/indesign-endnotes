@@ -83,7 +83,7 @@ function checkAndStart(args) {
 
 // Environment checking and startup
 function createEndnotes(dok) {
-	var endnoteStory = getEndnoteStory(dok, true);
+	var endnoteStory = getEndnoteStory(dok, "MODE_CREATE");
 	if (endnoteStory == null) {
 		return;
 	}
@@ -176,7 +176,7 @@ function createEndnotes(dok) {
 }
 // Environment checking and startup
 function addBacklinks(dok) {
-	var endnoteStory = getEndnoteStory(dok, false);
+	var endnoteStory = getEndnoteStory(dok, "MODE_BACKLINK");
 	if (endnoteStory == null) {
 		return;
 	}
@@ -532,7 +532,7 @@ function foot2manual(dok, endnoteStory) {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
 	app.findGrepPreferences.findWhat = "(?-m)(?<=\\r)[~m~>~f~|~S~s~<~/~.~3~4~% \\n]*\\r";
-	var emptyEndnotes = endnoteStory.findGrep();
+	var emptyEndnotes = dok.findGrep();
 	if (emptyEndnotes.length > 0) {
 		log.warn(localize(px.ui.emptyEndnotePar, emptyEndnotes.length, px.pStyleEndnote.name));
 		for (var e = 0; e < emptyEndnotes.length; e++) {
@@ -581,52 +581,63 @@ function foot2manual(dok, endnoteStory) {
 	app.findGrepPreferences.findWhat = "^.+?(\\t| )";
 
 	// Die wiederholte Auswertung ist wichtig, vermutlich weil oben Characters gelöscht wurden und sich der Index von hLinksPerStory verschoben hat.
-	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
+	// var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 
 	var createList = [];
-	for (var i = 1; i < hLinksPerStory.length - 1; i++) {
-		var hlink = dok.hyperlinks.itemByID(hLinksPerStory[i].hLinkID);
-		if (!hlink.destination instanceof ParagraphDestination) {
-			log.warn(localize(px.ui.couldNotCreateBacklink, hlink.name));
-			continue;
-		}
-		var hlinkPar = hlink.destination.destinationText.paragraphs[0].getElements()[0];
-		var numberingText = hlinkPar.findGrep()[0];
-		if (numberingText) {
-			var sourceText = hlink.source.sourceText;
-			var startPos = 1;
-			var endPos = 1;
-			if (sourceText.parentStory.id != hlink.destination.destinationText.parentStory.id || sourceText.parent instanceof Cell) {
-				// Weil der hinzugefügte Anker in der gleichen Story noch einen Index weiterschiebt. In Tabelle aber verankerten Textrahmen nicht.
-				startPos = 0;
-				endPos = 2;
+
+	for (var j = 0; j < dok.hyperlinks.length; j++) {
+		var hLink = dok.hyperlinks[j];
+		if (hLink.hasOwnProperty("destination") && hLink.extractLabel(px.hyperlinkLabel) == "true") {
+			try {
+				if (hLink.destination == null) {
+					log.warn(localize(px.ui.missingHyperlinkDestination, hLink.id));
+					continue;
+				}
+			} catch (e) {
+				log.warn("Fehler bei der Verarbeitung der Hyperlinks, Hyperlinks sind eventuell nicht mehr gültig?\n" + e);
 			}
-			numberingText = numberingText.characters.itemByRange(startPos, numberingText.characters.length - endPos);
+			if (!hLink.destination instanceof ParagraphDestination) {
+				log.warn(localize(px.ui.couldNotCreateBacklink, hLink.name));
+				continue;
+			}
+			var hLinkPar = hLink.destination.destinationText.paragraphs[0].getElements()[0];
+			var numberingText = hLinkPar.findGrep()[0];
+			if (numberingText) {
+				var sourceText = hLink.source.sourceText;
+				var startPos = 1;
+				var endPos = 1;
+				if (sourceText.parentStory.id != hLink.destination.destinationText.parentStory.id || sourceText.parent instanceof Cell) {
+					// Weil der hinzugefügte Anker in der gleichen Story noch einen Index weiterschiebt. In Tabelle aber verankerten Textrahmen nicht.
+					startPos = 0;
+					endPos = 2;
+				}
+				numberingText = numberingText.characters.itemByRange(startPos, numberingText.characters.length - endPos);
 
-			var endnote_backlink = dok.hyperlinkTextDestinations.add(sourceText.insertionPoints[0]);
-			endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");
+				var endnote_backlink = dok.hyperlinkTextDestinations.add(sourceText.insertionPoints[0]);
+				endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");
 
-			//~ 			$.writeln(numberingText.contents);
-			//~ 			$.bp(numberingText.contents = ".	")
+				//~ 			$.writeln(numberingText.contents);
+				//~ 			$.bp(numberingText.contents = ".	")
 
-			hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);
-			hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
-			var sourceIndex = getIndexInStory(sourceText);
-			createList.push({
-				hyperlinkTextSource: hyperlinkTextSource,
-				endnoteBacklink: endnote_backlink,
-				sourceIndexArray: sourceIndex
-			});
-		}
-		else {
-			log.warn(localize(px.ui.couldNotCreateBacklink, hlink.name) + hlinkPar.contents);
+				hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);
+				hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
+				var sourceIndex = getIndexInStory(sourceText);
+				createList.push({
+					hyperlinkTextSource: hyperlinkTextSource,
+					endnoteBacklink: endnote_backlink,
+					sourceIndexArray: sourceIndex
+				});
+			}
+			else {
+				log.warn(localize(px.ui.couldNotCreateBacklink, hLink.name) + hLinkPar.contents);
+			}
 		}
 	}
 
 	for (var x = 0; x < createList.length; x++) {
-		var hlink = dok.hyperlinks.add(createList[x].hyperlinkTextSource, createList[x].endnoteBacklink, { visible: false });
-		hlink.name = "EndnoteBacklink_" + (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1) + new Date().getTime();
-		hlink.insertLabel(px.hyperlinkLabel, "backlink");
+		var hLink = dok.hyperlinks.add(createList[x].hyperlinkTextSource, createList[x].endnoteBacklink, { visible: false });
+		hLink.name = "EndnoteBacklink_" + (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1) + new Date().getTime();
+		hLink.insertLabel(px.hyperlinkLabel, "backlink");
 		px.foot2EndCounter++;
 	}
 
@@ -635,7 +646,7 @@ function foot2manual(dok, endnoteStory) {
 
 }
 /* Returns a valid endnote story for processing or null*/
-function getEndnoteStory(dok, checkForFootnotes) {
+function getEndnoteStory(dok, mode) {
 	// Check for valid stories
 	var story;
 	var endnoteStory = null;
@@ -686,17 +697,29 @@ function getEndnoteStory(dok, checkForFootnotes) {
 			}
 		}
 		if (hlinkStoryMap.getItem(story.id) == "true") {
-			endnoteStory = story;
+			if (mode == "MODE_BACKLINK") {
+				if (endnoteStory == null) {
+					endnoteStory = story;
+				}
+				else {
+					if (story.characters.length > endnoteStory.characters.length) {
+						endnoteStory = story;
+					}
+				}
+			}
+			else {
+				endnoteStory = story;
+			}
 			endnoteStoryMap.pushItem(story.id, story);
 		}
 	}
 
 	// Die einfachen Fälle 
-	if (checkForFootnotes && footnoteStories.length == 0) {
+	if (mode == "MODE_CREATE" && footnoteStories.length == 0) {
 		log.warnAlert(localize(px.ui.noFootnoteInDoc));
 		return null;
 	}
-	if (endnoteStoryMap.length > 1) {
+	if (mode == "MODE_CREATE" && endnoteStoryMap.length > 1) {
 		log.warnAlert(localize(px.ui.multipleEndnoteLinks));
 		return null;
 	}
@@ -734,10 +757,11 @@ function getEndnoteStory(dok, checkForFootnotes) {
 		}
 	}
 
-	if (!checkForFootnotes && endnoteStoryMap.length != 1) {
-		alert(localize(px.ui.unknownSelectionError));
-		return null;
-	}
+	// Multi Endnote Stories are ok ...
+	// if (mode == "MODE_BACKLINK" && endnoteStoryMap.length != 1) {
+	// 	alert(localize(px.ui.unknownSelectionError));
+	// 	return null;
+	// }
 
 	if (endnoteStory == null) {
 		// Darf eigentlich nicht passieren 
@@ -749,6 +773,7 @@ function getEndnoteStory(dok, checkForFootnotes) {
 
 	return endnoteStory;
 }
+
 function getFootnotes(dok, endnoteStory) {
 	var footnotes = [];
 	for (var i = 0; i < dok.stories.length; i++) {
