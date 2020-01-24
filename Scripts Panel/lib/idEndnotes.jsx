@@ -1,4 +1,4 @@
-﻿/*
+/*
 //DESCRIPTION: Convert Footnotes to Endnotes  ( Uses the cross-reference function from InDesign )
 # Acknowledgements
 I derived the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
@@ -35,8 +35,8 @@ if (app.extractLabel("px:debugID") == "Jp07qcLlW3aDHuCoNpBK_Gregor") {
 	//~ 	px.debug = true;
 	//~ 	px.showGui = false;
 	if (!$.global.hasOwnProperty('idsTesting')) {
-		// checkAndStart(["createEndnotes"]);
-		checkAndStart(["addBacklinks"]);
+		checkAndStart(["createEndnotes"]);
+		// checkAndStart(["addBacklinks"]);
 		//~ 		checkAndStart(["jumpBetweenMarkerAndNote"]);
 		//~ 		checkAndStart(["deleteEndnote"]);
 		//~ 		checkAndStart(["deleteEndnoteHyperlinksAndBacklinks"]);
@@ -83,7 +83,7 @@ function checkAndStart(args) {
 
 // Environment checking and startup
 function createEndnotes(dok) {
-	var endnoteStory = getEndnoteStory(dok, "MODE_CREATE");
+	var endnoteStory = getEndnoteStory(dok, true);
 	if (endnoteStory == null) {
 		return;
 	}
@@ -176,7 +176,7 @@ function createEndnotes(dok) {
 }
 // Environment checking and startup
 function addBacklinks(dok) {
-	var endnoteStory = getEndnoteStory(dok, "MODE_BACKLINK");
+	var endnoteStory = getEndnoteStory(dok, false);
 	if (endnoteStory == null) {
 		return;
 	}
@@ -532,7 +532,7 @@ function foot2manual(dok, endnoteStory) {
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
 	app.findGrepPreferences.findWhat = "(?-m)(?<=\\r)[~m~>~f~|~S~s~<~/~.~3~4~% \\n]*\\r";
-	var emptyEndnotes = dok.findGrep();
+	var emptyEndnotes = endnoteStory.findGrep();
 	if (emptyEndnotes.length > 0) {
 		log.warn(localize(px.ui.emptyEndnotePar, emptyEndnotes.length, px.pStyleEndnote.name));
 		for (var e = 0; e < emptyEndnotes.length; e++) {
@@ -550,7 +550,7 @@ function foot2manual(dok, endnoteStory) {
 
 	fixHyperlinks(dok); // Fix broken Links before processing
 
-	checkStyles(dok);
+	if (!checkStyles(dok)) return;
 
 	var endnoteBlock = getEndnoteBlock(endnoteStory, dok, hLinksPerStory);
 	endnoteBlock.convertBulletsAndNumberingToText();
@@ -581,64 +581,52 @@ function foot2manual(dok, endnoteStory) {
 	app.findGrepPreferences.findWhat = "^.+?(\\t| )";
 
 	// Die wiederholte Auswertung ist wichtig, vermutlich weil oben Characters gelöscht wurden und sich der Index von hLinksPerStory verschoben hat.
-	// var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
+	var hLinksPerStory = getCurrentEndnotes(dok, endnoteStory);
 
 	var createList = [];
-
-
-	for (var j = 0; j < dok.hyperlinks.length; j++) {
-		var hLink = dok.hyperlinks[j];
-		if (hLink.hasOwnProperty("destination") && hLink.extractLabel(px.hyperlinkLabel) == "true") {
-			try {
-				if (hLink.destination == null) {
-					log.warn(localize(px.ui.missingHyperlinkDestination, hLink.id));
-					continue;
-				}
-			} catch (e) {
-				log.warn("Fehler bei der Verarbeitung der Hyperlinks, Hyperlinks sind eventuell nicht mehr gültig?\n" + e);
+	for (var i = 1; i < hLinksPerStory.length - 1; i++) {
+		var hlink = dok.hyperlinks.itemByID(hLinksPerStory[i].hLinkID);
+		if (!hlink.destination instanceof ParagraphDestination) {
+			log.warn(localize(px.ui.couldNotCreateBacklink, hlink.name));
+			continue;
+		}
+		var hlinkPar = hlink.destination.destinationText.paragraphs[0].getElements()[0];
+		var numberingText = hlinkPar.findGrep()[0];
+		if (numberingText) {
+			var sourceText = hlink.source.sourceText;
+			var startPos = 1;
+			var endPos = 1;
+			if (sourceText.parentStory.id != hlink.destination.destinationText.parentStory.id || sourceText.parent instanceof Cell) {
+				// Weil der hinzugefügte Anker in der gleichen Story noch einen Index weiterschiebt. In Tabelle aber verankerten Textrahmen nicht.
+				startPos = 0;
+				endPos = 2;
 			}
-			if (!hLink.destination instanceof ParagraphDestination) {
-				log.warn(localize(px.ui.couldNotCreateBacklink, hLink.name));
-				continue;
-			}
-			var hLinkPar = hLink.destination.destinationText.paragraphs[0].getElements()[0];
-			var numberingText = hLinkPar.findGrep()[0];
-			if (numberingText) {
-				var sourceText = hLink.source.sourceText;
-				var startPos = 1;
-				var endPos = 1;
-				if (sourceText.parentStory.id != hLink.destination.destinationText.parentStory.id || sourceText.parent instanceof Cell) {
-					// Weil der hinzugefügte Anker in der gleichen Story noch einen Index weiterschiebt. In Tabelle aber verankerten Textrahmen nicht.
-					startPos = 0;
-					endPos = 2;
-				}
-				numberingText = numberingText.characters.itemByRange(startPos, numberingText.characters.length - endPos);
+			numberingText = numberingText.characters.itemByRange(startPos, numberingText.characters.length - endPos);
 
-				var endnote_backlink = dok.hyperlinkTextDestinations.add(sourceText.insertionPoints[0]);
-				endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");
+			var endnote_backlink = dok.hyperlinkTextDestinations.add(sourceText.insertionPoints[0]);
+			endnote_backlink.insertLabel(px.hyperlinkLabel, "backlink");
 
-				//~ 			$.writeln(numberingText.contents);
-				//~ 			$.bp(numberingText.contents = ".	")
+			//~ 			$.writeln(numberingText.contents);
+			//~ 			$.bp(numberingText.contents = ".	")
 
-				hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);
-				hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
-				var sourceIndex = getIndexInStory(sourceText);
-				createList.push({
-					hyperlinkTextSource: hyperlinkTextSource,
-					endnoteBacklink: endnote_backlink,
-					sourceIndexArray: sourceIndex
-				});
-			}
-			else {
-				log.warn(localize(px.ui.couldNotCreateBacklink, hLink.name) + hLinkPar.contents);
-			}
+			hyperlinkTextSource = dok.hyperlinkTextSources.add(numberingText);
+			hyperlinkTextSource.insertLabel(px.hyperlinkLabel, "backlink");
+			var sourceIndex = getIndexInStory(sourceText);
+			createList.push({
+				hyperlinkTextSource: hyperlinkTextSource,
+				endnoteBacklink: endnote_backlink,
+				sourceIndexArray: sourceIndex
+			});
+		}
+		else {
+			log.warn(localize(px.ui.couldNotCreateBacklink, hlink.name) + hlinkPar.contents);
 		}
 	}
 
 	for (var x = 0; x < createList.length; x++) {
-		var hLink = dok.hyperlinks.add(createList[x].hyperlinkTextSource, createList[x].endnoteBacklink, { visible: false });
-		hLink.name = "EndnoteBacklink_" + (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1) + new Date().getTime();
-		hLink.insertLabel(px.hyperlinkLabel, "backlink");
+		var hlink = dok.hyperlinks.add(createList[x].hyperlinkTextSource, createList[x].endnoteBacklink, { visible: false });
+		hlink.name = "EndnoteBacklink_" + (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1) + new Date().getTime();
+		hlink.insertLabel(px.hyperlinkLabel, "backlink");
 		px.foot2EndCounter++;
 	}
 
@@ -647,7 +635,7 @@ function foot2manual(dok, endnoteStory) {
 
 }
 /* Returns a valid endnote story for processing or null*/
-function getEndnoteStory(dok, mode) {
+function getEndnoteStory(dok, checkForFootnotes) {
 	// Check for valid stories
 	var story;
 	var endnoteStory = null;
@@ -698,29 +686,17 @@ function getEndnoteStory(dok, mode) {
 			}
 		}
 		if (hlinkStoryMap.getItem(story.id) == "true") {
-			if (mode == "MODE_BACKLINK") {
-				if (endnoteStory == null) {
-					endnoteStory = story;
-				}
-				else {
-					if (story.characters.length > endnoteStory.characters.length) {
-						endnoteStory = story;
-					}
-				}
-			}
-			else {
-				endnoteStory = story;
-			}
+			endnoteStory = story;
 			endnoteStoryMap.pushItem(story.id, story);
 		}
 	}
 
 	// Die einfachen Fälle 
-	if (mode == "MODE_CREATE" && footnoteStories.length == 0) {
+	if (checkForFootnotes && footnoteStories.length == 0) {
 		log.warnAlert(localize(px.ui.noFootnoteInDoc));
 		return null;
 	}
-	if (mode == "MODE_CREATE" && endnoteStoryMap.length > 1) {
+	if (endnoteStoryMap.length > 1) {
 		log.warnAlert(localize(px.ui.multipleEndnoteLinks));
 		return null;
 	}
@@ -758,11 +734,10 @@ function getEndnoteStory(dok, mode) {
 		}
 	}
 
-	// Multi Endnote Stories are ok ...
-	// if (mode == "MODE_BACKLINK" && endnoteStoryMap.length != 1) {
-	// 	alert(localize(px.ui.unknownSelectionError));
-	// 	return null;
-	// }
+	if (!checkForFootnotes && endnoteStoryMap.length != 1) {
+		alert(localize(px.ui.unknownSelectionError));
+		return null;
+	}
 
 	if (endnoteStory == null) {
 		// Darf eigentlich nicht passieren 
@@ -774,7 +749,6 @@ function getEndnoteStory(dok, mode) {
 
 	return endnoteStory;
 }
-
 function getFootnotes(dok, endnoteStory) {
 	var footnotes = [];
 	for (var i = 0; i < dok.stories.length; i++) {
@@ -784,7 +758,7 @@ function getFootnotes(dok, endnoteStory) {
 			footnoteLoop: for (var f = story.footnotes.length - 1; f >= 0; f--) {
 				var footnote = story.footnotes[f];
 				//~ 				log.writeln(footnote.contents);
-				if (px.footnoteIgnore && px.footnoteIgnore) {
+				if (px.footnoteIgnore) {
 					for (var ff = 0; ff < footnote.paragraphs.length; ff++) {
 						if (footnote.paragraphs[ff].appliedParagraphStyle.id == px.pStyleFootnoteIgnore.id) {
 							log.info("Footnote " + getShortText(footnote) + " ignored by PargraphStyle ");
@@ -793,9 +767,10 @@ function getFootnotes(dok, endnoteStory) {
 						}
 					}
 				}
+				footnote = footnote.getElements()[0];
 				var storyOffset = footnote.storyOffset;
 				footnotes.push({
-					fn: footnote.getElements()[0],
+					fn: footnote,
 					sourceIndexArray: getIndexInStory(storyOffset),
 					storyOffset: storyOffset,
 					contents: footnote.contents
@@ -970,6 +945,7 @@ function foot2end(dok, endnoteStory) {
 		px.footNoteIgnoreCondition.visible = false;
 	}
 	var footn = getFootnotes(dok, endnoteStory);
+	log.info("Found [" + footn.length + "] Footnotes");
 	// Fußnoten sind jetzt rückwärts sortiert
 	footn.sort(sortSourceIndexArray);
 
@@ -988,7 +964,6 @@ function foot2end(dok, endnoteStory) {
 		}
 
 		footnote = footn[i].fn;
-
 		//~ 		$.writeln("i"  + i + " -> " + footnote.contents);
 
 		trimFootnoteSpace(footnote);
@@ -997,7 +972,7 @@ function foot2end(dok, endnoteStory) {
 			continue;
 		}
 
-		// Formatieren 				
+		// Formatieren 
 		footnote.paragraphs[0].applyParagraphStyle(px.pStyleEndnote, false);
 		if (footnote.paragraphs.length > 1) {
 			footnote.paragraphs.itemByRange(1, footnote.paragraphs.length - 1).applyParagraphStyle(px.pStyleEndnoteFollow, false);
@@ -1022,7 +997,6 @@ function foot2end(dok, endnoteStory) {
 			nextHlink = dok.hyperlinks.itemByID(hyperLinkID);
 			endnote = footnote.texts[0].move(LocationOptions.BEFORE, nextHlink.destination.destinationText.paragraphs[0].insertionPoints[0]);
 		}
-
 		// Verlinkung herstellen 
 		endnote_link = dok.paragraphDestinations.add(endnote.insertionPoints[0]);
 		endnote_link.insertLabel(px.hyperlinkLabel, "true");
@@ -1035,10 +1009,12 @@ function foot2end(dok, endnoteStory) {
 		pushHLink(hLinksPerStory, hyperLinkID, hlink);
 
 		px.foot2EndCounter++;
+		// log.info("foot2EndCounter [" + px.foot2EndCounter + "]")
+		// if (px.foot2EndCounter == 100) break footnoteLoop
 	} // footnoteLoop : for
 
 
-
+	log.info("Hyperlinks [" + px.foot2EndCounter + "] created");
 
 	idsTools.checkOverflow(endnoteStory);
 
@@ -1168,17 +1144,25 @@ function foot2end(dok, endnoteStory) {
 		}
 	}
 
+	log.info("start deleteNotemarkers")
 
 	deleteNotemarkers(dok, endnoteStory);
 	endnoteStory.characters[-1].contents = "";
 
 	recreateIgnoredFootnotes(dok, endnoteStory);
+	log.info("recreateIgnoredFootnotes finished")
 
 	app.findGrepPreferences = NothingEnum.NOTHING;
 	app.changeGrepPreferences = NothingEnum.NOTHING;
 	app.findGrepPreferences.appliedParagraphStyle = px.pStyleEndnote;
 	app.findGrepPreferences.findWhat = "^\\t";
-	endnoteBlock.changeGrep();
+	if (!endnoteBlock.isValid) {
+		// Ab CC 2019 ist der endnoteBlock durch deleteNotemarkers kaputt gemacht worden ?!?
+		dok.changeGrep();
+	}
+	else {
+		endnoteBlock.changeGrep();
+	}
 
 	// Force Footnote Numbering Reset (CC 2017 Problem )
 	var oldRestartNumbering = dok.footnoteOptions.restartNumbering;
@@ -1188,6 +1172,7 @@ function foot2end(dok, endnoteStory) {
 
 	// Seiten auflösen 
 	idsTools.checkOverflow(endnoteStory);
+	log.info("Update Hyperlinks")
 	for (var c = 0; c < dok.hyperlinks.length; c++) {
 		var hlink = dok.hyperlinks[c];
 		if (hlink.extractLabel(px.hyperlinkLabel) == "true" && hlink.source) {
@@ -1442,7 +1427,13 @@ function getCurrentEndnotes(dok, endnoteStory) {
 
 function getIndexInStory(sourceText) {
 	var indexArray = []
-	indexArray[0] = sourceText.index;
+	if (sourceText.parent instanceof Cell) {
+		indexArray[0] = sourceText.parent.parent.storyOffset.index + sourceText.parent.index;
+	}
+	else {
+		indexArray[0] = sourceText.index;
+	}
+
 	while (px.multipleStories &&
 		(sourceText.parent instanceof Cell ||
 			(sourceText.parentTextFrames.length > 0 && sourceText.parentTextFrames[0].parent instanceof Character))) {
@@ -1772,6 +1763,11 @@ function checkStyles(dok) {
 			log.warn(localize(px.ui.crossrefFormatFail, px.crossRefStyleEndnoteName, px.cStyleEndnoteMarkerName));
 		}
 	}
+	if (px.pStyleEndnoteHeading == undefined) {
+		log.warn(localize(px.ui.endnoteHeadingFail, px.pStyleEndnoteHeadingName));
+		return false;
+	}
+	return true;
 }
 
 /* GUI for configuration */
