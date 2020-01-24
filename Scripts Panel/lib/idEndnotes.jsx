@@ -1427,7 +1427,13 @@ function getCurrentEndnotes(dok, endnoteStory) {
 
 function getIndexInStory(sourceText) {
 	var indexArray = []
-	indexArray[0] = sourceText.index;
+	if (sourceText.parent instanceof Cell) {
+		indexArray[0] = sourceText.parent.parent.storyOffset.index + sourceText.parent.index;
+	}
+	else {
+		indexArray[0] = sourceText.index;
+	}
+
 	while (px.multipleStories &&
 		(sourceText.parent instanceof Cell ||
 			(sourceText.parentTextFrames.length > 0 && sourceText.parentTextFrames[0].parent instanceof Character))) {
