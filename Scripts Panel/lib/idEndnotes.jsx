@@ -1,4 +1,4 @@
-﻿/*
+/*
 //DESCRIPTION: Convert Footnotes to Endnotes  ( Uses the cross-reference function from InDesign )
 # Acknowledgements
 I derived the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
