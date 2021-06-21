@@ -26,7 +26,7 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include lib/idEndnotes.jsx
+//@include lib/idEndnotes.jsx
 
 //~ #targetengine "indesign_endnotes" 
 

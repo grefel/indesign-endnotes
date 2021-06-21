@@ -3,8 +3,8 @@
 # Acknowledgements
 I derived the idea of using InDesign cross references for endnotes from Peter Kahrel. Peters solution is still a good source of inspiration and can be found here [http://www.kahrel.plus.com/indesign/footnotes.html](http://www.kahrel.plus.com/indesign/footnotes.html)
 
-@Version: 3.5
-@Date: 2020-01-16
+@Version: 3.6
+@Date: 2021-06-21
 @Author: Gregor Fellenz https://www.publishingx.de/
 */
 
@@ -245,6 +245,11 @@ function addBacklinks(dok) {
 		} catch (e) {
 			log.warn(localize(px.ui.errorInfo) + e + "\nLine: " + e.line);
 		}
+	}
+
+	if (px.pStyleEndnote == undefined) {
+		log.warnAlert("Das ursprünglich verwendete Endnotenformat [" + dok.extractLabel(px.pStyleEndnoteLabel) + "] ist nicht mehr im Dokument enthalten!, bitte formatieren Sie die Endnoten mit dem entsprechenden Format!");		
+		return;
 	}
 
 	// Ebenen zurücksetzen
