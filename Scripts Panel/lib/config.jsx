@@ -76,6 +76,7 @@ var px = {
 		createSelection:{en:"More than one story with footnotes, place cursor in story and restart", de:"Mehr als ein Textabschnitt enthält Fußnoten, bitte positionieren Sie die Einfügemarke im gewünschten Textabschnitt"},
 		endnoteAndFootnotesAreNotInTheSameStory:{en:"Endnotes and Footnotes are not in the same story", de:"Endnoten und Fußnoten sind nicht im gleichen Textabschnitt!"},
 		unknownSelectionError:{en:"Could not determine the footnote story", de:"Der Textabschnitt mit den Fußnoten konnte nicht ermittelt werden!"},
+		couldNotFindEndnoteStoryBacklink:{en:"Could not determine the endnote story. No backlinking can be performed. Please select the story with the endnotes and call the script again.", de:"Der Textabschnitt mit den Endnoten konnte nicht ermittelt werden! Es kann keine Rückverlinkung durchgeführt werden. Bitte wählen Sie den Textabschnitt mit den Endnoten und rufen Sie das Skript erneut auf."},
 		wrongEndnoteOrder:{en:"Position of endnote [%1] is not in sync with story flow.\nCheck your document.", de:"Die Position im Textfluss der Endnote [%1] ist nicht in der richtigen Reihenfolge.\nPrüfen Sie das Dokument."},
 		emptyFootnote:{en:"Cannot process footnotes without text.", de:"Fußnoten ohne Text können nicht verarbeitet werden."},
 		hyperlinkAlreadyExists:{en:"Endnote %1 has already a hyperlink, cannot create Backlink.", de:"Endnote %1 enthält bereits einen Hyperlink. Es kann kein Backlink erstellt werden."},

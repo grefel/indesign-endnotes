@@ -9,21 +9,21 @@ I derived the idea of using InDesign cross references for endnotes from Peter Ka
 */
 
 /*
-    InDesign endnote solution based on scripting and cross references. 
-    Copyright (C) 2017  Gregor Fellenz
+	InDesign endnote solution based on scripting and cross references. 
+	Copyright (C) 2017  Gregor Fellenz
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //@include config.jsx 
@@ -248,7 +248,7 @@ function addBacklinks(dok) {
 	}
 
 	if (px.pStyleEndnote == undefined) {
-		log.warnAlert("Das ursprünglich verwendete Endnotenformat [" + dok.extractLabel(px.pStyleEndnoteLabel) + "] ist nicht mehr im Dokument enthalten!, bitte formatieren Sie die Endnoten mit dem entsprechenden Format!");		
+		log.warnAlert("Das ursprünglich verwendete Endnotenformat [" + dok.extractLabel(px.pStyleEndnoteLabel) + "] ist nicht mehr im Dokument enthalten!, bitte formatieren Sie die Endnoten mit dem entsprechenden Format!");
 		return;
 	}
 
@@ -762,6 +762,16 @@ function getEndnoteStory(dok, mode) {
 		}
 	}
 
+	if (mode == "MODE_BACKLINK" && endnoteStory == null) {
+		if (checkSelection()) {
+			var endnoteStory = app.selection[0].parentStory;
+		}
+		else {
+			alert(localize(px.ui.createSelection));
+			return null;
+		}
+	}
+
 	// Multi Endnote Stories are ok ...
 	// if (mode == "MODE_BACKLINK" && endnoteStoryMap.length != 1) {
 	// 	alert(localize(px.ui.unknownSelectionError));
@@ -770,7 +780,12 @@ function getEndnoteStory(dok, mode) {
 
 	if (endnoteStory == null) {
 		// Darf eigentlich nicht passieren 
-		alert(localize(px.ui.unknownSelectionError));
+		if (mode == "MODE_BACKLINK") {
+			alert(localize(px.ui.couldNotFindEndnoteStoryBacklink));
+		}
+		else {
+			alert(localize(px.ui.unknownSelectionError));
+		}
 		return null;
 	}
 
